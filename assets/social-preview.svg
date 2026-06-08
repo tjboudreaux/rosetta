@@ -1,0 +1,50 @@
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rosetta — the decision context engine for AI coding agents">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0a0e1f"/><stop offset="1" stop-color="#10173a"/>
+    </linearGradient>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5eead4" stop-opacity="0.5"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <g stroke="#26315e" stroke-width="1" opacity="0.3">
+    <path d="M0 128 H1280 M0 256 H1280 M0 384 H1280 M0 512 H1280"/>
+    <path d="M256 0 V640 M512 0 V640 M768 0 V640 M1024 0 V640"/>
+  </g>
+
+  <text x="640" y="120" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" letter-spacing="5" fill="#7c8bb8" font-weight="600">A ROSETTA STONE FOR YOUR AGENTS</text>
+  <text x="640" y="250" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="150" font-weight="800" fill="url(#brand)" letter-spacing="-3">Rosetta</text>
+  <text x="640" y="300" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="32" fill="#dbe4ff" font-weight="500">The decision context engine for AI coding agents</text>
+
+  <!-- motif: many transcripts → one ground truth -->
+  <g transform="translate(372,360)">
+    <g fill="#141d44" stroke="#2e3b72">
+      <rect x="0" y="0" width="84" height="104" rx="9"/>
+      <rect x="0" y="116" width="84" height="86" rx="9"/>
+      <rect x="96" y="-14" width="84" height="118" rx="9"/>
+      <rect x="96" y="116" width="84" height="100" rx="9"/>
+    </g>
+    <g stroke="#46538f" stroke-width="3" stroke-linecap="round" opacity="0.8">
+      <path d="M16 26 H68"/><path d="M16 44 H56"/><path d="M16 62 H68"/>
+      <path d="M112 12 H164"/><path d="M112 30 H148"/><path d="M112 48 H164"/>
+      <path d="M16 142 H68"/><path d="M16 160 H56"/>
+      <path d="M112 142 H164"/><path d="M112 160 H156"/>
+    </g>
+    <g stroke="url(#brand)" stroke-width="3" fill="none" opacity="0.9">
+      <path d="M180 52 C260 52, 280 100, 360 100"/>
+      <path d="M180 160 C260 160, 280 100, 360 100"/>
+    </g>
+    <circle cx="430" cy="100" r="96" fill="url(#glow)"/>
+    <circle cx="430" cy="100" r="60" fill="#0c1330" stroke="url(#brand)" stroke-width="3.5"/>
+    <path d="M407 100 l15 16 l30 -34" stroke="#5eead4" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="430" y="195" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="17" fill="#c8d3ff">ground-truth.md</text>
+  </g>
+
+  <text x="640" y="560" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" fill="#8a97c2">Claude Code · Codex · Gemini · Cursor · Aider · opencode · Goose · Cline · +10 more  —  one cited ground truth · ADR · PDR · BDR</text>
+  <text x="640" y="602" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="20" fill="#8ff0d4">$ npx skills add tjboudreaux/rosetta</text>
+</svg>
