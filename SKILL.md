@@ -4,6 +4,7 @@ description: Reconcile ALL prior agent conversations (Claude Code, Codex, Droid/
 argument-hint: "Project path (defaults to the current directory)"
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TodoWrite
+license: MIT
 ---
 
 # Rosetta — reconcile every agent's transcripts into one ground truth
