@@ -1,0 +1,21 @@
+# Rosetta scratch / generated artifacts — normalized transcripts can contain secrets.
+# Regenerable; never commit. (`rosetta collect` / ground-truth runs land here.)
+.agents/
+
+# Local agent + editor state
+.claude/
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Editor / OS
+*.swp
+*~
+.idea/
+.vscode/
