@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""rosetta — thin CLI over the skill's deterministic tools. No install required.
+
+Run directly:
+    python3 ~/.claude/skills/rosetta/scripts/rosetta <command> [args...]
+or add an alias:
+    alias rosetta='python3 ~/.claude/skills/rosetta/scripts/rosetta'
+
+Commands (every command forwards its remaining args to the underlying script unchanged):
+    collect    [args...]      scripts/collect.py            gather + normalize transcripts for a project
+    discover   [args...]      scripts/collect.py --all-projects   machine-wide project index
+    decisions  <sub> [args]   scripts/decisions.py          new | index | validate
+
+Examples:
+    rosetta collect --project ~/code/web-app --out ~/code/web-app/.agents/rosetta/full
+    rosetta discover --out /tmp/disc
+    rosetta decisions new --type adr --title "Use SQLite for the cache" --decider Travis
+    rosetta decisions index --root ~/.claude/skills/rosetta/decisions
+    rosetta decisions validate --root ~/.claude/skills/rosetta/decisions
+
+The heavy synthesis (reading transcripts, writing ground-truth.md, distilling decision prose) is
+agent-driven via the rosetta SKILL — this CLI is only the deterministic, token-free mechanics.
+"""
+import subprocess
+import sys
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parent
+COLLECT = SCRIPTS / "collect.py"
+DECISIONS = SCRIPTS / "decisions.py"
+
+
+def run(argv):
+    return subprocess.call([sys.executable, *[str(a) for a in argv]])
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help", "help"):
+        print(__doc__)
+        return 0
+    cmd, rest = sys.argv[1], sys.argv[2:]
+    if cmd == "collect":
+        return run([COLLECT, *rest])
+    if cmd == "discover":
+        return run([COLLECT, "--all-projects", *rest])
+    if cmd == "decisions":
+        return run([DECISIONS, *rest])
+    print(f"unknown command: {cmd!r}\n", file=sys.stderr)
+    print(__doc__, file=sys.stderr)
+    return 2
+
+
+if __name__ == "__main__":
+    sys.exit(main())
