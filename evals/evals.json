@@ -1,0 +1,40 @@
+{
+  "skill_name": "rosetta",
+  "notes": "Evals run against this machine's live agent stores. They assume the fixture project /Users/tjboudreaux/Sandbox/example-app has prior Claude + Codex + Factory history (verified 2026-05-29). If that project is archived, repoint the path in evals 1-2 to any project with known multi-agent history.",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Build a ground truth for /Users/tjboudreaux/Sandbox/example-app from all our previous agent conversations.",
+      "expected_output": "A coverage map is shown first, then .agents/ground-truth.md is written with cited findings, a Contradictions/unverified section, and a provenance index. Raw transcripts are never read into the orchestrator's context.",
+      "expectations": [
+        "The skill ran scripts/collect.py via Bash with --project pointing at the example-app path",
+        "A coverage map was presented to the user BEFORE any synthesis, listing per-agent session counts and date ranges",
+        "The coverage map surfaced unmatchable history (e.g. codex sessions_without_cwd and factory flat_files_without_cwd counts) rather than hiding it",
+        "The orchestrator did NOT open raw .jsonl transcript files with the Read tool; it read only the normalized .md files produced by the collector (or delegated reading to subagents)",
+        "The final .agents/ground-truth.md contains a Coverage report section and a Provenance index section",
+        "At least some claims in the ground-truth document carry a citation of the form agent + session + date",
+        "The document includes a 'Contradictions & unverified claims' section (may be empty but present)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Catch me up on the project at /Users/tjboudreaux/Sandbox — only that directory, not the subprojects under it.",
+      "expected_output": "Exact-cwd scoping is used (no --include-subdirs). The coverage and ground truth cover only sessions whose cwd is exactly /Users/tjboudreaux/Sandbox, excluding child projects like example-app.",
+      "expectations": [
+        "collect.py was run WITHOUT the --include-subdirs flag (exact-match default)",
+        "The coverage map / ground truth does NOT include sessions belonging to subprojects such as example-app",
+        "The skill explained that monorepo/subdirectory mode is available via --include-subdirs but was intentionally not used here"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build a ground truth for /tmp/rosetta-eval-cold-project (a directory with no prior agent history).",
+      "expected_output": "The collector runs without error, the coverage map reports zero sessions across all agents gracefully, and the skill states there is no prior agent history instead of fabricating any — while still checking git/docs.",
+      "expectations": [
+        "collect.py completed successfully and reported 0 matched sessions for every agent without crashing",
+        "The skill clearly told the user that no prior agent conversations were found for this project rather than inventing decisions or history",
+        "The skill still attempted to anchor on git state and any project docs (or noted their absence) before concluding"
+      ]
+    }
+  ]
+}

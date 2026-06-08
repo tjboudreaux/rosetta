@@ -1,0 +1,12 @@
+[
+  {"query": "Read all our previous agent conversations for this project and build a ground truth of where things stand.", "should_trigger": true},
+  {"query": "Catch me up on this project — what's the current state of it?", "should_trigger": true},
+  {"query": "What did past Claude and Codex sessions decide about this codebase?", "should_trigger": true},
+  {"query": "I'm picking up an unfamiliar project. Reconstruct its history from the prior agent chats, the docs, and git.", "should_trigger": true},
+  {"query": "Build a ground truth document for this project.", "should_trigger": true},
+  {"query": "Mine our old AI sessions and tell me what decisions were made and what's still open.", "should_trigger": true},
+  {"query": "Find and fix the bug in this function.", "should_trigger": false},
+  {"query": "Write a Python function to parse a CSV file into a list of dicts.", "should_trigger": false},
+  {"query": "Show me the git log for the last week.", "should_trigger": false},
+  {"query": "Generate an image of a sunset over mountains.", "should_trigger": false}
+]
