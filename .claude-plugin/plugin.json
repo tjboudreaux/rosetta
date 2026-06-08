@@ -1,0 +1,20 @@
+{
+  "name": "rosetta",
+  "version": "0.1.0",
+  "description": "Reconcile every AI coding agent's conversations (Claude Code, Codex, Gemini, Cursor, Aider, opencode, Cline + 11 more) with git and docs into one cited ground truth, and distill durable ADR/PDR/BDR decision records.",
+  "author": {
+    "name": "Travis Boudreaux"
+  },
+  "homepage": "https://github.com/tjboudreaux/rosetta",
+  "repository": "https://github.com/tjboudreaux/rosetta",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "claude-code",
+    "context-engineering",
+    "ground-truth",
+    "decision-records",
+    "adr",
+    "transcripts"
+  ]
+}
