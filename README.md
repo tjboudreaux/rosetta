@@ -111,7 +111,7 @@ rosetta decisions new --type adr --title "Adopt SQLite for the cache" --decider 
 rosetta decisions index --root decisions && rosetta decisions validate --root decisions
 ```
 
-Full flow with sample output: **[end-to-end walkthrough](docs/examples/end-to-end.md)**.
+Full flow with sample output: **[end-to-end walkthrough](skills/rosetta/docs/examples/end-to-end.md)**.
 
 ## Which agents does Rosetta support?
 
@@ -123,7 +123,7 @@ Crush (Charm) · Windsurf / Cascade · Augment.
 
 Formats range from JSONL to one-JSON-per-message directories, nested JSON trees, markdown, and sqlite.
 Unrecognized stores are **flagged loudly** rather than silently skipped, so you always know what wasn't
-read. See the full table, scoping rules, and how to add an agent in **[docs/agents.md](docs/agents.md)**.
+read. See the full table, scoping rules, and how to add an agent in **[docs/agents.md](skills/rosetta/docs/agents.md)**.
 
 ## Decision records: ADR / PDR / BDR
 
@@ -138,7 +138,7 @@ Rosetta turns scattered decisions into durable, cited records:
 Each record carries `Sources:` provenance (`agent · session-id · date`, a commit, a code path), a
 `Proposed → Accepted → Superseded` lifecycle, and never silently oscillates. Rosetta's own
 [`decisions/`](decisions) library is the reference implementation. Details:
-**[docs/decisions.md](docs/decisions.md)**.
+**[docs/decisions.md](skills/rosetta/docs/decisions.md)**.
 
 ## CLI
 
@@ -149,14 +149,14 @@ rosetta decisions new|index|validate             # scaffold / index / validate t
 ```
 
 `validate` exits nonzero on a malformed library, so it drops straight into CI. Full reference:
-**[docs/cli.md](docs/cli.md)**.
+**[docs/cli.md](skills/rosetta/docs/cli.md)**.
 
 ## Use it for your team
 
 The decision-record format **bends to your team**, not the reverse. Drop a `config.json` at your
 `decisions/` root to define your own record types, directories, numbering, statuses, required fields,
 and templates — or omit it for sensible defaults. Add a new record type (say, a Governance record)
-with no code change. See [docs/decisions.md → customize](docs/decisions.md#use-your-own-templates-any-team).
+with no code change. See [docs/decisions.md → customize](skills/rosetta/docs/decisions.md#use-your-own-templates-any-team).
 
 ## FAQ
 
@@ -184,25 +184,25 @@ the deterministic `decisions.py` handles numbering, the index, and validation.
 
 ## Documentation
 
-- [Getting started](docs/getting-started.md)
-- [Agents & discovery](docs/agents.md)
-- [Decision records](docs/decisions.md)
-- [CLI reference](docs/cli.md)
-- [End-to-end walkthrough](docs/examples/end-to-end.md) · [Example ground truth](docs/examples/ground-truth.example.md)
-- [Agent store registry](references/agent-stores.md) · [Decision schema](references/decision-schema.md)
+- [Getting started](skills/rosetta/docs/getting-started.md)
+- [Agents & discovery](skills/rosetta/docs/agents.md)
+- [Decision records](skills/rosetta/docs/decisions.md)
+- [CLI reference](skills/rosetta/docs/cli.md)
+- [End-to-end walkthrough](skills/rosetta/docs/examples/end-to-end.md) · [Example ground truth](skills/rosetta/docs/examples/ground-truth.example.md)
+- [Agent store registry](skills/rosetta/references/agent-stores.md) · [Decision schema](skills/rosetta/references/decision-schema.md)
 
 ## Roadmap
 
 - **External-source ingestion via MCP** (Circleback meeting notes, Slack) so human/meeting decisions
-  become cited records too — designed in [references/external-sources.md](references/external-sources.md)
-  (Proposed, [ADR 0012](decisions/architecture-decisions/0012-mcp-external-source-ingestion.md)).
-- **Installable CLI packaging** (`pipx install`) — [ADR 0013](decisions/architecture-decisions/0013-installable-cli-packaging.md).
+  become cited records too — designed in [references/external-sources.md](skills/rosetta/references/external-sources.md)
+  (Proposed, [ADR 0012](skills/rosetta/decisions/architecture-decisions/0012-mcp-external-source-ingestion.md)).
+- **Installable CLI packaging** (`pipx install`) — [ADR 0013](skills/rosetta/decisions/architecture-decisions/0013-installable-cli-packaging.md).
 - Resolvers for more agents as they appear (the sweep flags unknown stores so you know when to add one).
 
 ## Contributing & license
 
 Contributions welcome — adding an agent is usually a registry row + a resolver + a fixture. See
-[CONTRIBUTING.md](CONTRIBUTING.md). Licensed under [MIT](LICENSE).
+[CONTRIBUTING.md](skills/rosetta/CONTRIBUTING.md). Licensed under [MIT](LICENSE).
 
 ---
 

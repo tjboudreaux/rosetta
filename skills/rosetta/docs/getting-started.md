@@ -12,8 +12,8 @@ npx skills add tjboudreaux/rosetta
 # or GitHub CLI
 gh skill install tjboudreaux/rosetta
 
-# or just clone into your skills dir
-git clone https://github.com/tjboudreaux/rosetta ~/.claude/skills/rosetta
+# or clone the repo and copy the skill folder into your skills dir
+git clone https://github.com/tjboudreaux/rosetta /tmp/rosetta && cp -r /tmp/rosetta/skills/rosetta ~/.claude/skills/rosetta
 ```
 
 Rosetta is pure-Python **stdlib** — no `pip install`, no dependencies. You need Python 3.8+.
