@@ -1,0 +1,33 @@
+{
+  "_comment": "Rosetta decision-library config. This file is OPTIONAL — delete it and the rosetta defaults below apply. Copy it into any project's decisions/ root and edit to use your team's own record types, directories, numbering, statuses, and templates. Parsed by scripts/decisions.py (pure stdlib JSON, no PyYAML).",
+  "schema": "rosetta-decisions-config/v1",
+  "number_width": 4,
+  "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
+  "required_fields": ["Status", "Date", "Decider"],
+  "recommended_fields": ["Sources"],
+  "optional_fields": ["Decided originally", "Related", "Supersedes"],
+  "record_types": {
+    "adr": {
+      "label": "ADR",
+      "name": "Architecture Decision Record",
+      "dir": "architecture-decisions",
+      "template": "templates/adr-template.md"
+    },
+    "pdr": {
+      "label": "PDR",
+      "name": "Product Decision Record",
+      "dir": "product-decisions",
+      "template": "templates/pdr-template.md"
+    },
+    "bdr": {
+      "label": "BDR",
+      "name": "Business Decision Record",
+      "dir": "business-decisions",
+      "template": "templates/bdr-template.md"
+    }
+  },
+  "index": {
+    "path": "README.md",
+    "columns": ["Date", "ID", "Type", "Decision", "Status"]
+  }
+}
