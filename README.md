@@ -40,7 +40,9 @@ conversations.”**
 ## Table of contents
 
 - [What is Rosetta?](#what-is-rosetta)
+- [Who it's for](#who-its-for)
 - [Why it exists](#why-it-exists)
+- [How Rosetta compares](#how-rosetta-compares)
 - [How it works](#how-it-works)
 - [Quickstart](#quickstart)
 - [Which agents does Rosetta support?](#which-agents-does-rosetta-support)
@@ -66,6 +68,12 @@ and git history, and producing two durable artifacts:
 2. **A decision library** (`decisions/`) — individually-addressable **ADR** (architecture), **PDR**
    (product), and **BDR** (business) records with provenance and a status lifecycle.
 
+## Who it's for
+
+- **Solo developers** running several AI agents across many projects — stop re-explaining each project from scratch to every new session.
+- **Teams** who need onboarding context and a decision audit trail a new hire (or a new agent) can actually read.
+- **Anyone returning to a project weeks later** asking *"wait — why did we build it this way?"*
+
 ## Why it exists
 
 The same project's history is smeared across five-plus incompatible storage schemes, most not
@@ -78,6 +86,22 @@ reading it all into one context window is ruinous. And the two ways a summary fa
 Rosetta is engineered to defeat both: **coverage is loud** (every run shows what it found *and missed*
 before summarizing) and **code wins over chat** (a strict truth hierarchy where git arbitrates what
 actually shipped).
+
+## How Rosetta compares
+
+How a project's history and decisions get reconstructed today — versus with Rosetta:
+
+| | Reading transcripts by hand | A wiki / hand-written ADRs | **Rosetta** |
+|---|---|---|---|
+| Reads all 18 agents' formats | Manual, one tool at a time | — | **Automatic** |
+| Reconciles against git (code wins) | No | No | **Yes — truth hierarchy** |
+| Surfaces coverage gaps | No — silent misses | — | **Yes — loud manifest** |
+| Every claim cited to its source | Rarely | Drifts from reality | **Yes — provenance** |
+| Decisions as durable records | No | Manual upkeep | **ADR / PDR / BDR, auto-numbered** |
+| Effort | Hours, every time | Ongoing discipline | **One command** |
+
+Rosetta isn't another note-taking habit to maintain — it reconstructs the truth from history you've
+already created.
 
 ## How it works
 
@@ -210,7 +234,15 @@ Contributions welcome — adding an agent is usually a registry row + a resolver
 
 ---
 
-<sub>Keywords: Claude Code skill · agent skills · AI coding agent conversation history · transcript
-reconciliation · ground truth · architecture decision records (ADR) · product decision records (PDR) ·
-decision log generator · context engineering · Codex / Gemini CLI / Cursor / Aider / opencode / Cline
-/ Goose transcripts · skills.sh · agentskills.io</sub>
+### Try it now
+
+```bash
+npx skills add tjboudreaux/rosetta
+```
+
+Then ask your agent to **“build a ground truth for this project.”** If it saves you an afternoon of
+decision archaeology, a ⭐ helps other developers find it.
+
+<sub>Rosetta is a local-first Claude Code / agent skill for reconciling AI coding agent conversation
+history — across Codex, Gemini CLI, Cursor, Aider, opencode, Cline, Goose and 11 more — into one cited
+ground truth, and for generating ADR, PDR, and BDR decision records. Latest release: v0.1.1 · MIT licensed.</sub>
