@@ -15,10 +15,14 @@
 
 # Rosetta — the decision context engine for AI coding agents
 
-**Rosetta is an open-source [agent skill](https://agentskills.io) that reconciles every AI coding
-agent's conversation history — across 18 tools — with your git history and docs into one *cited*
-ground truth, and distills it into durable decision records (ADRs, PDRs, BDRs).** It runs locally,
-reads only your own machine, and ships as pure-stdlib Python with zero dependencies.
+**Your AI coding agents make hundreds of decisions across dozens of sessions — then that context
+evaporates the moment each window closes.**
+
+Rosetta is an open-source [agent skill](https://agentskills.io) that reads every coding agent's local
+conversation history (across **18 tools**), reconciles it with your git history and docs, and turns it
+into one *cited* **ground truth** — plus durable **decision records** (ADRs, PDRs, BDRs). So you, your
+team, and the next agent never lose the thread. **100% local, read-only, pure-stdlib Python, zero
+dependencies.**
 
 > Like the Rosetta Stone recovered one meaning across three scripts, Rosetta recovers one project
 > truth across many incompatible agent transcript formats.
