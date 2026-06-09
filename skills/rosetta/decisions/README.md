@@ -39,8 +39,8 @@ asserted, until code or an explicit human call confirms it.
 | 2026-06-07 | [ADR 0009](architecture-decisions/0009-deterministic-decisions-tooling.md) | adr | Deterministic `decisions.py` (scaffold / index / validate) | Accepted |
 | 2026-06-07 | [ADR 0010](architecture-decisions/0010-machine-wide-project-discovery.md) | adr | Machine-wide agent-conversation discovery | Accepted |
 | 2026-06-07 | [ADR 0011](architecture-decisions/0011-thin-rosetta-cli-dispatcher.md) | adr | Thin Rosetta CLI dispatcher | Accepted |
-| 2026-06-07 | [ADR 0012](architecture-decisions/0012-mcp-external-source-ingestion.md) | adr | External-source ingestion via MCP (Circleback, Slack, …) | Proposed |
-| 2026-06-07 | [ADR 0013](architecture-decisions/0013-installable-cli-packaging.md) | adr | Installable CLI packaging | Proposed |
+| 2026-06-07 | [ADR 0012](architecture-decisions/0012-mcp-external-source-ingestion.md) | adr | External-source ingestion via MCP (Circleback, Slack, …) | Accepted (scaffolder + workflow shipped 2026-06-08; live-MCP connectors unverified) |
+| 2026-06-07 | [ADR 0013](architecture-decisions/0013-installable-cli-packaging.md) | adr | Installable CLI packaging | Accepted (editable install shipped 2026-06-08; portable wheel/PyPI publish deferred) |
 | 2026-06-07 | [BDR 0001](business-decisions/0001-rosetta-as-org-system-of-record-for-decisions.md) | bdr | Rosetta as the org system-of-record for decisions | Accepted |
 | 2026-06-07 | [PDR 0001](product-decisions/0001-rosetta-as-universal-decision-context-engine.md) | pdr | Rosetta as the universal decision context engine | Accepted |
 | 2026-06-07 | [PDR 0002](product-decisions/0002-decisions-are-durable-first-class-deliverables.md) | pdr | Decisions are durable, first-class deliverables | Accepted |

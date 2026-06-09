@@ -9,7 +9,7 @@
   <a href="https://skills.sh"><img alt="Agent Skill on skills.sh" src="https://img.shields.io/badge/Agent%20Skill-skills.sh-818cf8"></a>
   <a href="docs/agents.md"><img alt="18 agents supported" src="https://img.shields.io/badge/agents-18-5eead4"></a>
   <img alt="Python 3.8+ stdlib only" src="https://img.shields.io/badge/python-3.8%2B%20·%20stdlib%20only-3776ab">
-  <img alt="Tests passing" src="https://img.shields.io/badge/tests-passing-22c55e">
+  <a href="https://github.com/tjboudreaux/rosetta/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tjboudreaux/rosetta/actions/workflows/ci.yml/badge.svg"></a>
   <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-c084fc"></a>
 </p>
 
@@ -174,9 +174,11 @@ Each record carries `Sources:` provenance (`agent · session-id · date`, a comm
 rosetta collect   --project <path> --out <dir>   # gather + normalize a project's transcripts
 rosetta discover  [--out <dir>]                  # machine-wide index of projects with history
 rosetta decisions new|index|validate             # scaffold / index / validate the decision library
+rosetta ingest    --root ./decisions --from x.json   # external decisions (meetings/Slack) -> Proposed records
 ```
 
-`validate` exits nonzero on a malformed library, so it drops straight into CI. Full reference:
+`validate` exits nonzero on a malformed library, so it drops straight into CI. No install needed, but
+`pip install -e skills/rosetta` puts `rosetta` on your PATH. Full reference:
 **[docs/cli.md](skills/rosetta/docs/cli.md)**.
 
 ## Use it for your team

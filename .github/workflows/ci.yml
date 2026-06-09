@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Syntax check (pure stdlib, no deps)
+        run: |
+          python -m py_compile \
+            skills/rosetta/scripts/collect.py \
+            skills/rosetta/scripts/decisions.py \
+            skills/rosetta/scripts/ingest.py \
+            skills/rosetta/scripts/rosetta \
+            skills/rosetta/rosetta_cli.py
+
+      - name: Unit tests (all 18 agent resolvers + parsers, ingest)
+        run: python -m unittest discover -s skills/rosetta/tests -v
+
+      - name: Validate decision library
+        run: python skills/rosetta/scripts/decisions.py --root skills/rosetta/decisions validate
