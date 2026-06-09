@@ -1,12 +1,15 @@
-# External decision-source registry (design — backs ADR 0012, status: Proposed)
+# External decision-source registry (backs ADR 0012)
 
 Parallel to `agent-stores.md` (which maps *agent transcript* stores), this maps *external* systems
-where decisions are made by humans — meetings, chat, trackers — reachable via MCP. It is the design
-for ADR 0012 (external-source ingestion); the connectors are **not yet implemented**.
+where decisions are made by humans — meetings, chat, trackers — reachable via MCP.
 
-Unlike transcript collection (deterministic, local files), external ingestion is **agent-driven and
-on-demand**: it calls MCP tools, needs auth, and may be unavailable in headless/cron runs. Everything
-it surfaces is a **Proposed** draft pending human confirmation (truth hierarchy, ADR 0004).
+**Status:** the deterministic half is **shipped** — `scripts/ingest.py` (`rosetta ingest`) turns a JSON
+array of extracted decisions into reviewable `Status: Proposed` records. The agent-driven half (the
+actual MCP queries that produce that JSON) is documented below and in SKILL.md but **unverified against
+live MCP servers** in this build. Unlike transcript collection (deterministic, local files), external
+ingestion is **agent-driven and on-demand**: it calls MCP tools, needs auth, and may be unavailable in
+headless/cron runs. Everything it surfaces is a **Proposed** draft pending human confirmation (truth
+hierarchy, ADR 0004).
 
 ## Sources
 
@@ -23,14 +26,15 @@ Verify what's actually authed with the collector's discovery sweep and the user'
 `~/.claude/mcp-needs-auth-cache.json`; the user's `CLAUDE.md` also documents a `gws` Google Workspace
 CLI and Circleback usage.
 
-## Ingestion flow (proposed)
+## Ingestion flow
 
 1. **Select** sources + a project/time window.
 2. **Query** each via its MCP tools (a deterministic skeleton lists tools + windows; the agent runs the
    calls).
 3. **Extract** candidate decisions (what was decided, by whom, why).
 4. **Normalize** provenance into the `Sources:` citation format above.
-5. **Scaffold** BDR/PDR/ADR drafts via `scripts/decisions.py new` with `Status: Proposed`.
+5. **Scaffold**: emit the extracted decisions as a JSON array and pipe it to `rosetta ingest`
+   (`scripts/ingest.py`), which writes one `Status: Proposed` record each (numbering, provenance, body draft).
 6. **Confirm** with a human before any draft becomes `Accepted` (ADR 0004).
 
 ## Adding a source

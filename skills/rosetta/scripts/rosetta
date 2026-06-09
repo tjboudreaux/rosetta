@@ -10,6 +10,7 @@ Commands (every command forwards its remaining args to the underlying script unc
     collect    [args...]      scripts/collect.py            gather + normalize transcripts for a project
     discover   [args...]      scripts/collect.py --all-projects   machine-wide project index
     decisions  <sub> [args]   scripts/decisions.py          new | index | validate
+    ingest     [args]         scripts/ingest.py             external decisions (meetings/Slack) -> Proposed records
 
 Examples:
     rosetta collect --project ~/code/web-app --out ~/code/web-app/.agents/rosetta/full
@@ -17,6 +18,7 @@ Examples:
     rosetta decisions new --type adr --title "Use SQLite for the cache" --decider Travis
     rosetta decisions index --root ~/.claude/skills/rosetta/decisions
     rosetta decisions validate --root ~/.claude/skills/rosetta/decisions
+    rosetta ingest --root ./decisions --from meeting-decisions.json
 
 The heavy synthesis (reading transcripts, writing ground-truth.md, distilling decision prose) is
 agent-driven via the rosetta SKILL — this CLI is only the deterministic, token-free mechanics.
@@ -28,6 +30,7 @@ from pathlib import Path
 SCRIPTS = Path(__file__).resolve().parent
 COLLECT = SCRIPTS / "collect.py"
 DECISIONS = SCRIPTS / "decisions.py"
+INGEST = SCRIPTS / "ingest.py"
 
 
 def run(argv):
@@ -45,6 +48,8 @@ def main():
         return run([COLLECT, "--all-projects", *rest])
     if cmd == "decisions":
         return run([DECISIONS, *rest])
+    if cmd == "ingest":
+        return run([INGEST, *rest])
     print(f"unknown command: {cmd!r}\n", file=sys.stderr)
     print(__doc__, file=sys.stderr)
     return 2

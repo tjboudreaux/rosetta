@@ -178,8 +178,11 @@ reconciled history into a decision library (see `references/decision-schema.md` 
 - Teams customize types/dirs/fields/templates via a `config.json` at the decisions root — adapt to
   their conventions rather than imposing rosetta's.
 
-Decisions made **outside** code and agent chat (meetings via Circleback, Slack threads) are the design
-in `references/external-sources.md` (ingested via MCP) — currently *Proposed* (ADR 0012).
+Decisions made **outside** code and agent chat (meetings via Circleback, Slack threads, trackers) can
+be ingested too: query the source's MCP tools for the project/time window, emit the extracted decisions
+as a JSON array, and pipe it to `scripts/ingest.py` (`rosetta ingest`) — it writes one `Status: Proposed`
+record each for human confirmation. See `references/external-sources.md` and ADR 0012 (the deterministic
+scaffolder is shipped; the live-MCP connectors are unverified — treat ingested records as drafts).
 
 ## Notes
 

@@ -1,9 +1,10 @@
 # ADR 0012 — External-source ingestion via MCP (Circleback, Slack, …)
 
-- Status: Proposed
-- Date: 2026-06-07
+- Status: Accepted (scaffolder + workflow shipped 2026-06-08; live-MCP connectors unverified)
+- Date: 2026-06-08
+- Decided originally: 2026-06-07
 - Decider: Travis
-- Sources: `claude · 4b80b004 · 2026-06-07` (this conversation, requirement #2); design `references/external-sources.md`
+- Sources: `claude · 4b80b004 · 2026-06-08` (this conversation, requirement #2); `scripts/ingest.py`; `references/external-sources.md`
 - Related: PDR 0004, ADR 0002, ADR 0007
 
 ## Context
@@ -15,13 +16,20 @@ To be the engine for *all* decisions, Rosetta must ingest these too. Unlike tran
 this step is agent-driven and on-demand (it calls MCP tools and needs auth), so it can't be fully
 deterministic.
 
-## Decision (proposed)
+## Decision
 
-Add an ingestion step (agent-driven, with a deterministic skeleton) that queries configured MCP
-sources for a project/time window, extracts candidate decisions, normalizes their provenance into the
-same `Sources:` citation format (e.g. `circleback · <meeting-id> · <date>`), and scaffolds BDR/PDR/ADR
-drafts via `decisions.py new` for human confirmation. A registry (`references/external-sources.md`)
-mirrors `agent-stores.md`: source → MCP tool prefix → how to query and cite it.
+Split the work along the deterministic/non-deterministic seam:
+
+- **Shipped (2026-06-08) — the deterministic half:** `scripts/ingest.py` (exposed as `rosetta ingest`)
+  takes a JSON array of extracted decisions and writes one reviewable record each, stamped
+  `Status: Proposed`, with the external `Sources:` citation and a first-draft body. A human confirms,
+  flips to `Accepted`, and runs `decisions.py index` + `validate`.
+- **Agent-driven half (documented, live-MCP unverified):** the agent queries the configured MCP
+  sources (Circleback/Slack/Gmail/Atlassian/…) for a project/time window, extracts candidate
+  decisions, and emits that JSON — normalizing provenance into the `Sources:` format
+  (e.g. `circleback · <meeting-id> · <date>`). The workflow lives in SKILL.md; the source→tool→citation
+  registry mirrors `agent-stores.md` in `references/external-sources.md`. The connectors are
+  **unverified against live MCP servers** in this build (none available headless) — pending real-data validation.
 
 ## Consequences
 
