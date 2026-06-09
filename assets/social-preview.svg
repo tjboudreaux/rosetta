@@ -1,50 +1,51 @@
 <svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rosetta — the decision context engine for AI coding agents">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#0a0e1f"/><stop offset="1" stop-color="#10173a"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0a0e1f"/><stop offset="1" stop-color="#0f1733"/>
     </linearGradient>
     <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#5eead4"/><stop offset="0.5" stop-color="#818cf8"/><stop offset="1" stop-color="#c084fc"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#5eead4" stop-opacity="0.5"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+      <stop offset="0" stop-color="#818cf8" stop-opacity="0.5"/><stop offset="1" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.5" cy="0.42" r="0.7">
+      <stop offset="0" stop-color="#1b2a5e" stop-opacity="0.45"/><stop offset="1" stop-color="#1b2a5e" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
   <rect width="1280" height="640" fill="url(#bg)"/>
-  <g stroke="#26315e" stroke-width="1" opacity="0.3">
+  <rect width="1280" height="640" fill="url(#vignette)"/>
+  <g stroke="#222d57" stroke-width="1" opacity="0.35">
     <path d="M0 128 H1280 M0 256 H1280 M0 384 H1280 M0 512 H1280"/>
     <path d="M256 0 V640 M512 0 V640 M768 0 V640 M1024 0 V640"/>
   </g>
 
-  <text x="640" y="120" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" letter-spacing="5" fill="#7c8bb8" font-weight="600">A ROSETTA STONE FOR YOUR AGENTS</text>
-  <text x="640" y="250" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="150" font-weight="800" fill="url(#brand)" letter-spacing="-3">Rosetta</text>
-  <text x="640" y="300" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="32" fill="#dbe4ff" font-weight="500">The decision context engine for AI coding agents</text>
+  <text x="640" y="104" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" letter-spacing="5" fill="#7f8db9" font-weight="600">A ROSETTA STONE FOR YOUR AGENTS</text>
+  <text x="640" y="226" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="142" font-weight="800" fill="url(#brand)" letter-spacing="-3">Rosetta</text>
+  <text x="640" y="274" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="29" fill="#e2e8ff" font-weight="600">The decision context engine for AI coding agents</text>
 
-  <!-- motif: many transcripts → one ground truth -->
-  <g transform="translate(372,360)">
-    <g fill="#141d44" stroke="#2e3b72">
-      <rect x="0" y="0" width="84" height="104" rx="9"/>
-      <rect x="0" y="116" width="84" height="86" rx="9"/>
-      <rect x="96" y="-14" width="84" height="118" rx="9"/>
-      <rect x="96" y="116" width="84" height="100" rx="9"/>
+  <!-- funnel motif: many agent transcripts -> one ground truth -->
+  <g>
+    <g transform="translate(404,332)" opacity="0.72"><rect width="150" height="40" rx="8" fill="#131d45" stroke="#2c396f"/><rect width="5" height="40" rx="2.5" fill="#5eead4"/><rect x="18" y="12" width="74" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="24" width="54" height="5" rx="2.5" fill="#3a4677"/></g>
+    <g transform="translate(404,380)" opacity="0.86"><rect width="150" height="40" rx="8" fill="#131d45" stroke="#2c396f"/><rect width="5" height="40" rx="2.5" fill="#818cf8"/><rect x="18" y="12" width="88" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="24" width="60" height="5" rx="2.5" fill="#3a4677"/></g>
+    <g transform="translate(404,428)"><rect width="150" height="40" rx="8" fill="#16224f" stroke="#39477f"/><rect width="5" height="40" rx="2.5" fill="#c084fc"/><rect x="18" y="12" width="82" height="5" rx="2.5" fill="#52609d"/><rect x="18" y="24" width="66" height="5" rx="2.5" fill="#414f86"/></g>
+    <g transform="translate(404,476)" opacity="0.86"><rect width="150" height="40" rx="8" fill="#131d45" stroke="#2c396f"/><rect width="5" height="40" rx="2.5" fill="#38bdf8"/><rect x="18" y="12" width="84" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="24" width="56" height="5" rx="2.5" fill="#3a4677"/></g>
+    <g transform="translate(404,524)" opacity="0.72"><rect width="150" height="40" rx="8" fill="#131d45" stroke="#2c396f"/><rect width="5" height="40" rx="2.5" fill="#34d399"/><rect x="18" y="12" width="70" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="24" width="50" height="5" rx="2.5" fill="#3a4677"/></g>
+
+    <g stroke="url(#brand)" stroke-width="2.5" fill="none" opacity="0.85">
+      <path d="M554 352 C 650 352, 690 450, 776 450"/>
+      <path d="M554 400 C 650 400, 705 450, 776 450"/>
+      <path d="M554 448 H 776"/>
+      <path d="M554 496 C 650 496, 705 450, 776 450"/>
+      <path d="M554 544 C 650 544, 690 450, 776 450"/>
     </g>
-    <g stroke="#46538f" stroke-width="3" stroke-linecap="round" opacity="0.8">
-      <path d="M16 26 H68"/><path d="M16 44 H56"/><path d="M16 62 H68"/>
-      <path d="M112 12 H164"/><path d="M112 30 H148"/><path d="M112 48 H164"/>
-      <path d="M16 142 H68"/><path d="M16 160 H56"/>
-      <path d="M112 142 H164"/><path d="M112 160 H156"/>
-    </g>
-    <g stroke="url(#brand)" stroke-width="3" fill="none" opacity="0.9">
-      <path d="M180 52 C260 52, 280 100, 360 100"/>
-      <path d="M180 160 C260 160, 280 100, 360 100"/>
-    </g>
-    <circle cx="430" cy="100" r="96" fill="url(#glow)"/>
-    <circle cx="430" cy="100" r="60" fill="#0c1330" stroke="url(#brand)" stroke-width="3.5"/>
-    <path d="M407 100 l15 16 l30 -34" stroke="#5eead4" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="430" y="195" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="17" fill="#c8d3ff">ground-truth.md</text>
+
+    <circle cx="838" cy="450" r="98" fill="url(#glow)"/>
+    <circle cx="838" cy="450" r="58" fill="#0b1330" stroke="url(#brand)" stroke-width="3.5"/>
+    <path d="M816 450 l14 15 l29 -33" stroke="#5eead4" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
-  <text x="640" y="560" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="17" fill="#8a97c2">Claude Code · Codex · Gemini · Cursor · Aider · opencode · Goose · Cline · +10 more  —  one cited ground truth · ADR · PDR · BDR</text>
-  <text x="640" y="602" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="20" fill="#8ff0d4">$ npx skills add tjboudreaux/rosetta</text>
+  <text x="640" y="592" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="15.5" fill="#94a0c8">18 agents · one cited ground truth · ADR · PDR · BDR</text>
+  <text x="640" y="620" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="17" fill="#8ff0d4">$ npx skills add tjboudreaux/rosetta</text>
 </svg>

@@ -1,8 +1,8 @@
-<svg width="1280" height="320" viewBox="0 0 1280 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rosetta — the decision context engine for AI coding agents">
+<svg width="1280" height="360" viewBox="0 0 1280 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Rosetta — the decision context engine for AI coding agents: reconcile every agent's history into one cited ground truth">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0a0e1f"/>
-      <stop offset="1" stop-color="#10173a"/>
+      <stop offset="1" stop-color="#0f1733"/>
     </linearGradient>
     <linearGradient id="brand" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#5eead4"/>
@@ -10,56 +10,75 @@
       <stop offset="1" stop-color="#c084fc"/>
     </linearGradient>
     <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#5eead4" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+      <stop offset="0" stop-color="#818cf8" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#818cf8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vignette" cx="0.74" cy="0.5" r="0.72">
+      <stop offset="0" stop-color="#1b2a5e" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#1b2a5e" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="1280" height="320" fill="url(#bg)"/>
-  <!-- faint grid -->
-  <g stroke="#26315e" stroke-width="1" opacity="0.35">
-    <path d="M0 80 H1280 M0 160 H1280 M0 240 H1280"/>
-    <path d="M160 0 V320 M320 0 V320 M480 0 V320 M640 0 V320 M800 0 V320 M960 0 V320 M1120 0 V320"/>
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <rect width="1280" height="360" fill="url(#vignette)"/>
+  <g stroke="#222d57" stroke-width="1" opacity="0.4">
+    <path d="M0 90 H1280 M0 180 H1280 M0 270 H1280"/>
+    <path d="M213 0 V360 M426 0 V360 M639 0 V360 M852 0 V360 M1065 0 V360"/>
   </g>
 
-  <!-- left: wordmark + tagline -->
-  <text x="64" y="86" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="15" letter-spacing="4" fill="#7c8bb8" font-weight="600">A ROSETTA STONE FOR YOUR AGENTS</text>
-  <text x="60" y="170" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="104" font-weight="800" fill="url(#brand)" letter-spacing="-2">Rosetta</text>
-  <text x="64" y="212" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="26" fill="#dbe4ff" font-weight="500">The decision context engine for AI coding agents</text>
-  <text x="64" y="244" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="16" fill="#8a97c2">Claude Code · Codex · Gemini · Cursor · Aider · opencode · Goose · +11 more</text>
+  <!-- LEFT: wordmark + copy -->
+  <text x="66" y="74" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="14" letter-spacing="4.5" fill="#7f8db9" font-weight="600">A ROSETTA STONE FOR YOUR AGENTS</text>
+  <text x="60" y="172" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="98" font-weight="800" fill="url(#brand)" letter-spacing="-2.5">Rosetta</text>
+  <text x="66" y="214" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="25" fill="#e2e8ff" font-weight="600">The decision context engine for AI coding agents</text>
+  <text x="66" y="246" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="16" fill="#94a0c8">Reconcile every agent's history into one cited ground truth.</text>
 
-  <!-- terminal chip -->
-  <rect x="64" y="266" width="430" height="34" rx="8" fill="#0c1330" stroke="#2b376a"/>
-  <circle cx="82" cy="283" r="4" fill="#ef6f6f"/><circle cx="96" cy="283" r="4" fill="#e7c66b"/><circle cx="110" cy="283" r="4" fill="#74d99f"/>
-  <text x="128" y="288" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#8ff0d4">$ npx skills add tjboudreaux/rosetta</text>
+  <!-- CTA chip -->
+  <rect x="66" y="276" width="436" height="38" rx="9" fill="#0c1432" stroke="#2f3c74"/>
+  <circle cx="86" cy="295" r="4.5" fill="#ef6f6f"/><circle cx="101" cy="295" r="4.5" fill="#e7c66b"/><circle cx="116" cy="295" r="4.5" fill="#74d99f"/>
+  <text x="136" y="300" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15.5" fill="#8ff0d4">$ npx skills add tjboudreaux/rosetta</text>
 
-  <!-- right: many transcripts → one ground truth -->
+  <!-- RIGHT: many transcripts -> one ground truth -->
   <g>
-    <!-- transcript cards -->
-    <g fill="#141d44" stroke="#2e3b72">
-      <rect x="828" y="70" width="74" height="92" rx="8"/>
-      <rect x="828" y="172" width="74" height="78" rx="8"/>
-      <rect x="912" y="58" width="74" height="104" rx="8"/>
-      <rect x="912" y="172" width="74" height="90" rx="8"/>
+    <g transform="translate(712,64)" opacity="0.7">
+      <rect width="156" height="44" rx="8" fill="#131d45" stroke="#2c396f"/>
+      <rect width="5" height="44" rx="2.5" fill="#5eead4"/>
+      <rect x="18" y="13" width="78" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="26" width="58" height="5" rx="2.5" fill="#3a4677"/>
     </g>
-    <g stroke="#46538f" stroke-width="3" stroke-linecap="round" opacity="0.8">
-      <path d="M842 92 H888"/><path d="M842 108 H878"/><path d="M842 124 H888"/>
-      <path d="M926 80 H972"/><path d="M926 96 H960"/><path d="M926 112 H972"/>
-      <path d="M842 192 H888"/><path d="M842 208 H878"/>
-      <path d="M926 192 H972"/><path d="M926 208 H966"/>
+    <g transform="translate(712,116)" opacity="0.85">
+      <rect width="156" height="44" rx="8" fill="#131d45" stroke="#2c396f"/>
+      <rect width="5" height="44" rx="2.5" fill="#818cf8"/>
+      <rect x="18" y="13" width="92" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="26" width="64" height="5" rx="2.5" fill="#3a4677"/>
     </g>
-    <!-- converging connectors -->
-    <g stroke="url(#brand)" stroke-width="2.5" fill="none" opacity="0.9">
-      <path d="M986 116 C1040 116, 1052 160, 1092 160"/>
-      <path d="M986 210 C1040 210, 1052 160, 1092 160"/>
-      <path d="M902 116 C1010 96, 1010 160, 1092 160"/>
-      <path d="M902 210 C1010 230, 1010 160, 1092 160"/>
+    <g transform="translate(712,168)">
+      <rect width="156" height="44" rx="8" fill="#16224f" stroke="#39477f"/>
+      <rect width="5" height="44" rx="2.5" fill="#c084fc"/>
+      <rect x="18" y="13" width="84" height="5" rx="2.5" fill="#52609d"/><rect x="18" y="26" width="70" height="5" rx="2.5" fill="#414f86"/>
     </g>
+    <g transform="translate(712,220)" opacity="0.85">
+      <rect width="156" height="44" rx="8" fill="#131d45" stroke="#2c396f"/>
+      <rect width="5" height="44" rx="2.5" fill="#38bdf8"/>
+      <rect x="18" y="13" width="88" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="26" width="60" height="5" rx="2.5" fill="#3a4677"/>
+    </g>
+    <g transform="translate(712,272)" opacity="0.7">
+      <rect width="156" height="44" rx="8" fill="#131d45" stroke="#2c396f"/>
+      <rect width="5" height="44" rx="2.5" fill="#34d399"/>
+      <rect x="18" y="13" width="74" height="5" rx="2.5" fill="#46538f"/><rect x="18" y="26" width="54" height="5" rx="2.5" fill="#3a4677"/>
+    </g>
+
+    <!-- converging connectors funnel into the node -->
+    <g stroke="url(#brand)" stroke-width="2.25" fill="none" opacity="0.85">
+      <path d="M868 86  C 968 86, 1015 190, 1090 190"/>
+      <path d="M868 138 C 968 138, 1030 190, 1090 190"/>
+      <path d="M868 190 H 1090"/>
+      <path d="M868 242 C 968 242, 1030 190, 1090 190"/>
+      <path d="M868 294 C 968 294, 1015 190, 1090 190"/>
+    </g>
+
     <!-- ground-truth node -->
-    <circle cx="1150" cy="160" r="84" fill="url(#glow)"/>
-    <circle cx="1150" cy="160" r="52" fill="#0c1330" stroke="url(#brand)" stroke-width="3"/>
-    <path d="M1130 160 l13 14 l26 -30" stroke="#5eead4" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <text x="1150" y="238" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="14" fill="#c8d3ff">ground-truth.md</text>
-    <text x="1150" y="258" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="13" fill="#8a97c2" letter-spacing="2">ADR · PDR · BDR</text>
+    <circle cx="1150" cy="190" r="104" fill="url(#glow)"/>
+    <circle cx="1150" cy="190" r="60" fill="#0b1330" stroke="url(#brand)" stroke-width="3.5"/>
+    <path d="M1127 190 l15 16 l30 -34" stroke="#5eead4" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="1150" y="283" text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,monospace" font-size="15" fill="#cdd7ff">ground-truth.md</text>
+    <text x="1150" y="304" text-anchor="middle" font-family="ui-sans-serif,-apple-system,Segoe UI,Roboto,sans-serif" font-size="12.5" fill="#8a97c2" letter-spacing="2.5">ADR · PDR · BDR</text>
   </g>
 </svg>
