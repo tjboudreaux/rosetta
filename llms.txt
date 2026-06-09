@@ -1,0 +1,40 @@
+# Rosetta
+
+> Rosetta is an open-source agent skill that reconciles every AI coding agent's local conversation
+> history (across 18 tools — Claude Code, Codex, Gemini CLI, Cursor, Aider, opencode, Cline, Goose,
+> and more) with git history and project docs into one cited "ground truth," and distills it into
+> durable decision records (ADRs, PDRs, BDRs). It is fully local, read-only, and pure-stdlib Python
+> with zero dependencies.
+
+## What it does
+
+- Discovers which projects on a machine have agent conversation history (`rosetta discover`).
+- Reconciles a project's transcripts + git + docs into `.agents/ground-truth.md` — a cited snapshot
+  with a loud coverage map that shows what was found and what was missed.
+- Distills decisions into ADR (architecture), PDR (product), and BDR (business) records, each with
+  provenance citations and a Proposed → Accepted → Superseded status lifecycle.
+- Resolves conflicts with a truth hierarchy: current code / git > committed decisions > docs >
+  latest conversation > older conversation. A thing the transcripts only discussed is recorded as
+  "intended," never asserted as "done."
+
+## Key facts
+
+- Supported agents: 18 transcript stores (Claude Code, Claude Agent-Mode, Codex, Factory/Droid,
+  Cursor, Gemini CLI, opencode, Cline, Continue, Aider, Hermes, Qwen, Roo, Kilo, Goose, Crush,
+  Windsurf, Augment).
+- Privacy: 100% local, read-only, no network calls, no telemetry.
+- Language: Python standard library only — no dependencies, no build step.
+- License: MIT.
+
+## Install
+
+- skills.sh: `npx skills add tjboudreaux/rosetta`
+- GitHub CLI: `gh skill install tjboudreaux/rosetta`
+
+## Docs
+
+- Repository: https://github.com/tjboudreaux/rosetta
+- Getting started: https://github.com/tjboudreaux/rosetta/blob/main/skills/rosetta/docs/getting-started.md
+- Supported agents & discovery: https://github.com/tjboudreaux/rosetta/blob/main/skills/rosetta/docs/agents.md
+- Decision records (ADR/PDR/BDR): https://github.com/tjboudreaux/rosetta/blob/main/skills/rosetta/docs/decisions.md
+- CLI reference: https://github.com/tjboudreaux/rosetta/blob/main/skills/rosetta/docs/cli.md
