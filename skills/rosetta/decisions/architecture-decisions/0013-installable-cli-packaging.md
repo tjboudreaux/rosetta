@@ -1,9 +1,10 @@
 # ADR 0013 — Installable CLI packaging
 
-- Status: Proposed
-- Date: 2026-06-07
+- Status: Accepted (editable install shipped 2026-06-08; portable wheel/PyPI publish deferred)
+- Date: 2026-06-08
+- Decided originally: 2026-06-07
 - Decider: Travis
-- Sources: `claude · 4b80b004 · 2026-06-07` (this conversation, requirement #6)
+- Sources: `claude · 4b80b004 · 2026-06-08` (this conversation, requirement #6); `pyproject.toml`, `rosetta_cli.py`
 - Related: ADR 0011
 
 ## Context
@@ -12,20 +13,28 @@ The thin dispatcher (ADR 0011) requires running `python3 …/scripts/rosetta` or
 the command surface stabilizes, putting `rosetta` on `PATH` is a better experience and makes the tool
 shareable beyond this machine.
 
-## Decision (proposed)
+## Decision
 
-Add a `pyproject.toml` with a `console_scripts` entry point (`rosetta = rosetta.cli:main`), keep the
-runtime pure-stdlib, and publish to PyPI or a private index. Pin a minimum Python version. The thin
-dispatcher's command surface (collect / discover / decisions) carries over unchanged.
+Ship `skills/rosetta/pyproject.toml` + an importable `rosetta_cli.py` with a `[project.scripts]`
+entry point (`rosetta = rosetta_cli:main`), pure-stdlib, `requires-python >=3.8`. The command surface
+(collect / discover / decisions / ingest) carries over from the thin dispatcher unchanged.
+
+```bash
+pip install -e skills/rosetta   # → `rosetta` on PATH; edits to the scripts take effect live
+```
 
 ## Consequences
 
 Positive:
-- `pipx install rosetta` (or similar) → `rosetta` on PATH for any user/CI.
+- `pip install -e` gives `rosetta` on PATH for local/dev use without abandoning the
+  run-the-scripts-directly path (ADR 0011) — both work.
 
-Negative:
-- Packaging, versioning, and release overhead; only worth it once the surface is stable (hence Proposed,
-  after ADR 0011 ships the thin version).
+Negative / open question:
+- **A portable wheel / PyPI / `pipx install` is deferred.** It additionally requires bundling
+  `scripts/` and `templates/` as package data and making `decisions.py`'s `SKILL_ROOT` resolution
+  install-aware — a packaging refactor that trades against the zero-install, direct-run design this
+  skill values. Editable install covers the realistic local case; revisit a published wheel when there
+  is demand to install Rosetta on machines that won't clone the repo.
 
 ## Alternatives considered
 

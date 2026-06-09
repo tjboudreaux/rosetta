@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rosetta-skill"
+version = "0.1.1"
+description = "Reconcile every AI coding agent's conversation history into one cited ground truth, and generate ADR/PDR/BDR decision records."
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "Travis Boudreaux" }]
+keywords = ["agent-skills", "claude-code", "decision-records", "adr", "ground-truth", "context-engineering"]
+
+[project.urls]
+Homepage = "https://github.com/tjboudreaux/rosetta"
+Repository = "https://github.com/tjboudreaux/rosetta"
+
+# Exposes the `rosetta` command. Best installed editable from this directory:
+#   pip install -e skills/rosetta
+# A fully portable wheel/PyPI build additionally needs scripts/ + templates/ bundled as package
+# data (see ADR 0013) — deferred to preserve the zero-install, run-the-scripts-directly design.
+[project.scripts]
+rosetta = "rosetta_cli:main"
+
+[tool.setuptools]
+py-modules = ["rosetta_cli"]
