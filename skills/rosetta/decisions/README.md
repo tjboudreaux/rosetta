@@ -48,6 +48,7 @@ asserted, until code or an explicit human call confirms it.
 | 2026-06-07 | [PDR 0004](product-decisions/0004-ingest-decisions-made-outside-code-and-chat.md) | pdr | Ingest decisions made outside code and agent chat | Proposed |
 | 2026-06-08 | [ADR 0014](architecture-decisions/0014-pluggable-per-agent-parsers-and-registry.md) | adr | Pluggable per-agent parsers + agent registry + ROSETTA_HOME injection | Accepted |
 | 2026-06-08 | [ADR 0015](architecture-decisions/0015-expanded-agent-coverage-and-exclusions.md) | adr | Expanded agent coverage to 18 sources; non-agent exclusion list | Accepted |
+| 2026-06-13 | [ADR 0016](architecture-decisions/0016-incremental-collect-via-processed-session-ledger.md) | adr | Incremental collect via processed-session ledger | Accepted |
 <!-- ROSETTA:TIMELINE:END -->
 
 ## Notable supersessions & nuances

@@ -987,6 +987,32 @@ def write_session_md(path, agent, src, project, data):
     path.write_text("\n".join(lines))
 
 
+# --- processed-session ledger ---------------------------------------------------------
+# Lets `collect` skip sessions it has already normalized. The key is f"{agent}::{unit['id']}",
+# which every agent's resolver already produces uniformly (filename stem, dir name, or a
+# composite like Crush's "{db}-{session_id}") — so this needs no per-agent code.
+def ledger_path(project, override):
+    if override:
+        return Path(override)
+    return Path(project) / ".agents" / "rosetta" / "processed-ledger.json"
+
+
+def load_ledger(path):
+    try:
+        led = json.loads(Path(path).read_text())
+        if isinstance(led, dict) and isinstance(led.get("entries"), dict):
+            return led
+    except Exception:
+        pass
+    return {"version": 1, "entries": {}}   # entries keyed by "agent::id"
+
+
+def save_ledger(path, ledger):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(ledger, indent=2))
+
+
 def main():
     ap = argparse.ArgumentParser(description="Rosetta transcript collector")
     ap.add_argument("--project", default=os.getcwd(), help="project path (default: cwd)")
@@ -998,6 +1024,10 @@ def main():
                     help="also include sessions whose cwd is UNDER the project (monorepo mode)")
     ap.add_argument("--max-chars", type=int, default=4000, help="truncate each message to N chars")
     ap.add_argument("--agents", default=DEFAULT_AGENTS, help="comma-separated subset of agents to scan")
+    ap.add_argument("--reprocess", action="store_true",
+                    help="rebuild every session, ignoring the processed-session ledger (still refreshes it)")
+    ap.add_argument("--processed-ledger", default=None,
+                    help="path to the processed-session ledger (default: <project>/.agents/rosetta/processed-ledger.json)")
     args = ap.parse_args()
 
     if args.all_projects:
@@ -1041,17 +1071,23 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     since = to_utc_iso(args.since + "T00:00:00") if args.since else None
     wanted = [a.strip() for a in args.agents.split(",") if a.strip()]
+    led_path = ledger_path(project, args.processed_ledger)
+    ledger = load_ledger(led_path)
 
     log(f"project: {project}")
     log(f"out: {out}")
+    log(f"ledger: {led_path} ({len(ledger['entries'])} known sessions"
+        f"{', reprocess=on' if args.reprocess else ''})")
 
     manifest = {
         "project": project,
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
-        "options": {"since": since, "include_subdirs": args.include_subdirs, "max_chars": args.max_chars},
+        "options": {"since": since, "include_subdirs": args.include_subdirs,
+                    "max_chars": args.max_chars, "reprocess": args.reprocess,
+                    "ledger": str(led_path)},
         "agents": {},
         "unknown_stores": discovery_sweep(),
-        "totals": {"sessions": 0, "messages": 0, "skipped_lines": 0},
+        "totals": {"sessions": 0, "messages": 0, "skipped_lines": 0, "skipped_sessions": 0},
     }
 
     for agent in wanted:
@@ -1059,7 +1095,7 @@ def main():
         if not spec:
             manifest["agents"][agent] = {"error": "unknown agent (not in registry)"}
             continue
-        entry = {"sessions": 0, "messages": 0, "skipped_lines": 0,
+        entry = {"sessions": 0, "messages": 0, "skipped_lines": 0, "skipped_sessions": 0,
                  "date_range": [None, None], "match_mode": None, "extra": {}, "files": []}
         try:
             res = spec["resolver"](project, args.include_subdirs)
@@ -1083,11 +1119,25 @@ def main():
                 continue
             if since and data["last_ts"] and data["last_ts"] < since:
                 continue
+            key = f"{agent}::{unit['id']}"
+            prev = ledger["entries"].get(key)
+            if prev and not args.reprocess:
+                # activity-aware skip: skip unless the session gained new messages.
+                # No timestamps anywhere -> fall back to id-only skip (already seen).
+                cur_last = data["last_ts"]
+                if cur_last is None or (prev.get("last_ts") and cur_last <= prev["last_ts"]):
+                    entry["skipped_sessions"] += 1
+                    continue
             outname = f"{agent}__{slugify(unit['id'])}.md"
             write_session_md(out / outname, agent, unit["src"], project, data)
             entry["files"].append({"source": unit["src"], "normalized": outname,
                                    "messages": data["kept"], "skipped": data["skipped"],
                                    "first_ts": data["first_ts"], "last_ts": data["last_ts"]})
+            ledger["entries"][key] = {
+                "last_ts": data["last_ts"], "first_ts": data["first_ts"],
+                "source": unit["src"], "normalized": outname,
+                "processed_at": manifest["generated_at"],
+            }
             entry["sessions"] += 1
             entry["messages"] += data["kept"]
             entry["skipped_lines"] += data["skipped"]
@@ -1101,12 +1151,16 @@ def main():
         manifest["totals"]["sessions"] += entry["sessions"]
         manifest["totals"]["messages"] += entry["messages"]
         manifest["totals"]["skipped_lines"] += entry["skipped_lines"]
-        log(f"{agent}: {entry['sessions']} sessions, {entry['messages']} messages "
+        manifest["totals"]["skipped_sessions"] += entry["skipped_sessions"]
+        skipped_note = f", {entry['skipped_sessions']} skipped (already processed)" if entry["skipped_sessions"] else ""
+        log(f"{agent}: {entry['sessions']} sessions, {entry['messages']} messages{skipped_note} "
             f"({res['match_mode']}); extra={res['extra']}")
 
     with open(out / "manifest.json", "w") as fh:
         json.dump(manifest, fh, indent=2)
     log(f"wrote {out / 'manifest.json'}")
+    save_ledger(led_path, ledger)
+    log(f"updated ledger: {led_path} ({len(ledger['entries'])} sessions)")
     print(json.dumps(manifest["totals"]))
 
 
