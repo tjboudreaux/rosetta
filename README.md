@@ -172,6 +172,7 @@ Each record carries `Sources:` provenance (`agent · session-id · date`, a comm
 
 ```bash
 rosetta collect   --project <path> --out <dir>   # gather + normalize a project's transcripts
+                                                 #   (skips already-processed sessions; --reprocess rebuilds all)
 rosetta discover  [--out <dir>]                  # machine-wide index of projects with history
 rosetta decisions new|index|validate             # scaffold / index / validate the decision library
 rosetta ingest    --root ./decisions --from x.json   # external decisions (meetings/Slack) -> Proposed records

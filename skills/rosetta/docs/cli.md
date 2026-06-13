@@ -24,9 +24,16 @@ rosetta collect --project <path> --out <dir> [flags]
 | `--since YYYY-MM-DD` | Only sessions active on/after this date. |
 | `--include-subdirs` | Monorepo mode: also include sessions whose cwd is *under* the project. |
 | `--max-chars N` | Truncate each message to N chars (default 4000). |
+| `--reprocess` | Rebuild every session, ignoring the processed-session ledger (the ledger is still refreshed). |
+| `--processed-ledger <path>` | Override the ledger location (default: `<project>/.agents/rosetta/processed-ledger.json`). |
 
-The `manifest.json` reports, per agent: sessions, messages, date range, match mode, and `extra`
-counters for unmatchable history (`sessions_without_cwd`, `flat_files_without_cwd`,
+By default `collect` skips sessions it has already processed, keyed by `<agent>::<session-id>` in
+the processed-session ledger. The skip is activity-aware: a session is re-processed only if it
+gained new messages since the last run, so the out dir holds the new/changed delta. Use
+`--reprocess` for a full rebuild.
+
+The `manifest.json` reports, per agent: sessions, messages, `skipped_sessions`, date range, match
+mode, and `extra` counters for unmatchable history (`sessions_without_cwd`, `flat_files_without_cwd`,
 `request_dumps_excluded`) plus `unknown_stores`.
 
 ## `rosetta discover` — machine-wide project index

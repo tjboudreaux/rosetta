@@ -51,6 +51,29 @@ Useful flags: `--include-subdirs` (monorepo mode — pulls cwd at or under the p
 truncation). The script prints a totals line to stdout and writes `manifest.json` + one
 `<agent>__<session>.md` per matched session into the out dir.
 
+By default, `collect` **skips sessions it has already processed** — it keeps a
+`<project>/.agents/rosetta/processed-ledger.json` keyed by `<agent>::<session-id>` (the uniform
+id every resolver produces). A skip is activity-aware: a session is re-processed only if it gained
+new messages (its last activity advanced) since the last run; otherwise the out dir holds just the
+new/changed delta. Pass `--reprocess` to ignore the ledger and rebuild every session (the ledger is
+still refreshed), or `--processed-ledger <path>` to point at a different ledger file. The
+per-agent and totals lines report `skipped_sessions`.
+
+**Incremental update vs. fresh build — this is where you save tokens.** `collect` itself spends no
+model tokens; the cost is downstream, where the Step-4 subagents read the `.md` files in the out
+dir. So the ledger only pays off if you let the out dir stay a delta:
+
+- **Catching up an existing `ground-truth.md`** (the common case): run `collect` normally (skip on),
+  then in Step 4 digest **only** the delta `.md` files now in the out dir, and in Step 8 **merge**
+  those digests into the existing doc in place — do not re-read prior sessions. Token cost scales
+  with what changed, not with total history.
+- **First build, or a deliberate from-scratch rebuild:** there is no prior doc to merge into, so the
+  delta is not enough — run with `--reprocess` so the out dir holds the full corpus. This is the
+  expensive path; use it only when you actually need to regenerate everything.
+
+A caveat for the incremental path: a session that *grew* is re-emitted whole (not just its new
+turns), so its full text is re-read once — correct for reconciliation, but not free.
+
 If the user doesn't know which project — "what have I worked on?", "which projects have agent
 history?" — run `collect.py --all-projects` first. It emits a machine-wide `projects-index.{json,md}`
 (project cwd ↔ per-agent session counts ↔ activity range) cheaply, with no per-session parsing, so
@@ -189,5 +212,9 @@ scaffolder is shipped; the live-MCP connectors are unverified — treat ingested
 - The out dir under `.agents/rosetta/<run>/` holds the normalized sessions + manifest for audit;
   it's regenerable and safe to add to `.gitignore`.
 - Re-running is cheap and idempotent — it refreshes the doc rather than duplicating it.
+- Re-running is also cheap in **tokens**: by default `collect` skips already-processed sessions, so
+  a catch-up run leaves only the changed delta for the Step-4 subagents to read. Merge that delta
+  into the existing `ground-truth.md` in place; reach for `--reprocess` (full token cost) only for a
+  genuine from-scratch rebuild.
 - To support a new agent later, add it to `references/agent-stores.md` and a resolver in
   `collect.py`; the discovery sweep already flags unknown stores so you know when one appears.
