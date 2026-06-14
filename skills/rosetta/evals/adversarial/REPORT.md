@@ -118,8 +118,8 @@ _29 anti-patterns in `A:deterministic`_
 _Three lenses on what the product is worth, not what the evals cost. Cost = solver tokens (the system under test). **$/correct** = cost per *passed* scenario, so failing cheap looks expensive, not free, and is **withheld below the 80% efficacy gate**. `~$` = estimated from total tokens × a blended rate (`pricing.json`); exact in/out pricing is used when a split is present._
 
 - **Same correctness, fewer tokens (`base` set):** at 100% both pass, but `B:sonnet-rosetta` costs **~3% less per correct answer** than `B:sonnet-naive` (~$0.152 vs ~$0.157).
-- **SoTA on a cheaper model (`hard` set):** `B:haiku-rosetta` (rosetta) matches the opus baseline's 100% correctness — 100% vs 100% — at **~24× lower est cost/correct** (~$0.047 vs ~$1.139).
-- **Same correctness, fewer tokens (`hard` set):** at 100% both pass, but `B:haiku-rosetta` costs **~25× less per correct answer** than `B:opus-rosetta` (~$0.047 vs ~$1.183).
+- **SoTA on a cheaper model (`hard` set):** `B:haiku-rosetta` (rosetta) matches the opus baseline's 100% correctness — 100% vs 100% — at **~7× lower est cost/correct** (~$0.058 vs ~$0.380).
+- **Same correctness, fewer tokens (`hard` set):** at 100% both pass, but `B:haiku-rosetta` costs **~7× less per correct answer** than `B:opus-rosetta` (~$0.058 vs ~$0.394).
 
 | Run | Tier | Condition | Set | Pass-rate | Failed | Tokens | $/correct |
 |---|---|---|---|---|---|---|---|
@@ -127,10 +127,10 @@ _Three lenses on what the product is worth, not what the evals cost. Cost = solv
 | B:sonnet-notools | sonnet | notools | base | 0% | 5 | 108,523 | ⚠️ withheld (<80%) |
 | B:sonnet-rosetta | sonnet | rosetta | base | 100% | 0 | 115,223 | ~$0.152 |
 | B:haiku-notools | haiku | notools | base | 0% | 5 | 116,018 | ⚠️ withheld (<80%) |
-| B:opus-base | opus | baseline | hard | 100% | 0 | 103,524 | ~$1.139 |
-| B:opus-rosetta | opus | rosetta | hard | 100% | 0 | 107,569 | ~$1.183 |
+| B:opus-base | opus | baseline | hard | 100% | 0 | 103,524 | ~$0.380 |
+| B:opus-rosetta | opus | rosetta | hard | 100% | 0 | 107,569 | ~$0.394 |
 | B:haiku-base | haiku | baseline | hard | 33% | 2 | 75,422 | ⚠️ withheld (<80%) |
-| B:haiku-rosetta | haiku | rosetta | hard | 100% | 0 | 79,312 | ~$0.047 |
+| B:haiku-rosetta | haiku | rosetta | hard | 100% | 0 | 79,312 | ~$0.058 |
 
 ## Per-test detail
 

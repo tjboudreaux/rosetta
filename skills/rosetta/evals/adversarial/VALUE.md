@@ -20,12 +20,16 @@ input/output pricing is used when a run carries a split).
 
 Each cell is a tool-enabled solver on the 3 hard scenarios, graded by an independent Sonnet judge.
 
+_$ uses the **verified 2026-06 price sheet** (Opus 4.8 $5/$25, Haiku 4.5 $1/$5 per 1M in/out;
+blended 70/30). An earlier draft used wrong Opus rates ($15/$75) and overstated the multiple as ~24×;
+the verified figure is ~7×._
+
 | Condition | Correctness | Est. $/correct |
 |---|---|---|
-| **Opus, no scaffolding** (SoTA baseline) | **3/3 (100%)** | ~$1.14 |
+| **Opus, no scaffolding** (SoTA baseline) | **3/3 (100%)** | ~$0.38 |
 | Haiku, no scaffolding | 1/3 (33%) | withheld (<80%) |
-| **Haiku + Rosetta** (cheap + product) | **3/3 (100%)** | **~$0.047** |
-| Opus + Rosetta | 3/3 (100%) | ~$1.18 |
+| **Haiku + Rosetta** (cheap + product) | **3/3 (100%)** | **~$0.058** |
+| Opus + Rosetta | 3/3 (100%) | ~$0.39 |
 
 **The three lenses, from one experiment:**
 
@@ -34,8 +38,9 @@ Each cell is a tool-enabled solver on the 3 hard scenarios, graded by an indepen
    tokens than the naive prompt; on the hard suite, Haiku+Rosetta reaches the same 100% as Opus for
    **~25× less per correct answer**.
 3. **SoTA on a cheaper model:** unaided Haiku scores **33%** on the hard suite; **Haiku + Rosetta
-   scaffolding scores 100% — matching the Opus baseline — at ~24× lower estimated cost per correct
-   answer.** The product is the difference between the 33% and the 100% column. The two Haiku failures
+   scaffolding scores 100% — matching the Opus baseline — at ~7× lower estimated cost per correct
+   answer** (verified prices; ~5× cheaper per token × similar token counts). The product is the
+   difference between the 33% and the 100% column. The two Haiku failures
    without scaffolding were a confident-hedge (citing a "Redis shipped" chat claim as current) and a
    dropped gold claim — exactly the failure modes the truth-hierarchy + skeptic pass prevent.
 
@@ -47,8 +52,9 @@ model's reconciliation correctness onto a distilled model an order of magnitude 
 - **Single sample per cell.** No k≥3 yet; treat the grid as directional. The earlier Codex/Gemini
   reviews asked for k≥3 + median before quoting cost numbers externally — do that before publishing.
 - **$ is estimated** from total tokens × a blended 70/30 rate, because the subagent harness reports a
-  total, not an input/output split. The *ratio* between tiers (~19× per token) is robust; the absolute
-  dollars are illustrative. Capture an input/output split to get exact `$`.
+  total, not an input/output split. Prices are the verified 2026-06 sheet (`pricing.json`); the
+  per-token ratio Opus:Haiku is ~5× (blended $11.0 vs $2.2 per 1M). Capture an input/output split for
+  exact `$`.
 - **Small N (3 hard scenarios).** Widen the hard suite before treating the 33%→100% lift as a precise
   effect size; the direction is clear and blind-judged.
 - Same model family (Sonnet) judged all cells — guards against in-context bias, not a shared blind spot.
