@@ -24,15 +24,18 @@ whether it reasoned correctly.
 
 ## Files
 
-- `dataset.json` — 29 scenarios. 23 test the reconcile→ground-truth path across every resolver/store
+- `dataset.json` — 32 scenarios. 23 test the reconcile→ground-truth path across every resolver/store
   class (project-encoded, date-bucketed, Cursor encoded-dir, Gemini basename, opencode message-dir,
   Goose file-jsonl, fuzzy path-mention, Aider file, Crush database, unknown-store). 6 test the
   decision-library half of the workflow: `decision-supersession-lookup-{5,25,100,250}` (a
   **size-parameterized** family that seeds an N-ADR library with a buried needle + near-miss
   distractor, to measure judgment drift with library size), `decision-already-recorded` (dedup), and
-  `incremental-ground-truth-merge` (update a prior doc in place). Each has a solver-visible `prompt`
-  and a `judge_only` block (gold claims + rubric). **`judge_only` is never written to a fixture and
-  never given to the solver.** See `RESULTS.md` for the latest run incl. the drift curve.
+  `incremental-ground-truth-merge` (update a prior doc in place). **3 are the v2 hard suite**
+  (`silent-revert-refactor`, `semantic-evasion-cache`, `release-gate-composite`) — built to break the
+  grep-and-pattern-match strategy that lets a tool-enabled SoTA solver ceiling the base suite; see
+  `HARD-SUITE.md`. Each has a solver-visible `prompt` and a `judge_only` block (gold claims + rubric).
+  **`judge_only` is never written to a fixture and never given to the solver.** See `RESULTS.md` and
+  `REVIEW-ablation.md` for runs; `HARD-SUITE.md` for the difficulty contract.
 - `fixtures.py` — one builder per scenario: writes a synthetic `$HOME` (multi-agent transcript stores
   in their real on-disk shapes) + a project checkout with real code/docs and best-effort git history.
   Returns the planted facts (expected sessions, anchors, markers, banned tokens).
@@ -41,8 +44,15 @@ whether it reasoned correctly.
 - `judge_prompt.md` — the reference Tier-B judge protocol (claim extraction → classification →
   claim-support verification → structured JSON verdict). Resists keyword-gaming and confident hedges.
 - `report.py` — pure-stdlib renderer: turns one or more `rosetta-eval-results/v1` JSON files into a
-  visual report (`REPORT.md` scorecard + scenario×run matrix + an SVG drift curve + discrimination
-  panel, and an optional self-contained `REPORT.html`).
+  visual report — a computed **CALIBRATED: YES/NO/UNKNOWN** verdict (applies CALIBRATION.md's gates),
+  scorecard with per-run scoring provenance, scenario×run matrix, drift curve (Tier-A excluded),
+  discrimination panel, and a **cost-efficiency** panel (`REPORT.md` + optional `REPORT.html`).
+- `pricing.json` — versioned price sheet (USD per 1M tokens). The cost panel computes `$/pass` from it
+  when a run carries an input/output token split, so rates never get hardcoded into `report.py`.
+- Cost dimension: results may carry per-scenario/run `tokens` ({input,output,total}). The report shows
+  total tokens, ECI (output ×5 when split present), **CPPS** (cost per *passed* scenario — failing
+  cheap looks expensive, not free), and `$/pass`, with efficiency **withheld below an 80% efficacy
+  gate** so "cheap but wrong" can't look good. Hardened against Codex/Gemini red-team review.
 
 ## Reporting
 

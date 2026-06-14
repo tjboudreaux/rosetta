@@ -1,0 +1,17 @@
+{
+  "schema": "rosetta-eval-pricing/v1",
+  "_note": "Versioned price sheet so dollar-cost is comparable across models without hardcoding stale rates in report.py. Rates are USD per 1,000,000 tokens. A results run references a sheet via price_sheet_id; report.py computes $ cost only when a run carries an input/output token split (the two are priced differently). Update effective_at + bump id when rates change; never edit a published id in place.",
+  "sheets": {
+    "2026-06": {
+      "effective_at": "2026-06-01",
+      "currency": "USD",
+      "unit": "per_1m_tokens",
+      "source": "list prices as of 2026-06; verify before quoting externally",
+      "models": {
+        "opus":   {"input": 15.0, "output": 75.0},
+        "sonnet": {"input": 3.0,  "output": 15.0},
+        "haiku":  {"input": 0.80, "output": 4.0}
+      }
+    }
+  }
+}

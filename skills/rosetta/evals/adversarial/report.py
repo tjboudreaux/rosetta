@@ -214,6 +214,144 @@ def discrimination_md(runs):
     return f"## Discrimination ({len(discriminating)} scenarios separate runs)\n\n{body}"
 
 
+# Output tokens cost far more (price + latency) than input; weight them when an in/out split
+# exists. ECI = input + OUTPUT_WEIGHT*output. Avoids hardcoding $ prices while honoring economics.
+OUTPUT_WEIGHT = 5
+# Efficiency of a broken system is meaningless — don't reward "cheap but wrong". Withhold
+# cost-efficiency for any run whose pass-rate is below this gate (CALIBRATION.md Sonnet tier).
+EFFICACY_GATE = 80.0
+
+
+def _run_tokens(run):
+    """Return {total, eci, has_split} for a run, summing scenarios or using a run-level block.
+
+    `total` is raw tokens; `eci` weights output at OUTPUT_WEIGHT when an input/output split is
+    present (else equals total). Returns None if the run carries no token data at all.
+    """
+    tot = inp = out = 0
+    seen = has_split = False
+    for s in run["scenarios"]:
+        tk = s.get("tokens")
+        if not tk:
+            continue
+        seen = True
+        tot += tk.get("total", (tk.get("input", 0) + tk.get("output", 0)))
+        if "input" in tk or "output" in tk:
+            has_split = True
+            inp += tk.get("input", 0)
+            out += tk.get("output", 0)
+    if not seen and run.get("tokens"):
+        tk = run["tokens"]
+        seen = True
+        tot = tk.get("total", (tk.get("input", 0) + tk.get("output", 0)))
+        if "input" in tk or "output" in tk:
+            has_split = True
+            inp, out = tk.get("input", 0), tk.get("output", 0)
+    if not seen:
+        return None
+    eci = (inp + OUTPUT_WEIGHT * out) if has_split else tot
+    return {"total": tot, "eci": eci, "has_split": has_split}
+
+
+_PRICING_CACHE = {}
+
+
+def _load_pricing():
+    """Load the sibling pricing.json once. Dollar cost stays out of report.py — it lives in a
+    versioned sheet so rates can't silently rot in code (Codex review P0)."""
+    if "loaded" not in _PRICING_CACHE:
+        p = Path(__file__).resolve().parent / "pricing.json"
+        try:
+            _PRICING_CACHE["data"] = json.loads(p.read_text()).get("sheets", {})
+        except (OSError, ValueError):
+            _PRICING_CACHE["data"] = {}
+        _PRICING_CACHE["loaded"] = True
+    return _PRICING_CACHE["data"]
+
+
+def _price_base(model, sheet):
+    """Map a run model label (e.g. 'sonnet-notools') to the longest matching base model in a sheet."""
+    models = sheet.get("models", {})
+    cands = [m for m in models if model == m or model.startswith(m + "-")]
+    return max(cands, key=len) if cands else None
+
+
+def _dollar_cost(run):
+    """USD cost for a run — only when it carries an input/output split AND a resolvable price.
+    Returns None otherwise (we never invent a price-weighted total from total-only tokens)."""
+    sheets = _load_pricing()
+    sid = run.get("price_sheet_id") or (next(iter(sheets)) if len(sheets) == 1 else None)
+    sheet = sheets.get(sid) if sid else None
+    if not sheet:
+        return None
+    base = _price_base(run.get("model", ""), sheet)
+    if not base:
+        return None
+    rate = sheet["models"][base]
+    inp = out = 0
+    seen = False
+    for s in run["scenarios"]:
+        tk = s.get("tokens") or {}
+        if "input" in tk or "output" in tk:
+            seen = True
+            inp += tk.get("input", 0)
+            out += tk.get("output", 0)
+    rtk = run.get("tokens") or {}
+    if not seen and ("input" in rtk or "output" in rtk):
+        seen, inp, out = True, rtk.get("input", 0), rtk.get("output", 0)
+    if not seen:
+        return None
+    return inp / 1e6 * rate["input"] + out / 1e6 * rate["output"]
+
+
+def _cost_row(run):
+    """Compute the cost-efficiency view for one run, applying the efficacy gate."""
+    tk = _run_tokens(run)
+    if not tk:
+        return None
+    passed, done, rate = _rate(run)
+    failed = sum(1 for s in run["scenarios"] if s["status"] == "fail")
+    gated = rate < EFFICACY_GATE
+    # Cost per passed scenario: you pay for failed runs but they don't help the denominator.
+    cpps = (tk["eci"] / passed) if passed else None
+    usd = _dollar_cost(run)
+    usd_pp = (usd / passed) if (usd is not None and passed) else None
+    return {"label": _label(run), "total": tk["total"], "eci": tk["eci"],
+            "has_split": tk["has_split"], "passed": passed, "done": done, "failed": failed,
+            "rate": rate, "cpps": cpps, "gated": gated, "usd": usd, "usd_pp": usd_pp}
+
+
+def cost_md(runs):
+    rows = [r for r in (_cost_row(run) for run in runs) if r]
+    if not rows:
+        return ""
+    out = ["## Cost efficiency",
+           "", f"_Cost = solver tokens (system under test). **Cost-per-passed-scenario (CPPS)** "
+           f"charges all tokens but only credits passes, so failing cheap looks expensive, not free. "
+           f"Efficiency is **withheld** below the {EFFICACY_GATE:.0f}% efficacy gate — a broken system "
+           f"has no meaningful efficiency. ECI weights output ×{OUTPUT_WEIGHT} when an input/output "
+           f"split is present._", "",
+           "| Run | Pass-rate | Failed | Total tokens | ECI | CPPS (ECI/pass) | $/pass |",
+           "|---|---|---|---|---|---|---|"]
+    for r in rows:
+        eci = f"{r['eci']:,}" + ("" if r["has_split"] else " *(=total; no split)*")
+        if r["gated"]:
+            cpps = f"⚠️ withheld (<{EFFICACY_GATE:.0f}%)"
+        elif r["cpps"] is None:
+            cpps = "— (0 passed)"
+        else:
+            cpps = f"{r['cpps']:,.0f}"
+        if r["gated"]:
+            usd = "⚠️ withheld"
+        elif r["usd_pp"] is None:
+            usd = "— *(needs in/out split)*"
+        else:
+            usd = f"${r['usd_pp']:,.4f}"
+        out.append(f"| {r['label']} | {r['rate']:.0f}% | {r['failed']} | {r['total']:,} | "
+                   f"{eci} | {cpps} | {usd} |")
+    return "\n".join(out)
+
+
 def drift_svg(runs):
     """SVG line chart: x = decision-library size (drift_size), y = pass-rate %, one series per run.
 
@@ -319,7 +457,7 @@ def build_markdown(runs, svg_ref):
                   "judgment. A flat line here is a ceiling check, not evidence of quality._",
                   "", f"![drift curve]({svg_ref})", ""]
     parts += [antipattern_md(runs), "", matrix_md(runs), "", discrimination_md(runs), "",
-              detail_md(runs), ""]
+              cost_md(runs), "", detail_md(runs), ""]
     return "\n".join(pt for pt in parts if pt is not None) + "\n"
 
 
@@ -400,6 +538,39 @@ def matrix_html(runs):
             f"<table><thead><tr><th>Scenario</th>{head}</tr></thead><tbody>{body}</tbody></table></details>")
 
 
+def cost_html(runs):
+    rows = [r for r in (_cost_row(run) for run in runs) if r]
+    if not rows:
+        return ""
+    body = ""
+    for r in rows:
+        eci = f"{r['eci']:,}" + ("" if r["has_split"] else " <span class=muted>(=total)</span>")
+        if r["gated"]:
+            cpps = f"<span class=muted>⚠️ withheld (&lt;{EFFICACY_GATE:.0f}%)</span>"
+        elif r["cpps"] is None:
+            cpps = "<span class=muted>— (0 passed)</span>"
+        else:
+            cpps = f"{r['cpps']:,.0f}"
+        if r["gated"]:
+            usd = "<span class=muted>⚠️ withheld</span>"
+        elif r["usd_pp"] is None:
+            usd = "<span class=muted>— (needs in/out split)</span>"
+        else:
+            usd = f"${r['usd_pp']:,.4f}"
+        body += (f"<tr><td><code>{_esc(r['label'])}</code></td><td>{r['rate']:.0f}%</td>"
+                 f"<td>{r['failed']}</td><td>{r['total']:,}</td><td>{eci}</td><td>{cpps}</td>"
+                 f"<td>{usd}</td></tr>")
+    return ("<h2>Cost efficiency</h2>"
+            f"<p class=muted>Cost = solver tokens (the system under test). "
+            f"<b>Cost-per-passed-scenario (CPPS)</b> charges all tokens but only credits passes, so "
+            f"failing cheap looks expensive, not free. Efficiency is <b>withheld</b> below the "
+            f"{EFFICACY_GATE:.0f}% efficacy gate. ECI weights output ×{OUTPUT_WEIGHT}; $/pass uses the "
+            f"versioned <code>pricing.json</code> and needs an input/output split.</p>"
+            "<table><thead><tr><th>Run</th><th>Pass-rate</th><th>Failed</th><th>Total tokens</th>"
+            f"<th>ECI</th><th>CPPS (ECI/pass)</th><th>$/pass</th></tr></thead>"
+            f"<tbody>{body}</tbody></table>")
+
+
 def build_html(runs, svg_inline):
     cards = "".join(
         f'<div class=card><div class=big>{_rate(r)[2]:.0f}%</div>'
@@ -437,6 +608,7 @@ def build_html(runs, svg_inline):
         "fixture was built, not judgment. A flat line is a ceiling check, not evidence of quality.</p>"
         f"{svg_inline or '<p>No judgment-tier drift data.</p>'}"
         f"{discrimination_html(runs)}"
+        f"{cost_html(runs)}"
         f"{matrix_html(runs)}"
         f"{detail_html(runs)}</html>")
 
