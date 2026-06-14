@@ -14,6 +14,21 @@ __pycache__/
 venv/
 .pytest_cache/
 
+# Coverage (CI/dev tool; .coveragerc IS committed, data files are not)
+.coverage
+.coverage.*
+htmlcov/
+
+# Regenerable decision-library caches (the committed README timeline is the canonical index;
+# INDEX.json + the numbering counter are derived by `decisions.py index` and would only drift in git)
+skills/rosetta/decisions/.counter.json
+skills/rosetta/decisions/INDEX.json
+
+# Eval report build artifacts (REPORT.md + REPORT.drift.svg are committed as a rendered example;
+# the Tier-A results json and the heavy HTML dashboard are regenerable — see evals/adversarial/README)
+skills/rosetta/evals/adversarial/results-tier-a.json
+skills/rosetta/evals/adversarial/REPORT.html
+
 # Editor / OS
 *.swp
 *~

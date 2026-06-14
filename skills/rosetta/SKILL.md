@@ -201,6 +201,24 @@ reconciled history into a decision library (see `references/decision-schema.md` 
 - Teams customize types/dirs/fields/templates via a `config.json` at the decisions root — adapt to
   their conventions rather than imposing rosetta's.
 
+**Operating over a LARGE decision library — query, never slurp.** A mature project may carry
+thousands of records; reading the whole `decisions/` tree into context does not scale and is never
+necessary. The CLI is the index — use it deterministically (no tokens) instead:
+
+- **Before recording a new decision, check it isn't already captured:** `decisions.py search --text
+  "<topic>"` (also `--type` / `--status`) returns just the matching records as JSON. If an existing
+  ADR already records it, cite that one — do not create a duplicate.
+- **Read a specific record in full** with `decisions.py get "ADR 0042"` — pull the one record you
+  need, not the library.
+- **Reverse a prior decision deterministically** with `decisions.py supersede "ADR 0042" --by "ADR
+  0098"` — it flips the old record's `Status` to `Superseded by ADR 0098` and sets the new record's
+  `Supersedes` line. Don't hand-edit status among thousands of files; let the tool do it, then
+  `index` + `validate`.
+- `decisions.py index` also emits a machine-readable `INDEX.json` (id · type · title · status · date ·
+  path) you can read once to orient, and maintains an O(1) numbering counter so `new` stays fast at
+  any library size. Numbering, search, and supersession are all O(1)/O(n)-deterministic — spend model
+  tokens only on the judgment of *which* record matters, never on scanning the corpus.
+
 Decisions made **outside** code and agent chat (meetings via Circleback, Slack threads, trackers) can
 be ingested too: query the source's MCP tools for the project/time window, emit the extracted decisions
 as a JSON array, and pipe it to `scripts/ingest.py` (`rosetta ingest`) — it writes one `Status: Proposed`

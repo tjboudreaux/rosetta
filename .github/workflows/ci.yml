@@ -24,10 +24,29 @@ jobs:
             skills/rosetta/scripts/decisions.py \
             skills/rosetta/scripts/ingest.py \
             skills/rosetta/scripts/rosetta \
-            skills/rosetta/rosetta_cli.py
+            skills/rosetta/rosetta_cli.py \
+            skills/rosetta/evals/adversarial/fixtures.py \
+            skills/rosetta/evals/adversarial/run_evals.py \
+            skills/rosetta/evals/adversarial/report.py
 
       - name: Unit tests (all 18 agent resolvers + parsers, ingest)
         run: python -m unittest discover -s skills/rosetta/tests -v
 
       - name: Validate decision library
         run: python skills/rosetta/scripts/decisions.py --root skills/rosetta/decisions validate
+
+  coverage:
+    # Separate job so the matrix test job above stays pure-stdlib (zero deps, per ADR 0013).
+    # coverage.py is a CI/dev-only tool; it is not a runtime dependency of the shipped skill.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install coverage
+      - name: Coverage gate (fail under 90%)
+        working-directory: skills/rosetta
+        run: |
+          coverage run -m unittest discover -s tests
+          coverage report   # fail_under = 90 enforced via .coveragerc

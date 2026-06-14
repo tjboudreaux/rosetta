@@ -1,0 +1,17 @@
+# Coverage config for the test suite. coverage.py is a CI/dev-only tool — it is NOT a runtime
+# dependency of the skill (the shipped CLI stays pure stdlib, per ADR 0013). Run from skills/rosetta:
+#   coverage run -m unittest discover -s tests && coverage report
+[run]
+branch = True
+source =
+    scripts
+    evals/adversarial
+
+[report]
+fail_under = 90
+show_missing = True
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
+    raise NotImplementedError
+    sys.exit\(main\(\)\)
