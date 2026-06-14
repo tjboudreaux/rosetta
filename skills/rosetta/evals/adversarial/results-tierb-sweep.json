@@ -1,0 +1,1210 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "_note": "Full cross-harness validation sweep (2026-06-14): 14 models x 3 hard scenarios x {baseline,rosetta}, IDENTICAL inlined inputs (in-context, no tools), each output blind-judged by an independent Sonnet judge against the withheld gold. Tokens estimated from prompt+output char counts /4 (codex/droid outputs include CLI chrome -> their token/$ are upper bounds; droid is multiplier-priced so $ is omitted). gemma-4-31b-it omitted (Google quota block).",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "claude:haiku",
+      "model_tier": "haiku",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 8556
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2753
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2779
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3024
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "claude:haiku",
+      "model_tier": "haiku",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 10401
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3173
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3346
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3882
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "claude:opus",
+      "model_tier": "opus",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 9086
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3102
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2906
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3078
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "claude:opus",
+      "model_tier": "opus",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 11599
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3774
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3898
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3927
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "claude:sonnet",
+      "model_tier": "sonnet",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 8920
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2972
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2810
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3138
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "claude:sonnet",
+      "model_tier": "sonnet",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "claude",
+      "tokens": {
+        "total": 10225
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3588
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3015
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3622
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "codex:gpt-5_4",
+      "model_tier": "gpt-5.4",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "codex",
+      "tokens": {
+        "total": 27980
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 6053
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 11867
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 10060
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "codex:gpt-5_4",
+      "model_tier": "gpt-5.4",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "codex",
+      "tokens": {
+        "total": 37497
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 13080
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 12224
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 12193
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "codex:gpt-5_5",
+      "model_tier": "gpt-5.5",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "codex",
+      "tokens": {
+        "total": 28727
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 10291
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 9251
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 9185
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "codex:gpt-5_5",
+      "model_tier": "gpt-5.5",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "codex",
+      "tokens": {
+        "total": 30275
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 10335
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 9628
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 10312
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:deepseek-v4-pro",
+      "model_tier": "deepseek-v4-pro",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 9456
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3565
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2694
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3197
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:deepseek-v4-pro",
+      "model_tier": "deepseek-v4-pro",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 11952
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 4322
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3654
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3976
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:glm-5_1",
+      "model_tier": "glm-5_1",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 8627
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3035
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2727
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 2865
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:glm-5_1",
+      "model_tier": "glm-5_1",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 10733
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3821
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3344
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3568
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:kimi-k2_6",
+      "model_tier": "kimi-k2_6",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 8559
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2918
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2812
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 2829
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:kimi-k2_6",
+      "model_tier": "kimi-k2_6",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 10124
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3355
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3363
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3406
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:minimax-m2_7",
+      "model_tier": "minimax-m2_7",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 7905
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2627
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2555
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 2723
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:minimax-m2_7",
+      "model_tier": "minimax-m2_7",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 9978
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3493
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3160
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3325
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:nemotron-3-ultra",
+      "model_tier": "nemotron-3-ultra",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 8260
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2736
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "fail",
+          "tokens": {
+            "total": 2407
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3117
+          }
+        }
+      ],
+      "totals": {
+        "passed": 2,
+        "failed": 1,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "droid:nemotron-3-ultra",
+      "model_tier": "nemotron-3-ultra",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "droid",
+      "tokens": {
+        "total": 10846
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3479
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3500
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3867
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3-flash-preview",
+      "model_tier": "gemini-3-flash-preview",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 8179
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2762
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "fail",
+          "tokens": {
+            "total": 2597
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 2820
+          }
+        }
+      ],
+      "totals": {
+        "passed": 2,
+        "failed": 1,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3-flash-preview",
+      "model_tier": "gemini-3-flash-preview",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 9115
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3045
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2987
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "fail",
+          "tokens": {
+            "total": 3083
+          }
+        }
+      ],
+      "totals": {
+        "passed": 2,
+        "failed": 1,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_1-flash-lite",
+      "model_tier": "gemini-3.1-flash-lite",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 7627
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2491
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "fail",
+          "tokens": {
+            "total": 2532
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "fail",
+          "tokens": {
+            "total": 2604
+          }
+        }
+      ],
+      "totals": {
+        "passed": 1,
+        "failed": 2,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_1-flash-lite",
+      "model_tier": "gemini-3.1-flash-lite",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 8744
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2926
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2864
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "fail",
+          "tokens": {
+            "total": 2954
+          }
+        }
+      ],
+      "totals": {
+        "passed": 2,
+        "failed": 1,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_1-pro-preview",
+      "model_tier": "gemini-3.1-pro",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 7860
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2566
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 2566
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 2728
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_1-pro-preview",
+      "model_tier": "gemini-3.1-pro",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 9299
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 2764
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3166
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3369
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_5-flash",
+      "model_tier": "gemini-3.5-flash",
+      "condition": "baseline",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 9679
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3399
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3167
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 3113
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    },
+    {
+      "tier": "B",
+      "model": "gemini:gemini-3_5-flash",
+      "model_tier": "gemini-3.5-flash",
+      "condition": "rosetta",
+      "scenario_set": "hard-incontext",
+      "harness": "gemini",
+      "tokens": {
+        "total": 11507
+      },
+      "scenarios": [
+        {
+          "id": "silent-revert-refactor",
+          "anti_pattern": "silent-revert-refactor",
+          "status": "pass",
+          "tokens": {
+            "total": 3931
+          }
+        },
+        {
+          "id": "semantic-evasion-cache",
+          "anti_pattern": "semantic-evasion-cache",
+          "status": "pass",
+          "tokens": {
+            "total": 3477
+          }
+        },
+        {
+          "id": "release-gate-composite",
+          "anti_pattern": "release-gate-composite",
+          "status": "pass",
+          "tokens": {
+            "total": 4099
+          }
+        }
+      ],
+      "totals": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      }
+    }
+  ]
+}
