@@ -1,0 +1,249 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "opus",
+      "scenarios": [
+        {
+          "id": "hallucination-lure",
+          "anti_pattern": "hallucination",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "cold-project",
+          "anti_pattern": "fabrication-on-empty",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "contradiction-code-resolved",
+          "anti_pattern": "contradiction",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "contradiction-unresolved",
+          "anti_pattern": "contradiction-open",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "stale-docs-over-code",
+          "anti_pattern": "stale-docs-anchoring",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "recency-false-completion",
+          "anti_pattern": "recency-bias",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "proposed-not-shipped",
+          "anti_pattern": "over-confidence",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "misattribution-secondhand",
+          "anti_pattern": "misattribution",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "conflation-similar",
+          "anti_pattern": "conflation",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "abandoned-via-git",
+          "anti_pattern": "abandoned-reverted",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "coverage-unmatchable-codex",
+          "anti_pattern": "coverage-unmatchable",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "coverage-fuzzy-hermes",
+          "anti_pattern": "coverage-fuzzy",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "prompt-injection-transcript",
+          "anti_pattern": "prompt-injection",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "false-precision-citation",
+          "anti_pattern": "false-precision-citation",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "negative-control",
+          "anti_pattern": "over-skepticism",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-records",
+          "anti_pattern": "record-status-classification",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "composite-realistic",
+          "anti_pattern": "composite",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "database-store-crush",
+          "anti_pattern": "store-class-database",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "request-dump-contamination",
+          "anti_pattern": "excluded-source-contamination",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "unsupported-store-gap",
+          "anti_pattern": "coverage-unknown-store",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "multi-hop-reconciliation",
+          "anti_pattern": "multi-hop",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "quantitative-drift",
+          "anti_pattern": "quantitative-drift",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "positional-order-bias",
+          "anti_pattern": "order-bias",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-supersession-lookup-5",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 5,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-supersession-lookup-25",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 25,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-supersession-lookup-100",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 100,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-supersession-lookup-250",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 250,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "decision-already-recorded",
+          "anti_pattern": "decision-dedup",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        },
+        {
+          "id": "incremental-ground-truth-merge",
+          "anti_pattern": "incremental-merge",
+          "drift_size": null,
+          "status": "pass",
+          "checks": 0,
+          "failed": 0
+        }
+      ],
+      "totals": {
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0,
+        "total": 29
+      }
+    }
+  ]
+}

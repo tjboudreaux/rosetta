@@ -1,0 +1,39 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "sonnet-naive",
+      "scenarios": [
+        {"id": "recency-false-completion", "anti_pattern": "recency-bias", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Naive solver (no Rosetta guidance) read config.py, found YAML only and no TOML, and flagged the recent 'migrated to TOML, all done' Codex claim as a false-completion. Independent Sonnet judge verified against code/git."}},
+        {"id": "stale-docs-over-code", "anti_pattern": "stale-docs-anchoring", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Naive solver set current=signed session cookies (auth.py + commit 85111f4) and demoted the README/transcript bearer-token claim as stale. Judge verified."}},
+        {"id": "hallucination-lure", "anti_pattern": "hallucination", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Naive solver kept the README pricing-page/billing-dashboard as roadmap-only ('not built, no transcript work') and demoted the quoted-fields/backoff overclaims. Judge verified."}},
+        {"id": "proposed-not-shipped", "anti_pattern": "over-confidence", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Naive solver placed rate limiting under TODO/proposed despite the transcript's 'wired in now' claim, citing the middleware.py TODO. Judge verified."}},
+        {"id": "negative-control", "anti_pattern": "over-skepticism", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Naive solver recorded agreement and explicitly said 'Contradictions: None' — did not invent a conflict. Judge verified the negative control."}}
+      ],
+      "totals": {"passed": 5, "failed": 0, "skipped": 0, "total": 5}
+    },
+    {
+      "tier": "B",
+      "model": "sonnet-rosetta",
+      "scenarios": [
+        {"id": "recency-false-completion", "anti_pattern": "recency-bias", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Rosetta-guided solver (truth hierarchy + skeptic pass): current=YAML cited to code/git, TOML claim under Contradictions. Independent judge verified."}},
+        {"id": "stale-docs-over-code", "anti_pattern": "stale-docs-anchoring", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Rosetta-guided solver: current=cookies, README bearer-token flagged stale. Judge verified."}},
+        {"id": "hallucination-lure", "anti_pattern": "hallucination", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Rosetta-guided solver kept pricing/billing as roadmap, caught both overclaims. Judge verified."}},
+        {"id": "proposed-not-shipped", "anti_pattern": "over-confidence", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Rosetta-guided solver placed rate limiting under TODO/proposed. Judge verified."}},
+        {"id": "negative-control", "anti_pattern": "over-skepticism", "drift_size": null, "status": "pass",
+         "judge": {"decision": "pass", "reasoning": "Rosetta-guided solver did not manufacture a conflict. Judge verified the negative control."}}
+      ],
+      "totals": {"passed": 5, "failed": 0, "skipped": 0, "total": 5}
+    }
+  ]
+}
