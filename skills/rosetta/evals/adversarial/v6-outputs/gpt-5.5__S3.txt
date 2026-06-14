@@ -1,0 +1,508 @@
+Reading additional input from stdin...
+OpenAI Codex v0.139.0
+--------
+workdir: /private/tmp/v6/S3_double_pivot
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019ec545-4682-78d0-9a84-4047fba2f861
+--------
+user
+Answer using your tools over the project in the current directory (read/grep history/; do not read gold.json). QUESTION: What is the current primary datastore for the user-profile service? Give a specific answer and cite evidence.
+2026-06-14T08:35:12.949788Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.cloudflare.com/.well-known/oauth-protected-resource/mcp\", error=\"invalid_token\", error_description=\"Missing or invalid access token\"" })
+hook: SessionStart
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll inspect the repo and its `history/` evidence, excluding `gold.json`, then pin the answer to concrete file references.
+exec
+/bin/zsh -lc 'cat /Users/tjboudreaux/.codex/plugins/cache/openai-curated/superpowers/c6ea566d/skills/using-superpowers/SKILL.md' in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+---
+name: using-superpowers
+description: Use when starting any conversation - establishes how to find and use skills, requiring Skill tool invocation before ANY response including clarifying questions
+---
+
+<SUBAGENT-STOP>
+If you were dispatched as a subagent to execute a specific task, skip this skill.
+</SUBAGENT-STOP>
+
+<EXTREMELY-IMPORTANT>
+If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+
+IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
+
+This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+</EXTREMELY-IMPORTANT>
+
+## Instruction Priority
+
+Superpowers skills override default system prompt behavior, but **user instructions always take precedence**:
+
+1. **User's explicit instructions** (CLAUDE.md, GEMINI.md, AGENTS.md, direct requests) — highest priority
+2. **Superpowers skills** — override default system behavior where they conflict
+3. **Default system prompt** — lowest priority
+
+If CLAUDE.md, GEMINI.md, or AGENTS.md says "don't use TDD" and a skill says "always use TDD," follow the user's instructions. The user is in control.
+
+## How to Access Skills
+
+**In Claude Code:** Use the `Skill` tool. When you invoke a skill, its content is loaded and presented to you—follow it directly. Never use the Read tool on skill files.
+
+**In Copilot CLI:** Use the `skill` tool. Skills are auto-discovered from installed plugins. The `skill` tool works the same as Claude Code's `Skill` tool.
+
+**In Gemini CLI:** Skills activate via the `activate_skill` tool. Gemini loads skill metadata at session start and activates the full content on demand.
+
+**In other environments:** Check your platform's documentation for how skills are loaded.
+
+## Platform Adaptation
+
+Skills use Claude Code tool names. Non-CC platforms: see `references/copilot-tools.md` (Copilot CLI), `references/codex-tools.md` (Codex) for tool equivalents. Gemini CLI users get the tool mapping loaded automatically via GEMINI.md.
+
+# Using Skills
+
+## The Rule
+
+**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means that you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+
+```dot
+digraph skill_flow {
+    "User message received" [shape=doublecircle];
+    "About to EnterPlanMode?" [shape=doublecircle];
+    "Already brainstormed?" [shape=diamond];
+    "Invoke brainstorming skill" [shape=box];
+    "Might any skill apply?" [shape=diamond];
+    "Invoke Skill tool" [shape=box];
+    "Announce: 'Using [skill] to [purpose]'" [shape=box];
+    "Has checklist?" [shape=diamond];
+    "Create TodoWrite todo per item" [shape=box];
+    "Follow skill exactly" [shape=box];
+    "Respond (including clarifications)" [shape=doublecircle];
+
+    "About to EnterPlanMode?" -> "Already brainstormed?";
+    "Already brainstormed?" -> "Invoke brainstorming skill" [label="no"];
+    "Already brainstormed?" -> "Might any skill apply?" [label="yes"];
+    "Invoke brainstorming skill" -> "Might any skill apply?";
+
+    "User message received" -> "Might any skill apply?";
+    "Might any skill apply?" -> "Invoke Skill tool" [label="yes, even 1%"];
+    "Might any skill apply?" -> "Respond (including clarifications)" [label="definitely not"];
+    "Invoke Skill tool" -> "Announce: 'Using [skill] to [purpose]'";
+    "Announce: 'Using [skill] to [purpose]'" -> "Has checklist?";
+    "Has checklist?" -> "Create TodoWrite todo per item" [label="yes"];
+    "Has checklist?" -> "Follow skill exactly" [label="no"];
+    "Create TodoWrite todo per item" -> "Follow skill exactly";
+}
+```
+
+## Red Flags
+
+These thoughts mean STOP—you're rationalizing:
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
+| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
+| "Let me gather information first" | Skills tell you HOW to gather information. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+| "This doesn't count as a task" | Action = task. Check for skills. |
+| "The skill is overkill" | Simple things become complex. Use it. |
+| "I'll just do this one thing first" | Check BEFORE doing anything. |
+| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
+| "I know what that means" | Knowing the concept ≠ using the skill. Invoke it. |
+
+## Skill Priority
+
+When multiple skills could apply, use this order:
+
+1. **Process skills first** (brainstorming, debugging) - these determine HOW to approach the task
+2. **Implementation skills second** (frontend-design, mcp-builder) - these guide execution
+
+"Let's build X" → brainstorming first, then implementation skills.
+"Fix this bug" → debugging first, then domain-specific skills.
+
+## Skill Types
+
+**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
+
+**Flexible** (patterns): Adapt principles to context.
+
+The skill itself tells you which.
+
+## User Instructions
+
+Instructions say WHAT, not HOW. "Add X" or "Fix Y" doesn't mean skip workflows.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+Using `using-superpowers` for the required startup workflow; for this question I’ll keep it lightweight and focus on project evidence only.
+exec
+/bin/zsh -lc 'find . -maxdepth 3 -type d -name history -print' in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+./history
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "pwd && rg --files -g '"'!gold.json'"' -g '"'!**/gold.json'"'" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+/tmp/v6/S3_double_pivot
+history/2025-10.md
+history/2025-04.md
+history/2025-05.md
+history/2025-11.md
+history/2025-01.md
+history/2026-04.md
+history/2026-05.md
+history/2026-01.md
+history/2026-06.md
+history/2026-02.md
+history/2025-08.md
+history/2026-03.md
+history/2025-09.md
+history/2025-06.md
+history/2025-12.md
+history/2025-02.md
+history/2025-03.md
+history/2025-07.md
+README.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'git status --short' in /private/tmp/v6/S3_double_pivot
+ exited 128 in 0ms:
+fatal: not a git repository (or any of the parent directories): .git
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+There’s no Git repository here, so the available evidence is the checked-in `README.md` and monthly files under `history/`. I’m searching those next for user-profile/datastore references.
+exec
+/bin/zsh -lc "rg -n -i \"user[-_ ]?profile|profile service|datastore|data store|database|postgres|dynamo|mysql|redis|mongodb|mongo|spanner|cassandra|aurora\" README.md history -g '"'!gold.json'"' -g '"'!**/gold.json'"'" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+history/2025-10.md:19:reporting datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-10.md:58:ingest datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:4:reporting datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:7:catalog datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:16:partner cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:55:identity cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:67:shipping datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:79:identity datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:88:fraud datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2026-01.md:100:search cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:4:profile datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:22:reporting datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:46:fraud datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:55:shipping cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:73:identity cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:76:pricing cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-06.md:82:media datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:10:media cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:31:fraud datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:46:shipping datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:52:risk datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:88:fraud datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:103:catalog cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-04.md:130:reporting datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:4:inventory datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:19:catalog datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:52:notify cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:67:notify cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:70:catalog datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:73:risk datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:76:search datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:88:media datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:115:fraud datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:127:shipping cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:136:ingest cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:139:ledger datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:31:gateway datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:37:fraud cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:43:shipping datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:46:fraud cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:88:gateway cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:112:partner cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:115:webhook datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2026-02.md:118:media datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:7:catalog datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:25:profile datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:31:profile datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:52:webhook cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:61:ledger cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:79:reporting datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:106:catalog cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:109:billing datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:10:catalog datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:55:notify datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:61:reporting cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:64:billing cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:82:gateway cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:85:partner datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:97:ingest datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-02.md:118:inventory datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:28:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:40:shipping datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:52:catalog datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:61:risk cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:82:shipping datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-08.md:106:partner datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:4:user-profile service datastore: DynamoDB for profile documents. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:10:shipping datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:13:media datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:61:search cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:67:reporting cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:70:billing datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:94:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:7:ingest datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:10:inventory datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:46:shipping datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:55:risk datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:61:media cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:97:ingest cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:100:ledger datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-03.md:118:media datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:13:gateway datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:19:shipping datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:22:risk datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:31:profile datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:34:webhook datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:49:ledger datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:64:partner cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:79:notify datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:7:billing datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:10:billing cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:58:gateway datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:76:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:100:inventory cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:103:media cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:106:gateway cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:7:partner cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:10:shipping datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:16:identity datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:22:catalog datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:25:pricing datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:34:identity datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:70:partner cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:76:gateway datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:103:profile datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:61:ledger datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:67:webhook datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:82:fraud cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:88:gateway datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:91:webhook cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:100:ingest datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:106:Naming: the user-profile service is internally 'Project Nimbus'.
+history/2025-09.md:109:Tier glossary: the 'unified ledger tier' is our Cloud Spanner deployment; the 'wide-column tier' is Cassandra.
+history/2026-05.md:19:gateway cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:22:notify cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:25:pricing datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:43:inventory datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:49:ingest cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:85:fraud datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:97:identity datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:109:user-profile (legacy note): DynamoDB tables still present during migration. Throughput, cost, and risk were weighed before sign-off.
+history/2026-04.md:22:gateway datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+history/2026-04.md:28:billing datastore: adopt Postgres. Throughput, cost, and risk were weighed before sign-off.
+history/2026-04.md:49:identity datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2026-04.md:76:fraud cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' README.md" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+# platform
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The hits show older direct mentions of `user-profile`, a `Project Nimbus` alias, and a later migration note. I’m reading the surrounding lines around those records to resolve “current” rather than just taking the first match.
+exec
+/bin/zsh -lc "rg -n -i \"nimbus|user-profile|user profile|profile datastore|profile cache|legacy note|migration|primary|still present|tables\" history README.md -g '"'!gold.json'"' -g '"'!**/gold.json'"'" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+history/2025-05.md:25:profile datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2025-05.md:31:profile datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:4:user-profile service datastore: DynamoDB for profile documents. Throughput, cost, and risk were weighed before sign-off.
+history/2025-11.md:94:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:103:profile datastore: adopt DynamoDB. Throughput, cost, and risk were weighed before sign-off.
+history/2025-01.md:118:profile cache: adopt Memcached. Throughput, cost, and risk were weighed before sign-off.
+history/2026-05.md:109:user-profile (legacy note): DynamoDB tables still present during migration. Throughput, cost, and risk were weighed before sign-off.
+history/2026-06.md:4:Project Nimbus migrates its primary store to the unified ledger tier for strong consistency, replacing the prior document store.
+history/2025-08.md:28:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:31:profile datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+history/2026-03.md:82:profile cache: adopt Memcached. Throughput, cost, and risk were weighed before sign-off.
+history/2025-09.md:106:Naming: the user-profile service is internally 'Project Nimbus'.
+history/2025-06.md:4:profile datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+history/2025-12.md:16:profile cache: adopt Memcached. Throughput, cost, and risk were weighed before sign-off.
+history/2025-07.md:76:profile cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "sed -n '90,116p' history/2025-09.md" in /private/tmp/v6/S3_double_pivot
+exec
+/bin/zsh -lc "sed -n '24,38p' history/2026-03.md" in /private/tmp/v6/S3_double_pivot
+exec
+/bin/zsh -lc "sed -n '100,114p' history/2026-05.md" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+## [2026-03-20]
+gateway serialization: adopt JSON. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-03-20]
+fraud serialization: adopt protobuf. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-03-20]
+profile datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-03-20]
+webhook datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-03-20]
+profile transport: adopt gRPC. Throughput, cost, and risk were weighed before sign-off.
+
+
+ succeeded in 0ms:
+## [2025-09-07]
+webhook cache: adopt Redis. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-09-07]
+fraud index: adopt gin. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-09-07]
+shipping event-store: adopt DuckDB. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-09-07]
+ingest datastore: adopt Cassandra. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-09-07]
+ledger index: adopt gin. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-09-15]
+Naming: the user-profile service is internally 'Project Nimbus'.
+
+## [2025-09-20]
+Tier glossary: the 'unified ledger tier' is our Cloud Spanner deployment; the 'wide-column tier' is Cassandra.
+
+ succeeded in 0ms:
+search index: adopt gin. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-05-04]
+risk transport: adopt gRPC. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-05-04]
+identity serialization: adopt JSON. Throughput, cost, and risk were weighed before sign-off.
+
+## [2026-05-28]
+user-profile (legacy note): DynamoDB tables still present during migration. Throughput, cost, and risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,16p' history/2025-11.md" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+# decision log 2025-11
+
+## [2025-11-10]
+user-profile service datastore: DynamoDB for profile documents. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-11-20]
+ledger ratelimit: adopt token bucket. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-11-20]
+shipping datastore: adopt MySQL. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-11-20]
+media datastore: adopt Spanner. Throughput, cost, and risk were weighed before sign-off.
+
+## [2025-11-20]
+inventory logging: adopt structlog. Throughput, cost, and risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,140p' history/2026-06.md" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+# decision log 2026-06
+
+## [2026-06-08]
+Project Nimbus migrates its primary store to the unified ledger tier for strong consistency, replacing the prior document store.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The latest June record is decisive: it says Project Nimbus moved its primary store to the unified ledger tier. I’m grabbing line-numbered citations for the alias and the tier mapping.
+exec
+/bin/zsh -lc 'nl -ba history/2026-06.md' in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+     1	# decision log 2026-06
+     2	
+     3	## [2026-06-08]
+     4	Project Nimbus migrates its primary store to the unified ledger tier for strong consistency, replacing the prior document store.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "nl -ba history/2025-09.md | sed -n '102,112p'" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+   102	## [2025-09-07]
+   103	ledger index: adopt gin. Throughput, cost, and risk were weighed before sign-off.
+   104	
+   105	## [2025-09-15]
+   106	Naming: the user-profile service is internally 'Project Nimbus'.
+   107	
+   108	## [2025-09-20]
+   109	Tier glossary: the 'unified ledger tier' is our Cloud Spanner deployment; the 'wide-column tier' is Cassandra.
+
+exec
+/bin/zsh -lc "nl -ba history/2026-05.md | sed -n '106,111p'" in /private/tmp/v6/S3_double_pivot
+exec
+/bin/zsh -lc "nl -ba history/2025-11.md | sed -n '1,7p'" in /private/tmp/v6/S3_double_pivot
+ succeeded in 0ms:
+     1	# decision log 2025-11
+     2	
+     3	## [2025-11-10]
+     4	user-profile service datastore: DynamoDB for profile documents. Throughput, cost, and risk were weighed before sign-off.
+     5	
+     6	## [2025-11-20]
+     7	ledger ratelimit: adopt token bucket. Throughput, cost, and risk were weighed before sign-off.
+
+ succeeded in 0ms:
+   106	identity serialization: adopt JSON. Throughput, cost, and risk were weighed before sign-off.
+   107	
+   108	## [2026-05-28]
+   109	user-profile (legacy note): DynamoDB tables still present during migration. Throughput, cost, and risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The current primary datastore for the user-profile service is **Cloud Spanner**.
+
+Evidence: [history/2025-09.md](/private/tmp/v6/S3_double_pivot/history/2025-09.md:106) says the user-profile service is internally **Project Nimbus**, and [history/2025-09.md](/private/tmp/v6/S3_double_pivot/history/2025-09.md:109) defines the “unified ledger tier” as **Cloud Spanner**. The latest relevant entry, [history/2026-06.md](/private/tmp/v6/S3_double_pivot/history/2026-06.md:4), says Project Nimbus migrated its **primary store** to the unified ledger tier, replacing the prior document store.
+
+DynamoDB was the prior datastore: [history/2026-05.md](/private/tmp/v6/S3_double_pivot/history/2026-05.md:109) describes DynamoDB tables as legacy during migration.
+hook: Stop
+hook: Stop Completed
+tokens used
+32,831
+The current primary datastore for the user-profile service is **Cloud Spanner**.
+
+Evidence: [history/2025-09.md](/private/tmp/v6/S3_double_pivot/history/2025-09.md:106) says the user-profile service is internally **Project Nimbus**, and [history/2025-09.md](/private/tmp/v6/S3_double_pivot/history/2025-09.md:109) defines the “unified ledger tier” as **Cloud Spanner**. The latest relevant entry, [history/2026-06.md](/private/tmp/v6/S3_double_pivot/history/2026-06.md:4), says Project Nimbus migrated its **primary store** to the unified ledger tier, replacing the prior document store.
+
+DynamoDB was the prior datastore: [history/2026-05.md](/private/tmp/v6/S3_double_pivot/history/2026-05.md:109) describes DynamoDB tables as legacy during migration.

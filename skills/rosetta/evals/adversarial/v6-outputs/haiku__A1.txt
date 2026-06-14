@@ -1,0 +1,1 @@
+A new EU enterprise billing service should use ClickHouse as its event-store backend. This decision was reaffirmed on 2026-06-05 as the standard choice for EU enterprise billing services, effective immediately across all teams. ClickHouse was selected after weighing throughput, data-residency, cost, and migration risk considerations against other alternatives.

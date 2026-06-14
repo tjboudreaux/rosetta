@@ -1,0 +1,8 @@
+Based on the project's historical logs, the current primary datastore for the user-profile service is the **unified ledger tier**. 
+
+Here is the evidence tracking this change:
+
+1. **Service Identity:** In `history/2025-09.md` (under `[2025-09-15]`), the logs state: *"Naming: the user-profile service is internally 'Project Nimbus'."*
+2. **Prior Datastore:** In `history/2025-11.md` (under `[2025-11-10]`), it was noted: *"user-profile service datastore: DynamoDB for profile documents."*
+3. **Migration Phase:** In `history/2026-05.md` (under `[2026-05-28]`), a migration is indicated: *"user-profile (legacy note): DynamoDB tables still present during migration."*
+4. **Current Datastore:** In `history/2026-06.md` (under `[2026-06-08]`), the migration is completed for the primary datastore: *"Project Nimbus migrates its primary store to the unified ledger tier for strong consistency, replacing the prior document store."*

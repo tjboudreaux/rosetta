@@ -1,0 +1,12 @@
+Error executing tool grep_search: Invalid regular expression pattern provided: (?i)kafka. Error: Invalid regular expression: /(?i)kafka/: Invalid group
+Based on the historical architecture decisions, there are exactly **6** distinct subsystems that currently use Kafka as their message queue. 
+
+They are:
+- **ledger**
+- **ingest**
+- **fraud**
+- **notify**
+- **shipping**
+- **risk**
+
+*(Note: `catalog`, `media`, and `pricing` previously used Kafka for queuing but have since migrated to SQS; `search`, `billing`, and `inventory` use Kafka, but strictly as an event-store, not as a message queue.)*

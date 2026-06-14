@@ -1,0 +1,7 @@
+Based on the project's historical logs, the specific retention period for **RAW EU payment logs (personally-identifiable)** is **30 days post-ingest**.
+
+**Evidence:**
+According to `history/2026-06.md` (under the entry for `[2026-06-02]`), a policy update was made stating:
+> *"Policy update (effective now): EU RAW payment logs retention reduced to 30 days post-ingest; only ANONYMIZED aggregates are retained 7 years. Raw personally-identifiable logs must be purged at 30 days."*
+
+(Prior to this update in June 2026, the logs were historically retained for 7 years for GDPR obligations, as seen in earlier files like `history/2025-07.md`).
