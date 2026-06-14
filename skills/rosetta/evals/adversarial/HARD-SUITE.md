@@ -53,8 +53,12 @@ Honest next steps to clear the ≤50% bar:
    library with three near-misses (Codex's full `release-gate-composite-300`), and a count conflict the
    code registry only settles after reconciling a subsystem split.
 
-## Tie-in to the cost dimension
+## Tie-in to the product-value dimension (`VALUE.md`)
 
-The hard suite is also the first place the cost view earns its keep: same models, ~1.5× the tokens per
-correct answer. As difficulty rises toward the ≤50% bar, the report's **efficacy gate** will start
-withholding CPPS for tiers that drop below it — which is exactly when "cheap but wrong" must not look good.
+The hard suite is where the **Product value** panel earns its keep — it's the scenario set with a real
+capability gap, so it can show the three value axes (correctness; correctness at token savings; SoTA on
+cheaper models). The headline result, blind-judged on this suite: **unaided Haiku scores 33%, but
+Haiku + Rosetta scaffolding scores 100% — matching the Opus baseline — at ~24× lower estimated cost per
+correct answer.** The two unaided-Haiku failures were a confident-hedge and a dropped claim: exactly the
+failure modes the truth-hierarchy + skeptic pass exist to prevent. See `VALUE.md` for the full grid and
+its honest limits (single sample, blended-$ estimate, small N).

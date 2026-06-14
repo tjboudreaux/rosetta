@@ -49,10 +49,14 @@ whether it reasoned correctly.
   discrimination panel, and a **cost-efficiency** panel (`REPORT.md` + optional `REPORT.html`).
 - `pricing.json` — versioned price sheet (USD per 1M tokens). The cost panel computes `$/pass` from it
   when a run carries an input/output token split, so rates never get hardcoded into `report.py`.
-- Cost dimension: results may carry per-scenario/run `tokens` ({input,output,total}). The report shows
-  total tokens, ECI (output ×5 when split present), **CPPS** (cost per *passed* scenario — failing
-  cheap looks expensive, not free), and `$/pass`, with efficiency **withheld below an 80% efficacy
-  gate** so "cheap but wrong" can't look good. Hardened against Codex/Gemini red-team review.
+- **Product-value dimension** (`VALUE.md`): runs carry `tokens` + tags (`model_tier`, `condition`,
+  `scenario_set`). The report's **Product value** panel proves value is multi-dimensional — (1)
+  correctness, (2) correctness at token savings, (3) bringing SoTA correctness to a cheaper/distilled
+  model. **$/correct** = cost per *passed* scenario, **withheld below an 80% efficacy gate** so "cheap
+  but wrong" can't look good; $ comes from the versioned `pricing.json` (blended estimate from totals,
+  exact when an input/output split is present). Measured result: Haiku + Rosetta matches the Opus
+  baseline's correctness on the hard suite at ~24× lower est cost (see `VALUE.md`). Metric design
+  hardened against Codex/Gemini red-team review.
 
 ## Reporting
 

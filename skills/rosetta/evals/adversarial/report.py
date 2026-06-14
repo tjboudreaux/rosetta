@@ -304,8 +304,29 @@ def _dollar_cost(run):
     return inp / 1e6 * rate["input"] + out / 1e6 * rate["output"]
 
 
+def _blended_usd(run):
+    """Estimated USD from total tokens × the model's blended rate — used for cross-model value
+    comparison when no input/output split exists. Exact in/out pricing (_dollar_cost) wins when present."""
+    exact = _dollar_cost(run)
+    if exact is not None:
+        return exact, False
+    sheets = _load_pricing()
+    sid = run.get("price_sheet_id") or (next(iter(sheets)) if len(sheets) == 1 else None)
+    sheet = sheets.get(sid) if sid else None
+    if not sheet:
+        return None, True
+    tier = run.get("model_tier")
+    base = tier if (tier and tier in sheet.get("models", {})) else _price_base(run.get("model", ""), sheet)
+    if not base or "blended" not in sheet["models"].get(base, {}):
+        return None, True
+    tk = _run_tokens(run)
+    if not tk:
+        return None, True
+    return tk["total"] / 1e6 * sheet["models"][base]["blended"], True
+
+
 def _cost_row(run):
-    """Compute the cost-efficiency view for one run, applying the efficacy gate."""
+    """Compute the cost/value view for one run, applying the efficacy gate."""
     tk = _run_tokens(run)
     if not tk:
         return None
@@ -314,41 +335,103 @@ def _cost_row(run):
     gated = rate < EFFICACY_GATE
     # Cost per passed scenario: you pay for failed runs but they don't help the denominator.
     cpps = (tk["eci"] / passed) if passed else None
-    usd = _dollar_cost(run)
+    usd, usd_est = _blended_usd(run)
     usd_pp = (usd / passed) if (usd is not None and passed) else None
-    return {"label": _label(run), "total": tk["total"], "eci": tk["eci"],
+    return {"label": _label(run), "model": run.get("model", "?"),
+            "tier": run.get("model_tier", ""), "condition": run.get("condition", ""),
+            "sset": run.get("scenario_set", ""), "total": tk["total"], "eci": tk["eci"],
             "has_split": tk["has_split"], "passed": passed, "done": done, "failed": failed,
-            "rate": rate, "cpps": cpps, "gated": gated, "usd": usd, "usd_pp": usd_pp}
+            "rate": rate, "cpps": cpps, "gated": gated, "usd": usd, "usd_est": usd_est,
+            "usd_pp": usd_pp}
+
+
+_TIER_RANK = {"opus": 3, "sonnet": 2, "haiku": 1}
+
+
+def value_lenses(runs):
+    """Compute the three product-value narratives per scenario_set from the cost rows.
+    1) correctness, 2) correctness at token savings (iso-correctness), 3) SoTA-on-cheaper-models."""
+    rows = [r for r in (_cost_row(run) for run in runs) if r]
+    by_set = {}
+    for r in rows:
+        by_set.setdefault(r["sset"] or "all", []).append(r)
+    lenses = []
+    for sset, rs in by_set.items():
+        if len(rs) < 2:
+            continue
+        top = max(r["rate"] for r in rs)
+        # Lens 2 — iso-correctness savings: cheapest vs priciest among runs at the top pass-rate.
+        iso = [r for r in rs if r["rate"] == top and r["usd_pp"] is not None and not r["gated"]]
+        savings = None
+        if len(iso) >= 2:
+            lo = min(iso, key=lambda r: r["usd_pp"])
+            hi = max(iso, key=lambda r: r["usd_pp"])
+            if hi["usd_pp"] > 0 and lo is not hi:
+                savings = {"set": sset, "rate": top, "cheap": lo, "exp": hi,
+                           "mult": hi["usd_pp"] / lo["usd_pp"]}
+        # Lens 3 — SoTA on cheaper models: a cheaper tier matching the strongest baseline's correctness.
+        baselines = [r for r in rs if r["condition"] == "baseline"]
+        sota = max(baselines, key=lambda r: (_TIER_RANK.get(r["tier"], 0), r["rate"]), default=None)
+        transfer = None
+        if sota:
+            for r in rs:
+                if (_TIER_RANK.get(r["tier"], 9) < _TIER_RANK.get(sota["tier"], 0)
+                        and r["rate"] >= sota["rate"] and not r["gated"]
+                        and r["usd_pp"] is not None and sota["usd_pp"]):
+                    cand = {"set": sset, "cheap": r, "sota": sota,
+                            "mult": sota["usd_pp"] / r["usd_pp"] if r["usd_pp"] else None}
+                    if not transfer or (cand["mult"] or 0) > (transfer["mult"] or 0):
+                        transfer = cand
+        lenses.append({"set": sset, "top": top, "savings": savings, "transfer": transfer})
+    return lenses
+
+
+def _mult_phrase(mult):
+    """Small deltas read better as a percentage than as '~1×'."""
+    if mult < 1.5:
+        return f"~{(mult - 1) * 100:.0f}% less"
+    return f"~{mult:.0f}× less"
+
+
+def _usd_pp_cell(r):
+    if r["gated"]:
+        return f"⚠️ withheld (<{EFFICACY_GATE:.0f}%)"
+    if r["usd_pp"] is None:
+        return "—"
+    return ("~" if r["usd_est"] else "") + f"${r['usd_pp']:,.3f}"
 
 
 def cost_md(runs):
     rows = [r for r in (_cost_row(run) for run in runs) if r]
     if not rows:
         return ""
-    out = ["## Cost efficiency",
-           "", f"_Cost = solver tokens (system under test). **Cost-per-passed-scenario (CPPS)** "
-           f"charges all tokens but only credits passes, so failing cheap looks expensive, not free. "
-           f"Efficiency is **withheld** below the {EFFICACY_GATE:.0f}% efficacy gate — a broken system "
-           f"has no meaningful efficiency. ECI weights output ×{OUTPUT_WEIGHT} when an input/output "
-           f"split is present._", "",
-           "| Run | Pass-rate | Failed | Total tokens | ECI | CPPS (ECI/pass) | $/pass |",
-           "|---|---|---|---|---|---|---|"]
-    for r in rows:
-        eci = f"{r['eci']:,}" + ("" if r["has_split"] else " *(=total; no split)*")
-        if r["gated"]:
-            cpps = f"⚠️ withheld (<{EFFICACY_GATE:.0f}%)"
-        elif r["cpps"] is None:
-            cpps = "— (0 passed)"
-        else:
-            cpps = f"{r['cpps']:,.0f}"
-        if r["gated"]:
-            usd = "⚠️ withheld"
-        elif r["usd_pp"] is None:
-            usd = "— *(needs in/out split)*"
-        else:
-            usd = f"${r['usd_pp']:,.4f}"
-        out.append(f"| {r['label']} | {r['rate']:.0f}% | {r['failed']} | {r['total']:,} | "
-                   f"{eci} | {cpps} | {usd} |")
+    out = ["## Product value (correctness · token savings · SoTA on cheaper models)",
+           "", "_Three lenses on what the product is worth, not what the evals cost. Cost = solver "
+           "tokens (the system under test). **$/correct** = cost per *passed* scenario, so failing "
+           f"cheap looks expensive, not free, and is **withheld below the {EFFICACY_GATE:.0f}% efficacy "
+           "gate**. `~$` = estimated from total tokens × a blended rate (`pricing.json`); exact in/out "
+           "pricing is used when a split is present._", ""]
+    # Lens summaries first (the narrative), then the backing matrix.
+    for L in value_lenses(runs):
+        tag = f"`{L['set']}` set" if L["set"] and L["set"] != "all" else "all runs"
+        if L["transfer"]:
+            t = L["transfer"]
+            mult = f"~{t['mult']:.0f}×" if t["mult"] else "lower"
+            out.append(f"- **SoTA on a cheaper model ({tag}):** `{t['cheap']['label']}` "
+                       f"({t['cheap']['condition']}) matches the {t['sota']['tier']} baseline's "
+                       f"{t['sota']['rate']:.0f}% correctness — {t['cheap']['rate']:.0f}% vs "
+                       f"{t['sota']['rate']:.0f}% — at **{mult} lower est cost/correct** "
+                       f"({_usd_pp_cell(t['cheap'])} vs {_usd_pp_cell(t['sota'])}).")
+        if L["savings"]:
+            s = L["savings"]
+            out.append(f"- **Same correctness, fewer tokens ({tag}):** at {s['rate']:.0f}% both pass, "
+                       f"but `{s['cheap']['label']}` costs **{_mult_phrase(s['mult'])} per correct answer** "
+                       f"than `{s['exp']['label']}` ({_usd_pp_cell(s['cheap'])} vs {_usd_pp_cell(s['exp'])}).")
+    out += ["", "| Run | Tier | Condition | Set | Pass-rate | Failed | Tokens | $/correct |",
+            "|---|---|---|---|---|---|---|---|"]
+    for r in sorted(rows, key=lambda r: (r["sset"], -_TIER_RANK.get(r["tier"], 0), r["condition"])):
+        out.append(f"| {r['label']} | {r['tier'] or '—'} | {r['condition'] or '—'} | {r['sset'] or '—'} "
+                   f"| {r['rate']:.0f}% | {r['failed']} | {r['total']:,} | {_usd_pp_cell(r)} |")
     return "\n".join(out)
 
 
@@ -538,36 +621,47 @@ def matrix_html(runs):
             f"<table><thead><tr><th>Scenario</th>{head}</tr></thead><tbody>{body}</tbody></table></details>")
 
 
+def _usd_pp_cell_html(r):
+    if r["gated"]:
+        return f"<span class=muted>⚠️ withheld (&lt;{EFFICACY_GATE:.0f}%)</span>"
+    if r["usd_pp"] is None:
+        return "<span class=muted>—</span>"
+    return ("~" if r["usd_est"] else "") + f"${r['usd_pp']:,.3f}"
+
+
 def cost_html(runs):
     rows = [r for r in (_cost_row(run) for run in runs) if r]
     if not rows:
         return ""
+    callouts = ""
+    for L in value_lenses(runs):
+        tag = f"<code>{_esc(L['set'])}</code> set" if L["set"] and L["set"] != "all" else "all runs"
+        if L["transfer"]:
+            t = L["transfer"]
+            mult = f"~{t['mult']:.0f}×" if t["mult"] else "lower"
+            callouts += (f"<li><b>SoTA on a cheaper model ({tag}):</b> <code>{_esc(t['cheap']['label'])}</code> "
+                         f"matches the {_esc(t['sota']['tier'])} baseline's {t['sota']['rate']:.0f}% correctness "
+                         f"at <b>{mult} lower est cost/correct</b> ({_usd_pp_cell_html(t['cheap'])} vs "
+                         f"{_usd_pp_cell_html(t['sota'])}).</li>")
+        if L["savings"]:
+            s = L["savings"]
+            callouts += (f"<li><b>Same correctness, fewer tokens ({tag}):</b> at {s['rate']:.0f}% both pass, "
+                         f"but <code>{_esc(s['cheap']['label'])}</code> costs <b>{_mult_phrase(s['mult'])} per "
+                         f"correct answer</b> than <code>{_esc(s['exp']['label'])}</code>.</li>")
     body = ""
-    for r in rows:
-        eci = f"{r['eci']:,}" + ("" if r["has_split"] else " <span class=muted>(=total)</span>")
-        if r["gated"]:
-            cpps = f"<span class=muted>⚠️ withheld (&lt;{EFFICACY_GATE:.0f}%)</span>"
-        elif r["cpps"] is None:
-            cpps = "<span class=muted>— (0 passed)</span>"
-        else:
-            cpps = f"{r['cpps']:,.0f}"
-        if r["gated"]:
-            usd = "<span class=muted>⚠️ withheld</span>"
-        elif r["usd_pp"] is None:
-            usd = "<span class=muted>— (needs in/out split)</span>"
-        else:
-            usd = f"${r['usd_pp']:,.4f}"
-        body += (f"<tr><td><code>{_esc(r['label'])}</code></td><td>{r['rate']:.0f}%</td>"
-                 f"<td>{r['failed']}</td><td>{r['total']:,}</td><td>{eci}</td><td>{cpps}</td>"
-                 f"<td>{usd}</td></tr>")
-    return ("<h2>Cost efficiency</h2>"
-            f"<p class=muted>Cost = solver tokens (the system under test). "
-            f"<b>Cost-per-passed-scenario (CPPS)</b> charges all tokens but only credits passes, so "
-            f"failing cheap looks expensive, not free. Efficiency is <b>withheld</b> below the "
-            f"{EFFICACY_GATE:.0f}% efficacy gate. ECI weights output ×{OUTPUT_WEIGHT}; $/pass uses the "
-            f"versioned <code>pricing.json</code> and needs an input/output split.</p>"
-            "<table><thead><tr><th>Run</th><th>Pass-rate</th><th>Failed</th><th>Total tokens</th>"
-            f"<th>ECI</th><th>CPPS (ECI/pass)</th><th>$/pass</th></tr></thead>"
+    for r in sorted(rows, key=lambda r: (r["sset"], -_TIER_RANK.get(r["tier"], 0), r["condition"])):
+        body += (f"<tr><td><code>{_esc(r['label'])}</code></td><td>{_esc(r['tier'] or '—')}</td>"
+                 f"<td>{_esc(r['condition'] or '—')}</td><td>{_esc(r['sset'] or '—')}</td>"
+                 f"<td>{r['rate']:.0f}%</td><td>{r['failed']}</td><td>{r['total']:,}</td>"
+                 f"<td>{_usd_pp_cell_html(r)}</td></tr>")
+    return ("<h2>Product value <span class=muted>— correctness · token savings · SoTA on cheaper models</span></h2>"
+            "<p class=muted>Three lenses on what the product is worth, not what the evals cost. "
+            "<b>$/correct</b> = cost per <i>passed</i> scenario (failing cheap looks expensive, not free) and is "
+            f"<b>withheld below the {EFFICACY_GATE:.0f}% efficacy gate</b>. <code>~$</code> = estimated from total "
+            "tokens × a blended rate (<code>pricing.json</code>); exact in/out pricing used when a split is present.</p>"
+            + (f"<ul>{callouts}</ul>" if callouts else "")
+            + "<table><thead><tr><th>Run</th><th>Tier</th><th>Condition</th><th>Set</th><th>Pass-rate</th>"
+            "<th>Failed</th><th>Tokens</th><th>$/correct</th></tr></thead>"
             f"<tbody>{body}</tbody></table>")
 
 

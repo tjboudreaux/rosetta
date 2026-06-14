@@ -109,6 +109,41 @@ class ReportRenderer(unittest.TestCase):
         self.assertIn("![drift curve](REPORT.drift.svg)", out_md.read_text())
         self.assertIn("<svg", out_html.read_text())
 
+    def _vrun(self, model, tier, condition, sset, scen):
+        # scen: list of (id, status, total_tokens)
+        r = {"tier": "B", "model": model, "model_tier": tier, "condition": condition,
+             "scenario_set": sset,
+             "scenarios": [{"id": i, "status": st, "anti_pattern": "x", "tokens": {"total": tok}}
+                           for i, st, tok in scen]}
+        return r
+
+    def test_value_lenses_sota_on_cheaper_and_savings(self):
+        # opus baseline 2/2; haiku baseline 1/2 (gap); haiku+rosetta 2/2 (gap closed, cheaper).
+        runs = [
+            self._vrun("opus-base", "opus", "baseline", "hard", [("a", "pass", 30000), ("b", "pass", 30000)]),
+            self._vrun("haiku-base", "haiku", "baseline", "hard", [("a", "pass", 20000), ("b", "fail", 20000)]),
+            self._vrun("haiku-rosetta", "haiku", "rosetta", "hard", [("a", "pass", 22000), ("b", "pass", 22000)]),
+        ]
+        lenses = {L["set"]: L for L in report.value_lenses(runs)}
+        hard = lenses["hard"]
+        # Lens 3: haiku-rosetta (cheaper tier) matches opus baseline correctness at lower cost.
+        self.assertIsNotNone(hard["transfer"])
+        self.assertEqual(hard["transfer"]["cheap"]["label"], "B:haiku-rosetta")
+        self.assertEqual(hard["transfer"]["sota"]["tier"], "opus")
+        self.assertGreater(hard["transfer"]["mult"], 1)      # cheaper per correct than SoTA
+        md = report.cost_md(runs)
+        self.assertIn("SoTA on a cheaper model", md)
+        self.assertIn("Product value", md)
+        # Efficacy gate: haiku-base is 50% (<80%) → $/correct withheld, never shown as a cheap win.
+        self.assertIn("withheld", md)
+
+    def test_value_efficacy_gate_blocks_cheap_but_wrong(self):
+        # A run that fails everything must not surface a (cheap) $/correct.
+        runs = [self._vrun("cheapfail", "haiku", "baseline", "s", [("a", "fail", 100), ("b", "fail", 100)])]
+        row = report._cost_row(runs[0])
+        self.assertTrue(row["gated"])
+        self.assertIn("withheld", report._usd_pp_cell(row))
+
     def test_detail_section_md_and_html(self):
         run = _run("B", "opus", [{
             "id": "x-scenario", "status": "pass", "anti_pattern": "hallucination",

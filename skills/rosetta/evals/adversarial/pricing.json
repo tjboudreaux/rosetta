@@ -8,10 +8,11 @@
       "unit": "per_1m_tokens",
       "source": "list prices as of 2026-06; verify before quoting externally",
       "models": {
-        "opus":   {"input": 15.0, "output": 75.0},
-        "sonnet": {"input": 3.0,  "output": 15.0},
-        "haiku":  {"input": 0.80, "output": 4.0}
-      }
+        "opus":   {"input": 15.0, "output": 75.0, "blended": 33.0},
+        "sonnet": {"input": 3.0,  "output": 15.0, "blended": 6.6},
+        "haiku":  {"input": 0.80, "output": 4.0,  "blended": 1.76}
+      },
+      "blended_note": "`blended` = a single USD/1M-token rate assuming a representative 70% input / 30% output mix, used to ESTIMATE $ when a run carries only a total-token count (no input/output split). When a split IS present, report.py uses the exact input/output rates instead. The blended estimate is for cross-model value comparison, not billing."
     }
   }
 }
