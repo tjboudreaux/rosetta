@@ -376,5 +376,44 @@ class DecisionsScale(unittest.TestCase):
         self.assertEqual([h["id"] for h in hits], ["ADR 1500"])        # needle found by content
 
 
+    def test_get_resolve_follows_supersession_to_current(self):
+        """Phase 0 retrieval layer: `get --resolve` on a stale record prints the CURRENT one."""
+        import io
+        from contextlib import redirect_stdout
+        d = self.root / "architecture-decisions"; d.mkdir(parents=True, exist_ok=True)
+        d.joinpath("0001-old-store.md").write_text(
+            "# ADR 0001 — user-profile datastore: DynamoDB\n\n- Status: Superseded by ADR 0002\n"
+            "- Date: 2025-11-10\n- Decider: Me\n- Sources: x\n\n## Decision\n\nUse DynamoDB.\n")
+        d.joinpath("0002-new-store.md").write_text(
+            "# ADR 0002 — user-profile datastore: Cloud Spanner\n\n- Status: Accepted\n"
+            "- Date: 2026-06-08\n- Decider: Me\n- Sources: x\n\n## Decision\n\nUse Cloud Spanner.\n")
+        # plain get on the stale record shows the stale (DynamoDB) content
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("get", "--root", str(self.root), "ADR 0001")
+        self.assertIn("DynamoDB", buf.getvalue())
+        self.assertNotIn("Cloud Spanner", buf.getvalue())
+        # get --resolve follows the chain and prints the CURRENT (Spanner) record + a redirect note
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("get", "--root", str(self.root), "ADR 0001", "--resolve")
+        out = buf.getvalue()
+        self.assertIn("Cloud Spanner", out)
+        self.assertIn("ADR 0002", out)
+        self.assertIn("resolved", out.lower())
+
+    def test_resolve_current_is_cycle_safe(self):
+        """A supersede cycle must not hang resolve_current (validate flags the cycle separately)."""
+        cfg = decisions.load_config(self.root)
+        recs = [
+            {"label": "ADR", "number": 1, "title": "a", "type": "adr",
+             "fields": {"Status": "Superseded by ADR 2"}, "path": Path("a")},
+            {"label": "ADR", "number": 2, "title": "b", "type": "adr",
+             "fields": {"Status": "Superseded by ADR 1"}, "path": Path("b")},
+        ]
+        current, chain = decisions.resolve_current(recs, recs[0], cfg)
+        self.assertIsNotNone(current)          # terminates, doesn't loop forever
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

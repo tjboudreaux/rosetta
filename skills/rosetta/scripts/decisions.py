@@ -498,10 +498,46 @@ def cmd_search(args, root, cfg):
     print(json.dumps(out, indent=2))
 
 
+SUPERSEDED_BY_RE = re.compile(r"superseded\s+by\s+([A-Za-z]+\s*\d+)", re.IGNORECASE)
+
+
+def resolve_current(records, rec, cfg, _seen=None):
+    """Follow a 'Superseded by <ID>' chain to the current (live) record. Returns (current_rec, chain)
+    where chain is the list of superseded ids walked through. Cycle-safe (stops if it revisits an id)."""
+    seen = _seen if _seen is not None else set()
+    chain = []
+    cur = rec
+    while True:
+        rid = record_id(cur, cfg)
+        if rid in seen:                      # defensive: supersede cycle (validate catches these)
+            break
+        seen.add(rid)
+        m = SUPERSEDED_BY_RE.search(cur["fields"].get("Status", ""))
+        if not m:
+            break
+        nxt = resolve_id(records, m.group(1), None)
+        if not nxt:
+            break
+        chain.append(rid)
+        cur = nxt
+    return cur, chain
+
+
 def cmd_get(args, root, cfg):
-    """Print one record in full (so the agent reads a single record, not the whole library)."""
-    rec = resolve_id(collect_records(root, cfg), args.id, args.type.lower() if args.type else None)
-    print(rec["path"].read_text())
+    """Print one record in full (so the agent reads a single record, not the whole library).
+    With --resolve, if the requested record is superseded, follow the chain to the CURRENT record and
+    print that instead (with a header noting the redirect) — so an agent that lands on a stale decision
+    is steered to the live one rather than reporting superseded state as current (Phase 0 retrieval layer)."""
+    records = collect_records(root, cfg)
+    rec = resolve_id(records, args.id, args.type.lower() if args.type else None)
+    if getattr(args, "resolve", False):
+        current, chain = resolve_current(records, rec, cfg)
+        if chain:
+            print(f"<!-- resolved: {' → superseded by → '.join(chain + [record_id(current, cfg)])}; "
+                  f"showing the CURRENT record -->")
+        print(current["path"].read_text())
+    else:
+        print(rec["path"].read_text())
 
 
 def _set_frontmatter_line(text, field, value):
@@ -576,6 +612,8 @@ def main():
     add_root(p_get)
     p_get.add_argument("id", help="record id, e.g. 'ADR 0002' or '2'")
     p_get.add_argument("--type", default=None, help="disambiguate when the number spans types")
+    p_get.add_argument("--resolve", action="store_true",
+                       help="if the record is superseded, follow the chain and print the CURRENT record")
 
     p_sup = sub.add_parser("supersede", help="flip <old> to 'Superseded by <new>' and link <new>")
     add_root(p_sup)
