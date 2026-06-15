@@ -23,6 +23,7 @@ import datetime as dt
 import json
 import os
 import re
+import subprocess
 import sys
 import tempfile
 import time
@@ -435,13 +436,31 @@ def cmd_validate(args, root, cfg):
         chain = " → ".join(f"{lbl} {num}" for lbl, num in cycle)
         errors.append(f"supersede cycle (oscillation): {chain}")
 
+    # optional freshness pass: an Accepted record whose cited code moved past its Date is "stale" —
+    # surfaced as a warning here (and a failure under --strict) so `validate --staleness` doubles as the
+    # CI freshness gate without a separate invocation.
+    stale_found = []
+    if getattr(args, "staleness", False):
+        git_ok, assessed = assess_staleness(records, root, cfg)
+        if not git_ok:
+            log("staleness: not a git work tree (or git unavailable); freshness check skipped")
+        else:
+            for a in assessed:
+                if a["stale"] is True:
+                    stale_found.append(a)
+                    paths = ", ".join(sp["path"] for sp in a["stale_paths"])
+                    warnings.append(f"{a['id']} ({a['title']}): STALE — cited code changed after "
+                                    f"{a['date']} ({paths})")
+
     for w in warnings:
         log(f"warn: {w}")
     for e in errors:
         print(f"ERROR: {e}", file=sys.stderr)
     strict_fail = bool(args.strict and warnings)
     note = " (--strict: warnings are failures)" if args.strict else ""
-    print(f"validated {len(records)} records: {len(errors)} errors, {len(warnings)} warnings{note}")
+    stale_note = f", {len(stale_found)} stale" if getattr(args, "staleness", False) else ""
+    print(f"validated {len(records)} records: {len(errors)} errors, "
+          f"{len(warnings)} warnings{stale_note}{note}")
     if errors or strict_fail:
         sys.exit(1)
 
@@ -523,6 +542,192 @@ def resolve_current(records, rec, cfg, _seen=None):
     return cur, chain
 
 
+# --- freshness / staleness (Phase 1 drift guard) ------------------------------------
+# A record can be Accepted yet stale: the code it cites under `Sources:` has changed in git since the
+# record's Date. A library that silently serves such a record is a confidently-wrong oracle — worse
+# than no library (EVAL-AND-PRODUCT-ROADMAP Phase 1, "freshness is mandatory"). This layer is
+# BEST-EFFORT against git: if there's no git, or git can't answer, it degrades to "unknown" rather
+# than guessing. Pure stdlib (subprocess to the git binary only; ADR 0013).
+
+# A code-path token in Sources: a slash-path or a dotted filename. We deliberately EXCLUDE Rosetta's
+# transcript citations (`agent · session · date`, recognised by the ` · ` separator) and bare prose
+# words (no slash, no dotted extension) so we never treat "this conversation" as a code path.
+_CODE_PATH_RE = re.compile(
+    r"""(?:^|[\s,(`])              # boundary: start, space, comma, paren, or backtick
+        (?!https?://)             # not a URL
+        (                         # capture the path
+          [A-Za-z0-9_.\-]+        #   a leading segment …
+          (?:/[A-Za-z0-9_.\-]+)*  #   … optionally with /subsegments
+          /?                      #   maybe a trailing slash (a directory like tests/)
+        )
+    """,
+    re.VERBOSE,
+)
+
+
+def _looks_like_code_path(tok):
+    """True if a token is plausibly a repo code path, not prose. Accept anything with a '/' (incl. a
+    trailing-slash directory like `tests/`) or a dotted filename with a short extension (foo.py, ci.yml).
+    Reject bare prose words and transcript-citation fragments."""
+    raw = tok.strip().strip("`").rstrip(",.;)").strip()
+    if not raw or " " in raw:
+        return False
+    if "·" in raw:                                   # a transcript citation fragment, never a path
+        return False
+    if "/" in raw:                                   # incl. a trailing-slash dir like 'tests/'
+        return True
+    # no slash → only accept a dotted filename with a short alpha-num extension (foo.py, ci.yml)
+    return bool(re.match(r"^[A-Za-z0-9_.\-]+\.[A-Za-z0-9]{1,5}$", raw))
+
+
+def extract_source_paths(sources):
+    """Pull the distinct code-path tokens out of a `Sources:` value, dropping transcript citations
+    (`agent · id · date`) and prose. Order-preserving, de-duplicated."""
+    if not sources:
+        return []
+    # remove `agent · session · date` citations wholesale so their dates/ids aren't mistaken for paths
+    cleaned = re.sub(r"`[^`]*·[^`]*`", " ", sources)
+    out, seen = [], set()
+    for m in _CODE_PATH_RE.finditer(cleaned):
+        raw = m.group(1).strip().strip("`").rstrip(",.;)")        # keep a trailing '/' for the test
+        if not _looks_like_code_path(raw):
+            continue
+        tok = raw.rstrip("/")                                     # normalise 'tests/' -> 'tests'
+        if tok and tok not in seen:
+            seen.add(tok)
+            out.append(tok)
+    return out
+
+
+def _git_repo_root(root):
+    """The git work-tree root containing `root`, or None. Best-effort: no git binary, not a repo, or a
+    perms error all return None so the staleness check skips cleanly rather than guessing."""
+    try:
+        r = subprocess.run(["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+                           capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return Path(r.stdout.strip()) if r.returncode == 0 and r.stdout.strip() else None
+
+
+def _last_change_after(repo_root, path, since_date):
+    """Return (changed, last_iso) for `path`: whether git recorded a commit touching it strictly AFTER
+    `since_date` (a YYYY-MM-DD string), and the most-recent commit date if known. `path` is resolved
+    relative to the decisions root first, then tried as repo-relative. A path git doesn't know returns
+    (None, None) — 'unknown', not 'stale'."""
+    # `--since` is inclusive of the day; we want commits strictly after the record's Date, so ask for
+    # the full commit date and compare date-strings ourselves (robust, tz-agnostic at day resolution).
+    try:
+        r = subprocess.run(
+            ["git", "-C", str(repo_root), "log", "-1", "--format=%cI", "--", path],
+            capture_output=True, text=True, timeout=15)
+    except (OSError, subprocess.SubprocessError):
+        return None, None
+    if r.returncode != 0:
+        return None, None
+    out = r.stdout.strip()
+    if not out:
+        return None, None                            # git knows no history for this path
+    last_day = out[:10]                              # YYYY-MM-DD from the ISO timestamp
+    return (last_day > since_date), last_day
+
+
+def staleness_for_record(rec, repo_root, decisions_root):
+    """Assess one record's freshness against git. Returns a dict:
+        {stale: bool|None, date: str, checked: [paths], stale_paths: [{path,last_change}], reason}
+    stale is None when freshness can't be determined (no Date, no cited paths, or git can't resolve any
+    path) — callers must treat None as 'unknown', never as fresh."""
+    date = effective_date(rec)
+    sources = rec["fields"].get("Sources", "")
+    paths = extract_source_paths(sources)
+    result = {"stale": None, "date": date, "checked": [], "stale_paths": [], "reason": ""}
+    if not date:
+        result["reason"] = "no Date to compare against"
+        return result
+    if not paths:
+        result["reason"] = "no cited code paths in Sources"
+        return result
+    any_resolved = False
+    for p in paths:
+        # try the path as decisions-root-relative first, then verbatim (repo-relative)
+        candidates = []
+        abs = (decisions_root / p)
+        with contextlib.suppress(ValueError):
+            candidates.append(abs.resolve().relative_to(repo_root.resolve()).as_posix())
+        candidates.append(p)
+        changed = last = None
+        for cand in candidates:
+            changed, last = _last_change_after(repo_root, cand, date)
+            if changed is not None:
+                break
+        if changed is None:
+            continue                                 # git doesn't know this path → skip (unknown)
+        any_resolved = True
+        result["checked"].append(p)
+        if changed:
+            result["stale_paths"].append({"path": p, "last_change": last})
+    if not any_resolved:
+        result["reason"] = "none of the cited paths are tracked in git"
+        return result
+    result["stale"] = bool(result["stale_paths"])
+    result["reason"] = ("cited code changed after the record's Date"
+                        if result["stale"] else "cited code unchanged since the record's Date")
+    return result
+
+
+def assess_staleness(records, root, cfg, statuses=("accepted",)):
+    """Run the freshness check across `records` (default: only Accepted records — the ones a library
+    actively serves). Returns (git_ok, [per-record dict]). Each dict carries the record id + title plus
+    the staleness_for_record payload. If git isn't available, returns (False, []) so the caller can
+    report 'skipped' rather than a false all-fresh."""
+    repo_root = _git_repo_root(root)
+    if repo_root is None:
+        return False, []
+    out = []
+    want = tuple(s.lower() for s in statuses)
+    for rec in records:
+        status = rec["fields"].get("Status", "").lower()
+        if want and not any(status.startswith(s) for s in want):
+            continue
+        info = staleness_for_record(rec, repo_root, root)
+        info["id"] = record_id(rec, cfg)
+        info["title"] = rec["title"]
+        out.append(info)
+    return True, out
+
+
+def cmd_staleness(args, root, cfg):
+    """Flag Accepted records whose cited `Sources:` code paths changed in git after the record's Date —
+    so a library can't silently serve a stale-but-Accepted decision (Phase 1 freshness guard). JSON out.
+    Best-effort: with no git (or no resolvable paths) it reports 'skipped'/'unknown', never a false pass.
+    Exit code 1 when --strict and at least one stale record is found (CI-gateable)."""
+    records = collect_records(root, cfg)
+    statuses = (args.status,) if getattr(args, "status", None) else ("accepted",)
+    git_ok, assessed = assess_staleness(records, root, cfg, statuses)
+    if not git_ok:
+        out = {"git": False, "skipped": True,
+               "note": "not a git work tree (or git unavailable); staleness check skipped"}
+        print(json.dumps(out, indent=2))
+        return
+    stale = [a for a in assessed if a["stale"] is True]
+    unknown = [a for a in assessed if a["stale"] is None]
+    fresh = [a for a in assessed if a["stale"] is False]
+    out = {
+        "git": True,
+        "checked_records": len(assessed),
+        "stale": [{"id": a["id"], "title": a["title"], "date": a["date"],
+                   "stale_paths": a["stale_paths"]} for a in stale],
+        "unknown": [{"id": a["id"], "title": a["title"], "reason": a["reason"]} for a in unknown],
+        "fresh_count": len(fresh),
+    }
+    if stale:
+        out["note"] = (f"{len(stale)} Accepted record(s) cite code that changed after their Date — "
+                       f"review and re-validate (the library may be serving a stale decision)")
+    print(json.dumps(out, indent=2))
+    if getattr(args, "strict", False) and stale:
+        sys.exit(1)
+
+
 def cmd_get(args, root, cfg):
     """Print one record in full (so the agent reads a single record, not the whole library).
     With --resolve, if the requested record is superseded, follow the chain to the CURRENT record and
@@ -555,20 +760,39 @@ def cmd_resolve(args, root, cfg):
         if not q or q in hay or q in rec["path"].read_text(errors="replace").lower():
             matched.append(rec)
     current = {}                                   # id -> {record, superseded_from}
+    current_recs = {}                              # id -> live record object (for the freshness pass)
     for rec in matched:
         cur, chain = resolve_current(records, rec, cfg)
         if not cur["fields"].get("Status", "").lower().startswith("accepted"):
             continue                               # only surface live (Accepted) endpoints
         cid = record_id(cur, cfg)
+        current_recs[cid] = cur
         entry = current.setdefault(cid, {
             "id": cid, "title": cur["title"], "status": cur["fields"].get("Status", ""),
             "date": effective_date(cur), "path": cur["path"].relative_to(root).as_posix(),
             "aliases": cur["fields"].get("Aliases", ""), "superseded_from": []})
         if chain:
             entry["superseded_from"] = sorted(set(entry["superseded_from"]) | set(chain))
+
+    # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
+    # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /
+    # False / null(unknown) so a consumer never reads "absent flag" as "fresh".
+    git_stale = False
+    if not getattr(args, "no_stale_check", False):
+        repo_root = _git_repo_root(root)
+        if repo_root is not None:
+            git_stale = True
+            for cid, entry in current.items():
+                info = staleness_for_record(current_recs[cid], repo_root, root)
+                entry["stale"] = info["stale"]
+                if info["stale"]:
+                    entry["stale_paths"] = info["stale_paths"]
+
     live = list(current.values())
     out = {"query": args.text, "current": live, "matched_records": len(matched),
-           "conflict": len(live) > 1}
+           "conflict": len(live) > 1, "freshness_checked": git_stale}
+    if git_stale and any(e.get("stale") for e in live):
+        out["stale"] = True
     if len(live) > 1:
         out["note"] = ("MULTIPLE current records match — unresolved conflict; the library does not "
                        "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
@@ -637,6 +861,16 @@ def main():
     p_val = sub.add_parser("validate", help="check frontmatter, numbering, statuses, supersede links")
     add_root(p_val)
     p_val.add_argument("--strict", action="store_true", help="treat warnings as failures (nonzero exit)")
+    p_val.add_argument("--staleness", action="store_true",
+                       help="also flag Accepted records whose cited code changed in git since their Date")
+
+    p_stale = sub.add_parser("staleness", help="flag Accepted records whose cited code moved in git "
+                                               "since their Date (freshness/drift guard)")
+    add_root(p_stale)
+    p_stale.add_argument("--status", default=None,
+                         help="status prefix to check (default: Accepted — the records a library serves)")
+    p_stale.add_argument("--strict", action="store_true",
+                         help="exit nonzero if any stale record is found (CI gate)")
 
     p_search = sub.add_parser("search", help="query the library (returns only matches as JSON)")
     add_root(p_search)
@@ -663,6 +897,8 @@ def main():
     add_root(p_res)
     p_res.add_argument("--text", default=None, help="substring/term to resolve (title/frontmatter/body)")
     p_res.add_argument("--type", default=None, help="restrict to a record type (adr|pdr|bdr|…)")
+    p_res.add_argument("--no-stale-check", action="store_true",
+                       help="skip the git freshness annotation on resolved records")
 
     args = ap.parse_args()
 
@@ -680,6 +916,8 @@ def main():
         cmd_index(args, root, cfg)
     elif args.cmd == "validate":
         cmd_validate(args, root, cfg)
+    elif args.cmd == "staleness":
+        cmd_staleness(args, root, cfg)
     elif args.cmd == "search":
         cmd_search(args, root, cfg)
     elif args.cmd == "get":
