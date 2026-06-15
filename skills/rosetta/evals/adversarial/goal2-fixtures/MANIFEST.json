@@ -1,0 +1,31 @@
+{
+  "seed": 20260614,
+  "per_type": 1,
+  "fixtures": [
+    {
+      "id": "glossary-present__00",
+      "type": "glossary-present",
+      "query": "What is the current primary datastore for Beacon (the notification dispatcher)?"
+    },
+    {
+      "id": "glossary-absent__00",
+      "type": "glossary-absent",
+      "query": "What datastore does the Cobalt service use for its profile data?"
+    },
+    {
+      "id": "scattered-alias__00",
+      "type": "scattered-alias",
+      "query": "What message queue / event bus does the Drift service publish to today?"
+    },
+    {
+      "id": "ambiguous-supersession__00",
+      "type": "ambiguous-supersession",
+      "query": "Which identity provider (IdP) did we settle on for Beacon (notification dispatcher)?"
+    },
+    {
+      "id": "code-vs-decision-conflict__00",
+      "type": "code-vs-decision-conflict",
+      "query": "What datastore is Beacon (notification dispatcher) actually running on in production?"
+    }
+  ]
+}

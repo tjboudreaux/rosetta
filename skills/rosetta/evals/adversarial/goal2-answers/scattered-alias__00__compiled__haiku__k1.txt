@@ -1,0 +1,5 @@
+ANSWER: The Drift service (canonical identity: svc-flags_api) publishes to Google Cloud Pub/Sub.
+
+RESOLUTION: Drift is an alias for the feature-flag service svc-flags_api (ADR 0001). The service migrated from RabbitMQ to Pub/Sub on 2026-05-17 to gain ordering guarantees required by the platform. Current state confirmed by code path raw/code/flags_api.py (EVENT_BUS = "pub/sub") and git commit 77aa88b (2026-05-17).
+
+CITATIONS: ADR 0001 (canonical service identity mapping), ADR 0002 (event bus: Pub/Sub, supersedes ADR 0003).

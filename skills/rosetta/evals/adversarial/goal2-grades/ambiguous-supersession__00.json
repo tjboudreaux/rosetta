@@ -1,0 +1,87 @@
+{
+  "fixture": "ambiguous-supersession__00",
+  "fixture_type": "ambiguous-supersession",
+  "gold_answer": "Keycloak",
+  "results": [
+    {
+      "file": "ambiguous-supersession__00__raw__haiku__k1.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "FINAL ANSWER: Keycloak, asserted as the final IdP. Resolution shows both same-day choices (Ping AM, Auth0 PM) were superseded by the 2026-04-19 amendment because neither met SCIM. Neither earlier choice asserted as final."
+    },
+    {
+      "file": "ambiguous-supersession__00__raw__haiku__k2.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "FINAL ANSWER: Keycloak. Explicitly states 03-amendment.md supersedes both March 4 decisions (Ping AM, Auth0 PM) due to SCIM, Keycloak final. No earlier choice asserted as final."
+    },
+    {
+      "file": "ambiguous-supersession__00__raw__sonnet__k1.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak as final IdP. Both AM (Ping) and PM (Auth0) decisions noted as conflicting and explicitly superseded by 2026-04-19 amendment (SCIM); both marked overridden. No earlier choice asserted as final."
+    },
+    {
+      "file": "ambiguous-supersession__00__raw__sonnet__k2.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak. States neither AM (Ping) nor PM (Auth0) is final; 03-amendment explicitly supersedes both due to SCIM; final answer Keycloak not Ping or Auth0."
+    },
+    {
+      "file": "ambiguous-supersession__00__compiled__haiku__k1.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak final/accepted. ADR 0001 (Ping) and 0002 (Auth0) both same-day, neither met SCIM; ADR 0003 supersedes both. Both labeled superseded; neither asserted as final."
+    },
+    {
+      "file": "ambiguous-supersession__00__compiled__haiku__k2.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak current/live. Two conflicting 2026-03-04 decisions (Ping ADR 0001, Auth0 ADR 0002) both rejected for failing SCIM; ADR 0003 supersedes both. Supersession chain shown; neither asserted as final."
+    },
+    {
+      "file": "ambiguous-supersession__00__compiled__sonnet__k1.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak current/accepted (ADR 0003). Two conflicting same-day calls (Ping ADR 0001 AM, Auth0 ADR 0002 PM), both unresolved and found not to meet SCIM; ADR 0003 supersedes both. Both marked superseded."
+    },
+    {
+      "file": "ambiguous-supersession__00__compiled__sonnet__k2.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "ANSWER: Keycloak final/settled (ADR 0003, Accepted). Same-day conflict (Ping ADR 0001 AM, Auth0 ADR 0002 PM); neither qualified on SCIM; ADR 0003 supersedes both. Full supersession chain shown; neither earlier choice asserted as final."
+    }
+  ]
+}

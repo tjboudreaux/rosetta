@@ -1,0 +1,5 @@
+ANSWER: MySQL
+
+RESOLUTION: The Cobalt service uses MySQL for profile data storage, hosted on the cluster mysql-prod-eu. This is confirmed by multiple independent sources in the corpus: (1) the infra dashboard export (02-dashboard-export.md) explicitly states "Cluster mysql-prod-eu hosts the Cobalt workloads. Backend engine reported by the cluster: MySQL"; (2) the git commit log (git-log.txt) shows "point Cobalt at mysql-prod-eu"; (3) the incident review (04-incident.md) confirms profile reads were affected by MySQL replica failover on mysql-prod-eu. The unresolved "Cloud Spanner?" note in 03-stray-distractor.md is marked as a TODO that was never confirmed and should be disregarded.
+
+CITATIONS: 02-dashboard-export.md (infra dashboard export), git-log.txt (deployment commit), 04-incident.md (incident evidence), 01-org-notes.md (team context)

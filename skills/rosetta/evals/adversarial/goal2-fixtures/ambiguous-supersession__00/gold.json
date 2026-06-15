@@ -1,0 +1,36 @@
+{
+  "fixture_type": "ambiguous-supersession",
+  "answer": "Keycloak",
+  "answer_aliases": [
+    "Keycloak",
+    "keycloak"
+  ],
+  "claims": [
+    {
+      "id": "current",
+      "text": "the IdP is Keycloak",
+      "supported_by": "03-amendment.md + code + git"
+    },
+    {
+      "id": "supersession",
+      "text": "both Ping (AM) and Auth0 (PM) were superseded by Keycloak",
+      "supported_by": "03 supersedes 01 and 02"
+    },
+    {
+      "id": "no_latest_wins",
+      "text": "naive latest-of-same-day would wrongly pick Auth0; the amendment overrides",
+      "supported_by": "01,02 vs 03"
+    }
+  ],
+  "rubric": {
+    "must": [
+      "names Keycloak",
+      "shows Ping and Auth0 were both superseded"
+    ],
+    "must_not": [
+      "asserts Ping as final",
+      "asserts Auth0 as final"
+    ],
+    "negative_control": false
+  }
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "\"Cobalt\" codename refers to the user-profile service (squad + workload)",
+    "status": "Accepted",
+    "date": "2025-12-03",
+    "path": "architecture-decisions/0001-cobalt-codename-scope.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "Cobalt's datastore is MySQL on cluster mysql-prod-eu",
+    "status": "Accepted",
+    "date": "2026-03-15",
+    "path": "architecture-decisions/0002-cobalt-datastore-mysql.md"
+  },
+  {
+    "id": "ADR 0003",
+    "type": "adr",
+    "number": 3,
+    "title": "\"Cloud Spanner for profiles\" was an open TODO, never adopted (not a decision)",
+    "status": "Rejected",
+    "date": "2026-01-09",
+    "path": "architecture-decisions/0003-rejected-spanner-todo.md"
+  }
+]

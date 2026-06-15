@@ -1,0 +1,3 @@
+The current primary datastore for Beacon (the notification dispatcher) is PostgreSQL, adopted as the ledger tier (strongly-consistent primary datastore). This represents a migration from MySQL, which was originally chosen in ADR 0001 but suffered hotspotting incidents. The Postgres migration was completed in production on 2026-04-20 and is documented in ADR 0002 (Accepted status), which supersedes ADR 0001. The decision is corroborated by git commit a1b2c3d and the notify_svc.py code setting BACKEND = "postgres" with LEGACY_MYSQL_ENABLED = False.
+
+Resolution chain: ADR 0001 (MySQL, Superseded by ADR 0002) → ADR 0002 (Postgres, Accepted, current).

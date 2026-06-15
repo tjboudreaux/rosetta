@@ -1,0 +1,5 @@
+ANSWER: The Drift service publishes to Google Cloud Pub/Sub today.
+
+RESOLUTION: The service has multiple historical aliases (Drift, svc-flags_api, feature-flag service) all referring to the same service. Git history and platform decision documents show a migration from RabbitMQ to Pub/Sub, with cutover completed on 2026-05-17. Since today's date (2026-06-14) is after this cutover, the current event bus is Pub/Sub.
+
+CITATIONS: 03-platform-decision.md (confirms service aliases and migration), git-log.txt (2026-05-17 cutover date), flags_api.py (code confirms EVENT_BUS = "pub/sub").

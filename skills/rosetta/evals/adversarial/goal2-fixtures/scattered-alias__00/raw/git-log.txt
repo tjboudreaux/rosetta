@@ -1,0 +1,2 @@
+77aa88b 2026-05-17 flags_api: switch event bus to Pub/Sub
+11bb22c 2025-11-02 flags_api: publish to RabbitMQ

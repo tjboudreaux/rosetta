@@ -1,0 +1,2 @@
+a1b2c3d 2026-04-20 migrate Beacon ledger tier to Postgres; disable MySQL writes
+9f8e7d6 2025-10-12 add MySQL client for Beacon

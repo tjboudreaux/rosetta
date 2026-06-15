@@ -1,0 +1,5 @@
+ANSWER: Keycloak is the final, accepted IdP for Beacon (notification dispatcher).
+
+SUPPORTING RESOLUTION: The decision history involved two conflicting same-day calls on 2026-03-04: ADR 0001 (morning) chose Ping, while ADR 0002 (afternoon) chose Auth0. Neither provider satisfied Beacon's SCIM requirements. On 2026-04-19, ADR 0003 superseded both earlier decisions and settled on Keycloak as a SCIM-capable IdP, confirmed in code (notify_svc.py) and commit 33cc44d.
+
+KEY ADRs: ADR 0001 (Ping, superseded), ADR 0002 (Auth0, superseded), ADR 0003 (Keycloak, final/accepted).

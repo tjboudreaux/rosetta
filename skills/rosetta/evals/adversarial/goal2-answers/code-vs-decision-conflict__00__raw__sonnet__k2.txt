@@ -1,0 +1,5 @@
+(1) PRODUCTION ANSWER: Beacon is running on MySQL in production.
+
+(2) RESOLUTION: Starting from the code: notify_svc.py (the production service file) explicitly sets DATASTORE = "mysql" and includes a comment stating "ADR says Postgres but licensing blocked it." The git log (git-log.txt) shows commit 55dd66e dated 2026-05-24 with message "notify_svc: provision MySQL (prod), retire Postgres POC" — this commit retired the Postgres proof-of-concept and provisioned MySQL for production. An earlier commit 88ff99a (2026-02-01) scaffolded against Postgres but was superseded. The implementation note (02-impl-note.md) independently confirms a licensing blocker on Postgres caused the cutover to MySQL, and that prod has been on MySQL since. The ADR (01-adr-record.md) records the original decision to use Postgres (status: Accepted, never updated) — this ADR is STALE; it reflects the original intent, not the shipped reality. Per the truth hierarchy, CODE and GIT are authoritative and override the ADR.
+
+CITATIONS: raw/code/notify_svc.py, raw/git-log.txt (commit 55dd66e 2026-05-24), raw/02-impl-note.md. ADR raw/01-adr-record.md is stale.
