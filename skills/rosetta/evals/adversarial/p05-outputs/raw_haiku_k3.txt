@@ -1,0 +1,1 @@
+The user-profile service's current primary datastore is Cloud Spanner (via the "ledger tier"). As of 2026-06-09, Atlas completed the migration from DynamoDB to the ledger tier infrastructure, which runs on the spanner-prod-eu cluster for strong consistency. The prior document store (DynamoDB) was retired after this cutover.

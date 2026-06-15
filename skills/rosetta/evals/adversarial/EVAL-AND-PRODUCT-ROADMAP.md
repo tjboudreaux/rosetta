@@ -1,5 +1,24 @@
 # Rosetta — phased roadmap for evals + product (post adversarial review)
 
+> **POST-PHASE-0.5 UPDATE (2026-06-14, after running P0 + P0.5 with Codex+Gemini review).** Findings
+> changed the direction — see `PHASE0-RESULTS.md` (retracted/corrected) and `PHASE0.5-RESULTS.md`:
+> - **Product reframed** from "alias-aware retriever" → a **decision-resolution layer / provenance
+>   graph** (aliases + supersession + scope + code-evidence + conflict/stale flags). Compilation is the
+>   materialization/cache; retrieval is the interface; the moat is **verified resolution + freshness**.
+> - **Evidence:** on a *messy implicit-glossary* corpus (the realistic case), a real LLM compiler lifted
+>   cheap Haiku **2/3 → 3/3 at −31% tokens/query**, while a regex retriever extracted **0** aliases —
+>   compilation pulls ahead exactly where reviewers predicted.
+> - **Value prop (evidence-backed):** Rosetta builds/serves a verified decision-resolution layer that
+>   lifts cheap models to ~frontier correctness on messy real histories at lower amortized per-query cost.
+> - **Insert Phase 0b** (preregistered 2×2 over 20+ fixtures: glossary present/absent/scattered,
+>   ambiguous-supersession, code-conflict; arms = raw / scaffold / production LLM resolver / LLM-compiler
+>   graph; report **$/correct incl. compile+retry**; grade two axes) **before** scaling Phase 1.
+> - **Reframe Phase 1** to build the shared **resolver/evidence graph**, not just `decisions.py search`.
+>   (Already shipped one piece: `get --resolve` supersession-following.)
+> - **Process lesson:** never grep-grade (it mis-graded Phase 0); always claim-check, read-verified.
+
+
+
 **Reframe forced by the Codex+Gemini reviews:** our headline ("retrieval-defeat breaks models; Rosetta's
 compiled library is the antidote") is a **hypothesis on n=1 fixtures**, not a result — and it is
 **falsifiable** by inference-time tooling (a `resolve_codename`/glossary tool, or a better retriever)
