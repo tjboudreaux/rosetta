@@ -40,4 +40,4 @@ skills/rosetta/evals/adversarial/killtest-outputs/decisions/
 *~
 .idea/
 .vscode/
-killtest-outputs/smoke-runs/*.err
+skills/rosetta/evals/adversarial/killtest-outputs/**/*.err

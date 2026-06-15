@@ -86,9 +86,24 @@ product thesis. → `evals/adversarial/RESEARCH-workflows-x-rosetta.md` (open qu
 - **Eval design/quality:** `DESIGN.md` · `CALIBRATION.md` · `README.md` · `judge_prompt.md` · `RESULTS.md` · `REPORT.md`
 - **Difficulty escalation:** `HARD-SUITE.md` · `HARDER-V3.md` (scale doesn't break) · `HARDER-V5.md` (broke Sonnet) · `HARDER-V6.md` (variety + broke Gemini-Pro) · `REVIEW-ablation.md`
 - **Value / cost:** `VALUE.md` · `SWEEP.md` (14-model cross-harness) · `TOKEN-REDUCTION-HYPOTHESES.md`
+- **Recall-recovery thesis (PROVEN, Claude tiers):** `KILLTEST-RESULTS.md` · `killtest_gen.py` · `killtest_validate.py` · `killtest_matrix.py`
 - **Phase 0 program:** `EVAL-AND-PRODUCT-ROADMAP.md` · `PRODUCT-VALUE-PLAN.md` · `PHASE0-RESULTS.md` · `PHASE0.5-RESULTS.md` · `PHASE0-REVIEWS.md`
 - **Research (cited, verified):** `RESEARCH-llm-failure-modes.md` · `RESEARCH-workflows-x-rosetta.md`
 - **Shipped product:** `scripts/decisions.py` (`resolve`, `get --resolve`) · `commands/rosetta-grill.md` · `commands/rosetta-conflicts.md` · `commands/README.md`
+
+## ACTIVE GOAL (set 2026-06-15): harden the proven thesis — execute BOTH
+The recall-recovery thesis is proven on Claude tiers (kill test). The active goal is to run the two
+hardening passes that turn it into a fully defensible, end-to-end result — **both**, not either/or:
+
+1. **Cross-harness pass** — re-run the kill-test matrix across **Gemini + Codex** (not just Claude), so
+   the result generalizes beyond one provider. Budget for the CLI flakiness seen on Sonnet-flat (use
+   `killtest_matrix.py --tiers` + per-harness adapters; resumable cells already handle partial failure).
+2. **End-to-end compiled-library arm** — add an arm where an LLM **compiles** the decision library from
+   the raw corpus (gated by the ADR-0024 integrity check), instead of querying the deterministic
+   ground-truth library. This folds **compile cost + the compiler's own fallibility** into $/correct, so
+   the resolve arm measures real Rosetta end-to-end, not just the resolution ceiling.
+
+Done when both run at k≥3 with the CALIBRATED gate and `KILLTEST-RESULTS.md` carries the combined matrix.
 
 ## Candidate goals to choose from (pick one to set) — post-orchestration
 Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:
