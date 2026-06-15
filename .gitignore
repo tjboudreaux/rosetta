@@ -43,5 +43,5 @@ skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib/decisions/
 .idea/
 .vscode/
 skills/rosetta/evals/adversarial/killtest-outputs/**/*.err
-skills/rosetta/evals/adversarial/killtest-outputs/scale/*/corpus.md
-skills/rosetta/evals/adversarial/killtest-outputs/scale/*/decisions/
+# per-size scale fixtures are fully regenerable (killtest_gen.py --services --out); keep only the results
+skills/rosetta/evals/adversarial/killtest-outputs/scale/n*/
