@@ -1,17 +1,9 @@
 {
-  "rag": {
-    "current": 2,
-    "replaced": 2,
+  "resolve": {
+    "current": 3,
+    "replaced": 3,
     "parsed": 3,
-    "in_tokens": 1177,
-    "fails": [
-      [
-        "Q001",
-        "Darwin",
-        "deploy-target",
-        "self-hosted k8s",
-        "GKE Autopilot"
-      ]
-    ]
+    "in_tokens": 680,
+    "fails": []
   }
 }

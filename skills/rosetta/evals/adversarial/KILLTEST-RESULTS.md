@@ -88,19 +88,80 @@ timeout (`[32, 29, 0]`); the majority vote over the two good samples is unaffect
 - **Synthetic corpus**, deterministic by construction; it models scattered supersession + distractors,
   not the full mess of a real repo. The mechanism, not the absolute percentages, is the durable result.
 - **The resolve arm queries a deterministic ground-truth library** — this measures the *resolution
-  mechanism's* recall ceiling with a model in the loop, NOT end-to-end LLM compilation. Compile cost +
-  the compiler's own fallibility (now gated by ADR 0024) are a separate line item, still unmeasured at
-  this scale.
-- **Claude-only, k=3.** Cross-harness (Gemini + Codex) is the next pass; the CLI flakiness seen on
-  Sonnet-flat is a logistics tax to budget for there.
+  mechanism's* recall ceiling. End-to-end LLM compilation (compile cost + compiler fallibility) is
+  **measured in hardening pass 2 below** (82% vs the 100% ceiling).
+- **Claude-only, k=3** at this point — **generalized to Gemini + Codex in hardening pass 1 below.**
+
+## Hardening pass 1 — cross-harness (Gemini + Codex), k=3, 40 probes
+Re-ran the matrix across **five models / three providers** via a harness-agnostic dispatcher
+(`run_model` → claude / gemini / codex CLIs). Majority recall:
+
+| arm | Haiku | Sonnet | Gemini-flash | Gemini-3.1-pro | GPT-5.5 |
+|---|---|---|---|---|---|
+| raw (106k corpus) | 95% | 100% | 100% | 100% | 100% |
+| generic-RAG | 85% | 85% | 95% | 95% | 98% |
+| flat-summary | 65% | 72% | 82% | 82% | **57%** |
+| **resolve (provenance)** | **100%** | **100%** | **100%** | **100%** | **100%** |
+
+**$ per correct** (real per-provider rates, `pricing.json` 2026-06):
+
+| arm | Haiku | Sonnet | Gemini-flash | Gemini-3.1-pro | GPT-5.5 |
+|---|---|---|---|---|---|
+| raw | $0.0093 | $0.0264 | $0.0045 | $0.0179 | $0.0448 |
+| **resolve** | **$0.0013** | $0.0039 | **$0.0007** | $0.0029 | $0.0073 |
+
+- **`resolve` = 100% recall on every provider** — the recovery is not Claude-specific.
+- **Flat compression loses recall on every provider** (57–82%); GPT-5.5 is the worst flat performer (57%).
+- **resolve is the cheapest-correct path on every model** (~6–7× under raw). Cheapest overall:
+  **Gemini-flash + resolve = $0.0007/correct at 100%** — matching GPT-5.5-raw's 100% (**$0.0448**) at **~64×
+  lower cost**. The cheap-model-to-frontier result holds across harnesses.
+- On the strong models raw also reaches 100% (they resist lost-in-the-middle better than Haiku, where
+  resolve's 100% > raw's 95%) — so on capable models resolve's win is **cost + the second axis**, not raw recall.
+
+## Hardening pass 2 — end-to-end compiled-library arm (real LLM compile, not ground truth)
+The matrix `resolve` arm queries a deterministic ground-truth library (the resolution *ceiling*). This
+arm instead has an LLM **compile** the library from the raw corpus (`killtest_compile.py`,
+compiler = Sonnet), gated by the ADR-0024 integrity check, then resolves against THAT. So it folds in
+compile cost + the compiler's own fallibility.
+
+| compiled-library variant | resolve recall vs gold | conflicts | note |
+|---|---|---|---|
+| naive per-chunk extract + assemble | **50%** (20/40) | **14** | LLM emitted the same codename with drifting casing across chunks → split chains → resolve correctly **flags conflicts** instead of guessing |
+| **+ entity canonicalization** (case/whitespace) | **82%** (33/40) | 0 | chains now match ground truth (340); remaining 18% = genuine extraction errors (a chain's final decision missed/mis-dated) |
+
+Model-in-loop (solver answers from resolve-on-compiled), majority recall — **constant 82% across all
+tiers** (Haiku/Sonnet/Gemini-flash/GPT-5.5), because resolve hands the answer and the solver only
+transcribes; the 18-pt gap is entirely the compiler, not the solver:
+
+| arm | Haiku | Sonnet | Gemini-flash | GPT-5.5 |
+|---|---|---|---|---|
+| compiled-resolve | 82% | 82% | 82% | 82% |
+| $/correct | $0.0016 | $0.0047 | $0.0009 | $0.0087 |
+
+**Compile cost ≈ 146k tokens, one-time** (amortizes over all queries). Integrity gate: **CLEAN** (the
+resolve-then-assemble design assigns ids deterministically, so id-hallucination is structurally
+impossible; the gate guards ghost citations).
+
+**What pass 2 establishes (honestly):** a *real* LLM-compiled library answers **82%** end-to-end at this
+scale — below the 100% ground-truth ceiling but **above flat compression on most tiers** and far cheaper
+than raw. The dominant failure is **compiler extraction**, not resolution; the biggest single lever is
+**entity canonicalization** (+32 pts, 50→82) — the alias-resolution step Phase 1 named but never built,
+now shown to be load-bearing. Closing the remaining 18% is a compiler-quality problem (better extraction
+/ chunk overlap / a verification pass), not a thesis problem.
 
 ## Verdict
-Per the pre-committed stop rule (tie → retire the accuracy thesis), this is the **decisive opposite of a
-tie**: clean, calibrated separation at scale on both Claude tiers, with the cheap-model-to-frontier
-result proven. **The recall-recovery thesis — unproven through Goals 1 & 2 — now holds on Claude tiers.**
-Next: the cross-harness pass (Gemini + Codex) and an end-to-end *compiled-library* arm to fold in
-compile cost + the integrity gate.
+The recall-recovery thesis — unproven through Goals 1 & 2 — **holds across five models and three
+providers** (resolve 100% vs flat 57–82%), with the cheap-model-to-frontier result reproduced
+cross-harness (~64× cost edge at equal recall). End-to-end, a real LLM-compiled library reaches **82%**
+(ceiling 100%), gated clean by ADR 0024, with the gap localized to compiler extraction and a quantified
+canonicalization lever. **The accuracy moat is real; the remaining work is compiler quality, not the
+mechanism.**
+
+Remaining (smaller) next steps: push compiler extraction past 82% (overlap chunks / add a self-check
+pass), and a real-repo corpus to replace the synthetic one.
 
 ## Artifacts
-`killtest_gen.py` · `killtest_validate.py` · `killtest_smoke.py` · `killtest-outputs/` (corpus,
-decisions library, probes, gold, smoke-runs/).
+`killtest_gen.py` · `killtest_validate.py` · `killtest_smoke.py` (arms + `run_model` dispatcher) ·
+`killtest_matrix.py` (matrix + `pricing.json` $/correct) · `killtest_compile.py` (LLM compile +
+canonicalization, `--reassemble`) · `killtest-outputs/matrix/matrix-results-{claude,xharness,compiled}.json`
+· `killtest-outputs/compiled-lib/{extracted.json,compile-meta.json}`.

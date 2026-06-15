@@ -91,19 +91,20 @@ product thesis. → `evals/adversarial/RESEARCH-workflows-x-rosetta.md` (open qu
 - **Research (cited, verified):** `RESEARCH-llm-failure-modes.md` · `RESEARCH-workflows-x-rosetta.md`
 - **Shipped product:** `scripts/decisions.py` (`resolve`, `get --resolve`) · `commands/rosetta-grill.md` · `commands/rosetta-conflicts.md` · `commands/README.md`
 
-## ACTIVE GOAL (set 2026-06-15): harden the proven thesis — execute BOTH
-The recall-recovery thesis is proven on Claude tiers (kill test). The active goal is to run the two
-hardening passes that turn it into a fully defensible, end-to-end result — **both**, not either/or:
+## GOAL COMPLETE (2026-06-15): both hardening passes done → thesis holds cross-harness + end-to-end
+Both passes ran at k=3, 40 probes; combined matrix in `KILLTEST-RESULTS.md`.
 
-1. **Cross-harness pass** — re-run the kill-test matrix across **Gemini + Codex** (not just Claude), so
-   the result generalizes beyond one provider. Budget for the CLI flakiness seen on Sonnet-flat (use
-   `killtest_matrix.py --tiers` + per-harness adapters; resumable cells already handle partial failure).
-2. **End-to-end compiled-library arm** — add an arm where an LLM **compiles** the decision library from
-   the raw corpus (gated by the ADR-0024 integrity check), instead of querying the deterministic
-   ground-truth library. This folds **compile cost + the compiler's own fallibility** into $/correct, so
-   the resolve arm measures real Rosetta end-to-end, not just the resolution ceiling.
+1. **Cross-harness pass — DONE.** Matrix across **5 models / 3 providers** (Haiku, Sonnet, Gemini-flash,
+   Gemini-3.1-pro, GPT-5.5) via a `run_model` dispatcher. **resolve = 100% recall on every provider**;
+   flat compression loses recall everywhere (57–82%). resolve is the cheapest-correct path on every
+   model; cheapest **Gemini-flash+resolve $0.0007/correct @100% = GPT-5.5-raw @100% at ~64× lower cost**.
+2. **End-to-end compiled-library arm — DONE.** An LLM compiles the library (Sonnet, ADR-0024 gate CLEAN);
+   resolve-on-compiled = **82%** end-to-end (vs 100% ground-truth ceiling). Naive compile 50% → **+entity
+   canonicalization 82%** (the alias step Phase 1 named, now shown load-bearing); compile cost ~146k tok
+   one-time. Remaining 18% = compiler extraction error, not the mechanism.
 
-Done when both run at k≥3 with the CALIBRATED gate and `KILLTEST-RESULTS.md` carries the combined matrix.
+**Net: the accuracy moat is real and provider-independent.** Remaining work is compiler quality (push
+extraction past 82%) and a real-repo corpus — not the thesis.
 
 ## Candidate goals to choose from (pick one to set) — post-orchestration
 Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:
