@@ -540,6 +540,43 @@ def cmd_get(args, root, cfg):
         print(rec["path"].read_text())
 
 
+def cmd_resolve(args, root, cfg):
+    """Decision-resolution primitive (the product's core capability): given a query, find matching
+    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
+    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
+    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
+    records = collect_records(root, cfg)
+    q = (args.text or "").lower()
+    matched = []
+    for rec in records:
+        if args.type and rec["type"] != args.type.lower():
+            continue
+        hay = (rec["title"] + " " + " ".join(rec["fields"].values())).lower()
+        if not q or q in hay or q in rec["path"].read_text(errors="replace").lower():
+            matched.append(rec)
+    current = {}                                   # id -> {record, superseded_from}
+    for rec in matched:
+        cur, chain = resolve_current(records, rec, cfg)
+        if not cur["fields"].get("Status", "").lower().startswith("accepted"):
+            continue                               # only surface live (Accepted) endpoints
+        cid = record_id(cur, cfg)
+        entry = current.setdefault(cid, {
+            "id": cid, "title": cur["title"], "status": cur["fields"].get("Status", ""),
+            "date": effective_date(cur), "path": cur["path"].relative_to(root).as_posix(),
+            "aliases": cur["fields"].get("Aliases", ""), "superseded_from": []})
+        if chain:
+            entry["superseded_from"] = sorted(set(entry["superseded_from"]) | set(chain))
+    live = list(current.values())
+    out = {"query": args.text, "current": live, "matched_records": len(matched),
+           "conflict": len(live) > 1}
+    if len(live) > 1:
+        out["note"] = ("MULTIPLE current records match — unresolved conflict; the library does not "
+                       "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
+    elif not live:
+        out["note"] = "no current (Accepted) record matches; all matches are superseded or none found"
+    print(json.dumps(out, indent=2))
+
+
 def _set_frontmatter_line(text, field, value):
     """Replace the first `- <field>: …` line, or insert it right after `- Status:` if absent. Raises
     ValueError if it can do NEITHER (a malformed record with no frontmatter) so callers fail loudly
@@ -621,6 +658,12 @@ def main():
     p_sup.add_argument("--by", required=True, help="superseding record, e.g. 'ADR 0026'")
     p_sup.add_argument("--type", default=None, help="disambiguate ids when a number spans types")
 
+    p_res = sub.add_parser("resolve", help="resolve a query to its CURRENT decision(s), following "
+                                           "supersession and flagging unresolved conflicts")
+    add_root(p_res)
+    p_res.add_argument("--text", default=None, help="substring/term to resolve (title/frontmatter/body)")
+    p_res.add_argument("--type", default=None, help="restrict to a record type (adr|pdr|bdr|…)")
+
     args = ap.parse_args()
 
     if args.root:
@@ -643,6 +686,8 @@ def main():
         cmd_get(args, root, cfg)
     elif args.cmd == "supersede":
         cmd_supersede(args, root, cfg)
+    elif args.cmd == "resolve":
+        cmd_resolve(args, root, cfg)
 
 
 if __name__ == "__main__":

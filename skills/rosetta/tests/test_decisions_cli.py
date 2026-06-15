@@ -402,6 +402,36 @@ class DecisionsScale(unittest.TestCase):
         self.assertIn("ADR 0002", out)
         self.assertIn("resolved", out.lower())
 
+    def test_resolve_returns_current_and_flags_conflict(self):
+        """`resolve` follows supersession to the live record; flags when 2+ current records collide
+        (the Phase-0 failure where a naive library left two Accepted records for the same query)."""
+        import io
+        from contextlib import redirect_stdout
+        d = self.root / "architecture-decisions"; d.mkdir(parents=True, exist_ok=True)
+        d.joinpath("0001-old.md").write_text(
+            "# ADR 0001 — widget store: DynamoDB\n\n- Status: Superseded by ADR 0002\n- Date: 2025-01-01\n"
+            "- Decider: Me\n- Sources: x\n\n## Decision\n\nUse DynamoDB.\n")
+        d.joinpath("0002-new.md").write_text(
+            "# ADR 0002 — widget store: Spanner\n\n- Status: Accepted\n- Date: 2026-01-01\n"
+            "- Decider: Me\n- Sources: x\n\n## Decision\n\nUse Spanner.\n")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("resolve", "--root", str(self.root), "--text", "widget store")
+        res = json.loads(buf.getvalue())
+        self.assertFalse(res["conflict"])
+        self.assertEqual([c["id"] for c in res["current"]], ["ADR 0002"])   # resolved to live
+        self.assertIn("ADR 0001", res["current"][0]["superseded_from"])     # provenance kept
+        # now add a SECOND unresolved Accepted record for the same query -> conflict flagged
+        d.joinpath("0003-conflict.md").write_text(
+            "# ADR 0003 — widget store: Postgres\n\n- Status: Accepted\n- Date: 2026-02-01\n"
+            "- Decider: Me\n- Sources: x\n\n## Decision\n\nUse Postgres.\n")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("resolve", "--root", str(self.root), "--text", "widget store")
+        res = json.loads(buf.getvalue())
+        self.assertTrue(res["conflict"])                                    # the Phase-0 bug, now caught
+        self.assertEqual(len(res["current"]), 2)
+
     def test_resolve_current_is_cycle_safe(self):
         """A supersede cycle must not hang resolve_current (validate flags the cycle separately)."""
         cfg = decisions.load_config(self.root)
