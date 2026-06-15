@@ -4,6 +4,17 @@ A navigable index of everything produced this arc, what's proven vs. open, the r
 and the live hypothesis ledger — so the next goal can be set against concrete state. Paths are relative
 to `skills/rosetta/`.
 
+## Orchestration outcomes (goals 1–5, all run in isolated worktrees, merged into `evals-hardening`)
+| Goal | Outcome | Disposition | Evidence |
+|---|---|---|---|
+| **3 — token reduction** | **SUCCESS** | merged as a win | H1+H2 = 98.9% cut on the resolvable+scorable core, discrimination held (`GOAL3-TOKEN-REDUCTION-RESULTS.md`, `measure_tokens.py`) |
+| **4 — productize freshness/resolver** | **SUCCESS** | merged as a win | `staleness` subcommand + `validate --staleness` + 3-state `resolve` stale flag; 155 tests green; flags stale Accepted records on the live library (`GOAL4-FRESHNESS.md`) |
+| **5 — agentic frontier** | research delivered | merged | benchmark survey + compile-once/fan-out design (`GOAL5-AGENTIC.md`) |
+| **1 — recall-recovery thesis** | **INCONCLUSIVE** | merged as a **negative/inconclusive result; do NOT cite as supporting recall recovery** | ~1.1k-token corpus never hit the high-compression regime; all 3 conditions tied 3/3; resolved graph won on **cost −37%/query**, not accuracy (`GOAL1-THESIS-EXPERIMENT.md`) |
+| **2 — Phase 0b 2×2** | **MIXED → NO** at this scale | merged as **apparatus + honest negative; do NOT cite as "compiled beats raw"** | raw 20/20 = compiled 20/20 (no fixture separated arms); compiler hallucinated ADR ids in 2/5; cost inverted at toy scale (`GOAL2-PHASE0B.md`) |
+
+**Net:** the *cost/token* and *productization* bets are proven (goals 3, 4). The two *accuracy/correctness* bets (goals 1, 2) are **not yet supported at small/clean scale** — both failed for the same reason: no compression pressure. The decisive next experiment is the **same thesis at LARGE, lossy corpus scale**, where flat compression actually drops recall and compile cost amortizes.
+
 ## Where we are (one paragraph)
 The eval suite catches real LLM failure modes; only **retrieval-defeat** (semantic evasion / codename
 pivots / multi-hop) reliably breaks tool-calling models (scale/reversals/counts do not). A
@@ -56,9 +67,11 @@ product thesis. → `evals/adversarial/RESEARCH-workflows-x-rosetta.md` (open qu
 - **Research (cited, verified):** `RESEARCH-llm-failure-modes.md` · `RESEARCH-workflows-x-rosetta.md`
 - **Shipped product:** `scripts/decisions.py` (`resolve`, `get --resolve`) · `commands/rosetta-grill.md` · `commands/rosetta-conflicts.md` · `commands/README.md`
 
-## Candidate goals to choose from (pick one to set)
-1. **Prove the thesis (recommended):** run the decision-graph-grounding vs long-context vs RAG experiment — does provenance recover the 33–35-pt recall loss? Settles accuracy + cost in one stroke.
-2. **Phase 0b rigor:** the preregistered 20+-fixture 2×2 with production resolver + LLM compiler + $/correct — convert the strong signal into a defensible result.
-3. **Token-reduction build+measure:** implement H1+H2+H3 and measure the >75% claim end-to-end (with discrimination held).
-4. **Productize the resolver/freshness layer** (Phase 1 completion) + ship the commands for real use.
-5. **Agentic frontier:** close the agentic eval gap (benchmark research → fixtures → the compile-once/fan-out pattern).
+## Candidate goals to choose from (pick one to set) — post-orchestration
+Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:
+
+1. **Prove the thesis at scale (recommended):** re-run the goal-1/goal-2 design on a **LARGE, lossy corpus** (hundreds of ADRs / 100k+ tokens) so flat compression actually drops recall and compile cost amortizes. This is the *only* way to settle the two accuracy bets that tied at toy scale.
+2. **Harden the token-reduction win (goal 3):** wire H1+H2 as the default grading path in CI end-to-end (not just measured), add H3 caching + H5 adaptive-k, keep the discrimination guardrail.
+3. **Extend the freshness layer (goal 4):** auto-supersede when code/git moves past an ADR; resolve the 12 stale records the live sanity run flagged.
+4. **Fix the compiler hallucination (goal 2 finding):** the LLM compiler invented ADR ids in 2/5 fixtures — constrain it to emit only verifiable ids before any "compiled beats raw" claim is attempted again.
+5. **Agentic frontier (goal 5):** turn the delivered research into real fixtures + the compile-once/fan-out workflow on a real repo.
