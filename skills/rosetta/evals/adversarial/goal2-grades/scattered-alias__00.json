@@ -1,0 +1,87 @@
+{
+  "fixture": "scattered-alias__00",
+  "fixture_type": "scattered-alias",
+  "gold_answer": "Pub/Sub",
+  "results": [
+    {
+      "file": "scattered-alias__00__raw__haiku__k1.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Names Pub/Sub as current (cutover 2026-05-17, before today). Recognizes Drift/svc-flags_api/feature-flag service are the same service. Treats RabbitMQ as migrated-away, not current. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__raw__haiku__k2.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Asserts Pub/Sub as current with correct cutover reasoning. Identifies the three aliases as one service and treats RabbitMQ as the superseded earlier bus. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__raw__sonnet__k1.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Explicitly unifies Drift/svc-flags_api/feature-flag service per 03, names Pub/Sub as current, and frames the 2025-11-02 RabbitMQ commit as superseded by the 2026-05-17 cutover. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__raw__sonnet__k2.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Quotes the alias-unification statement from 03, names Pub/Sub as current state via the most-recent commit 77aa88b, and treats RabbitMQ as historical. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__compiled__haiku__k1.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Maps Drift to canonical svc-flags_api/feature-flag service and names Pub/Sub as current (migrated from RabbitMQ 2026-05-17). RabbitMQ not asserted as current. Invented ADR numbers are not penalized by the rubric. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__compiled__haiku__k2.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Consolidates the three aliases to one service, states Pub/Sub is authoritative/current and RabbitMQ is retired. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__compiled__sonnet__k1.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Names Pub/Sub as current, unifies Drift/svc-flags_api/feature-flag service, and lays out a supersession chain marking RabbitMQ as superseded. Both axes PASS."
+    },
+    {
+      "file": "scattered-alias__00__compiled__sonnet__k2.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Asserts Pub/Sub as authoritative current state, unifies the three aliases, and flags the RabbitMQ ops-runbook reference as stale post-cutover. Both axes PASS."
+    }
+  ]
+}

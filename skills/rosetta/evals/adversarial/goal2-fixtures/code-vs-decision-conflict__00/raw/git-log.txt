@@ -1,0 +1,2 @@
+55dd66e 2026-05-24 notify_svc: provision MySQL (prod), retire Postgres POC
+88ff99a 2026-02-01 notify_svc: scaffold against Postgres (POC)

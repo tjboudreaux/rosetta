@@ -1,0 +1,87 @@
+{
+  "fixture": "code-vs-decision-conflict__00",
+  "fixture_type": "code-vs-decision-conflict",
+  "gold_answer": "MySQL",
+  "results": [
+    {
+      "file": "code-vs-decision-conflict__00__raw__haiku__k1.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Names MySQL as the production datastore and asserts it as current. Flags the ADR (Postgres) as stale, correctly citing impl-note and git commit 55dd66e (retire Postgres POC). Does not assert Postgres as production."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__raw__haiku__k2.txt",
+      "arm": "raw",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "States MySQL is production/authoritative. Flags ADR as stale ('never updated, acknowledged oversight'), cites impl-note and git. Does not assert Postgres as production."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__raw__sonnet__k1.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Production answer MySQL, asserted as current via notify_svc.py DATASTORE='mysql' and git 55dd66e. Explicitly flags ADR as STALE and that code/git win. No Postgres-as-production assertion."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__raw__sonnet__k2.txt",
+      "arm": "raw",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Production answer MySQL, asserted current from code + git 55dd66e + impl-note. ADR explicitly labeled STALE ('reflects original intent, not shipped reality'). Does not assert Postgres as production."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__compiled__haiku__k1.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "Names MySQL as production (current), backed by code + git 55dd66e. Flags ADR Postgres as stale/superseded. Fabricates an 'ADR 0002' superseding record (no such file in corpus; impl-note is not an ADR and ADR status is Accepted/un-amended, not Superseded), but this does not assert Postgres as production and still treats the Postgres value as stale, so rubric.must/must_not are satisfied under the two-axis grading."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__compiled__haiku__k2.txt",
+      "arm": "compiled",
+      "model": "haiku",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "MySQL named as production (current) via code + git 55dd66e. Flags ADR 0001/Postgres as stale and un-amended. Invents 'ADR 0002 (MySQL)' superseding record not present in corpus, but does not assert Postgres as production and the Postgres value is flagged stale; rubric satisfied."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__compiled__sonnet__k1.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k1",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "MySQL asserted as live production via notify_svc.py and git 55dd66e. Flags ADR 0001/Postgres as stale ('never amended', 'stale/superseded'). Fabricates an 'ADR 0002' that does not exist in corpus, but does not assert Postgres as production and explicitly treats Postgres as stale; rubric.must met, no must_not violation."
+    },
+    {
+      "file": "code-vs-decision-conflict__00__compiled__sonnet__k2.txt",
+      "arm": "compiled",
+      "model": "sonnet",
+      "k": "k2",
+      "axis_answer": "PASS",
+      "axis_resolution": "PASS",
+      "pass": true,
+      "reason": "MySQL asserted as current production via code + git 55dd66e. Flags Postgres/ADR 0001 as stale and superseded; states it never reached production. Fabricates 'ADR 0002' and relabels ADR 0001 status as 'Superseded' (corpus shows status Accepted, un-amended, no ADR 0002), but does not assert Postgres as production and treats Postgres value as stale; rubric satisfied."
+    }
+  ]
+}

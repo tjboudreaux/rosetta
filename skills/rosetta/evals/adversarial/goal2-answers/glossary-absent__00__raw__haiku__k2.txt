@@ -1,0 +1,5 @@
+ANSWER: MySQL
+
+RESOLUTION: Cobalt's profile data is stored in MySQL. The corpus provides converging evidence: the infra dashboard export (02-dashboard-export.md) reports that mysql-prod-eu cluster hosting Cobalt uses "MySQL" as its backend engine; the git history (git-log.txt) shows deployment "point Cobalt at mysql-prod-eu"; and the incident report (04-incident.md) documents an actual MySQL replica failover on mysql-prod-eu that degraded Cobalt profile reads. The distractor is the unresolved TODO in 03-stray-distractor.md asking "Cloud Spanner?" — this was explicitly marked as never confirmed and never resolved, so it does not represent a decision.
+
+CITATIONS: 02-dashboard-export.md (authoritative infra dashboard), git-log.txt (deployment record), 04-incident.md (production incident), 03-stray-distractor.md (identifies distractor as unresolved)

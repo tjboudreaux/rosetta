@@ -1,0 +1,7 @@
+The identity provider settled on for Beacon (notification dispatcher) is Keycloak.
+
+Keycloak is the current, accepted decision as of 2026-04-19 (ADR 0003), confirmed in code via `notify_svc.py` setting `IDP_PROVIDER = "keycloak"` and git commit 33cc44d.
+
+Supersession chain: On 2026-03-04 there were two conflicting same-day calls — ADR 0001 (morning review) chose Ping, and ADR 0002 (afternoon review, apparently unaware of the AM outcome) chose Auth0. Both decisions were left unresolved at end of day. A follow-up review on 2026-04-19 evaluated both Ping and Auth0 against Beacon's SCIM provisioning requirements and found neither met them. ADR 0003 therefore supersedes both ADR 0001 and ADR 0002, adopting Keycloak as the single authoritative, SCIM-capable IdP for Beacon.
+
+ADR citations: ADR 0001 (Ping, superseded), ADR 0002 (Auth0, superseded), ADR 0003 (Keycloak, Accepted/current).

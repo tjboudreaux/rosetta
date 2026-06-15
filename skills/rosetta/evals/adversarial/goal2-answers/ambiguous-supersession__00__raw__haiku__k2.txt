@@ -1,0 +1,5 @@
+FINAL ANSWER: Keycloak
+
+RESOLUTION: The decision history shows three distinct decisions: Ping (2026-03-04 AM), Auth0 (2026-03-04 PM), and finally Keycloak (2026-04-19). The 03-amendment.md file explicitly states that Keycloak supersedes both the March 4th decisions. The supersession was necessary because neither Ping nor Auth0 satisfied SCIM requirements. Keycloak was adopted as the final IdP for Beacon, confirmed by the git commit on 2026-04-19.
+
+CITATIONS: 03-amendment.md (explicit supersession statement), git-log.txt (2026-04-19 commit), 01-decision-morning.md and 02-decision-afternoon.md (prior decisions being superseded)

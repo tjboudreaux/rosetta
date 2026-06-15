@@ -1,0 +1,8 @@
+PRODUCTION DATASTORE: MySQL
+
+RESOLUTION:
+The ADR (01-adr-record.md) states Beacon will use Postgres (Accepted, 2026-02-01). However, the implementation note (02-impl-note.md) reveals a licensing blocker forced a shift to MySQL during build. The git-log (git-log.txt) confirms the shipped state: commit 55dd66e (2026-05-24) explicitly "provision MySQL (prod), retire Postgres POC" — this post-dates the POC commit 88ff99a (2026-02-01). Code and Git win per the truth hierarchy. The ADR is stale.
+
+CITATIONS:
+- 02-impl-note.md: "shipping Postgres; shipped on MySQL instead. Prod has been on MySQL since cutover."
+- git-log.txt: 55dd66e (2026-05-24) "notify_svc: provision MySQL (prod), retire Postgres POC"

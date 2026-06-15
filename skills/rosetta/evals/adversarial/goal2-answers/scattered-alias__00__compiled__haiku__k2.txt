@@ -1,0 +1,5 @@
+ANSWER: Drift (svc-flags_api, the feature-flag service) currently publishes to Pub/Sub for all event messaging.
+
+RESOLUTION: The service identity chain resolves "Drift" → "svc-flags_api" per ADR 0001, which consolidates three scattered aliases. The message bus was migrated from RabbitMQ to Pub/Sub on 2026-05-17 (ADR 0002), with cutover confirmed by code configuration and git history. RabbitMQ is retired for this service; Pub/Sub is authoritative.
+
+CITATIONS: ADR 0001 (service aliases), ADR 0002 (Pub/Sub event bus, supersedes ADR 0003), git commit 77aa88b.

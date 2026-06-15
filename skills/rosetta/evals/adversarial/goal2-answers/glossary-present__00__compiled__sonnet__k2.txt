@@ -1,0 +1,7 @@
+Beacon's current primary datastore is Postgres. The "ledger tier" is Beacon's term for its strongly-consistent primary datastore, and as of ADR 0002 (status: Accepted), that tier runs on PostgreSQL following a completed production migration.
+
+Supersession chain:
+- ADR 0001 (status: Superseded by ADR 0002): Originally adopted MySQL for the Beacon ledger tier in October 2025 due to team familiarity. MySQL subsequently experienced hotspotting incidents under load, which motivated a migration review.
+- ADR 0002 (status: Accepted, current): Supersedes ADR 0001. Decided April 2026 — moved Beacon's ledger tier to Postgres for strong consistency. The prod cutover was completed 2026-04-20 (git commit a1b2c3d: "migrate Beacon ledger tier to Postgres; disable MySQL writes"). Code corroboration: notify_svc.py sets `BACKEND = "postgres"` and `LEGACY_MYSQL_ENABLED = False`; a legacy MySQL client is retained temporarily for backfill only.
+
+In summary: MySQL is the legacy (superseded) datastore per ADR 0001; Postgres is the current primary datastore per ADR 0002.

@@ -1,0 +1,35 @@
+{
+  "fixture_type": "scattered-alias",
+  "answer": "Pub/Sub",
+  "answer_aliases": [
+    "Pub/Sub",
+    "pub/sub"
+  ],
+  "claims": [
+    {
+      "id": "decode",
+      "text": "\"Drift\", \"feature-flag service\", and \"svc-flags_api\" are the same service",
+      "supported_by": "03-platform-decision.md"
+    },
+    {
+      "id": "current",
+      "text": "the service publishes to Pub/Sub today",
+      "supported_by": "03 + code + git"
+    },
+    {
+      "id": "supersession",
+      "text": "RabbitMQ was earlier and was migrated away",
+      "supported_by": "01/02 superseded by 03"
+    }
+  ],
+  "rubric": {
+    "must": [
+      "names Pub/Sub as current",
+      "recognizes the aliases refer to one service"
+    ],
+    "must_not": [
+      "asserts RabbitMQ as the current bus"
+    ],
+    "negative_control": false
+  }
+}

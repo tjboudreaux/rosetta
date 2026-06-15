@@ -1,0 +1,5 @@
+ANSWER: The Drift service publishes to Pub/Sub today.
+
+RESOLUTION: Following the decision history: Drift was initially published to RabbitMQ (per 01-arch-note.md from 2025-11-02), but a platform decision (03-platform-decision.md, dated 2026-05-18) documented the migration from RabbitMQ to Pub/Sub for ordering guarantees. The git log shows commit 77aa88b on 2026-05-17 switching the event bus. Since today is 2026-06-14 (after the 2026-05-17 cutover), Pub/Sub is the current event bus. The code confirms this: flags_api.py sets EVENT_BUS = "pub/sub".
+
+CITATIONS: 01-arch-note.md (initial RabbitMQ architecture), 03-platform-decision.md (migration details and service alias clarification), git-log.txt (2026-05-17 cutover commit), flags_api.py (current config).

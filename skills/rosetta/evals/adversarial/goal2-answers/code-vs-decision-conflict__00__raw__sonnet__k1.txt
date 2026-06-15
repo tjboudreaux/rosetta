@@ -1,0 +1,5 @@
+(1) PRODUCTION ANSWER: Beacon (notification dispatcher) is running on MySQL in production.
+
+(2) RESOLUTION: The ADR (01-adr-record.md, session cvd0a, 2026-02-01) states that Beacon will use Postgres — status "Accepted" — but this record is STALE and disagrees with what actually shipped. The implementation note (02-impl-note.md, session cvd0b, 2026-05-25) documents that a licensing blocker on Postgres caused the team to ship on MySQL instead, with the ADR never amended. The production code confirms this: notify_svc.py sets DATASTORE = "mysql" with an inline comment referencing the same licensing issue. The git log corroborates: commit 55dd66e (2026-05-24) "notify_svc: provision MySQL (prod), retire Postgres POC" supersedes the earlier scaffold commit 88ff99a against Postgres. Under the truth hierarchy, CODE and GIT win; the ADR is flagged as stale.
+
+CITATIONS: raw/code/notify_svc.py (DATASTORE = "mysql"), raw/git-log.txt (commit 55dd66e), raw/02-impl-note.md. ADR raw/01-adr-record.md is stale.

@@ -1,0 +1,5 @@
+ANSWER: PostgreSQL is the current primary datastore for Beacon (the notification dispatcher).
+
+RESOLUTION: Beacon is defined in the onboarding glossary (01-onboarding-glossary.md, Sept 2025) as the notification dispatcher using a "ledger tier" for strongly-consistent persistence. An early decision (02-early-decision.md, Oct 2025) adopted MySQL as the primary datastore based on team familiarity. This decision was superseded by a migration decision (03-migration-decision.md, April 2026) that moved Beacon's ledger tier from MySQL to PostgreSQL to address MySQL hotspotting incidents. The migration completed in production on 2026-04-20 per git commit a1b2c3d. Current code (code/notify_svc.py) confirms BACKEND = "postgres" with LEGACY_MYSQL_ENABLED = False.
+
+CITATIONS: 01-onboarding-glossary.md (defines Beacon), 02-early-decision.md (MySQL decision, Oct 2025, superseded), 03-migration-decision.md (Postgres decision, April 2026, supersedes), git-log.txt (commit a1b2c3d, 2026-04-20), code/notify_svc.py (current configuration).

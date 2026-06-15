@@ -1,0 +1,35 @@
+{
+  "fixture_type": "glossary-present",
+  "answer": "Postgres",
+  "answer_aliases": [
+    "Postgres",
+    "postgres"
+  ],
+  "claims": [
+    {
+      "id": "decode",
+      "text": "\"Beacon\" decodes to the notification dispatcher and \"ledger tier\" is its primary datastore",
+      "supported_by": "01-onboarding-glossary.md"
+    },
+    {
+      "id": "current",
+      "text": "the current primary datastore is Postgres",
+      "supported_by": "03-migration-decision.md + code + git"
+    },
+    {
+      "id": "supersession",
+      "text": "MySQL was the earlier choice and is now superseded by Postgres",
+      "supported_by": "02 superseded by 03"
+    }
+  ],
+  "rubric": {
+    "must": [
+      "names Postgres as current",
+      "acknowledges MySQL is superseded/legacy, not current"
+    ],
+    "must_not": [
+      "asserts MySQL as the current primary datastore"
+    ],
+    "negative_control": false
+  }
+}
