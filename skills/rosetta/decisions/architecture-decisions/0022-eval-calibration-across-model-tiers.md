@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-13
 - Decider: Travis Boudreaux
-- Sources: evals/adversarial/score.py, run_evals.py (--report, --emit-bundle library.txt), report.py, CALIBRATION.md, RESULTS.md (multi-tier run), tests/test_score.py
+- Sources: evals/adversarial/score.py, evals/adversarial/run_evals.py, evals/adversarial/report.py, evals/adversarial/CALIBRATION.md, evals/adversarial/RESULTS.md, tests/test_score.py
 - Related: ADR 0018 (adversarial eval dataset), ADR 0021 (decision query/supersede the evals exercise)
 
 ## Context

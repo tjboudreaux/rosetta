@@ -164,6 +164,11 @@ how much of raw's success is the prompt; (b) scale to a **large real corpus** to
 thesis that is compilation's actual moat; (c) add the **compiler citation-integrity gate**; (d)
 `--per-type ≥4`, **k ≥ 3**, ≥3 tiers, two judges.
 
+> **Follow-up (2026-06-14): (c) is shipped.** The compiler citation-integrity gate is now
+> `decisions.py integrity` / `validate --integrity` — it makes the hallucinated-ADR-id failure (and
+> ghost source citations) a hard, CI-gateable error. See ADR 0024 and `tests/test_integrity.py`. This
+> closes the catastrophic-trust gap before the large-scale recall "kill test" (item b).
+
 ---
 
 ## Artifacts (all under this worktree)

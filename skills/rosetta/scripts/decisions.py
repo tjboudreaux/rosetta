@@ -436,6 +436,18 @@ def cmd_validate(args, root, cfg):
         chain = " → ".join(f"{lbl} {num}" for lbl, num in cycle)
         errors.append(f"supersede cycle (oscillation): {chain}")
 
+    # optional integrity pass: fabricated ADR-id references and ghost source citations anywhere in a
+    # record (the compiler-hallucination gate). These are hard errors — fabricated provenance has no
+    # benign reading — so `validate --integrity` doubles as the CI anti-hallucination gate.
+    if getattr(args, "integrity", False):
+        intg = assess_integrity(records, cfg, root)
+        for d in intg["dangling_refs"]:
+            errors.append(f"{d['record']}: references {d['ref']} which does not exist "
+                          f"(fabricated provenance)")
+        for g in intg["ghost_sources"]:
+            errors.append(f"{g['record']}: cites source '{g['source']}' which is not on disk "
+                          f"(ghost citation)")
+
     # optional freshness pass: an Accepted record whose cited code moved past its Date is "stale" —
     # surfaced as a warning here (and a failure under --strict) so `validate --staleness` doubles as the
     # CI freshness gate without a separate invocation.
@@ -696,6 +708,123 @@ def assess_staleness(records, root, cfg, statuses=("accepted",)):
     return True, out
 
 
+# --- integrity (compiler anti-hallucination gate) -----------------------------------
+# Goal-2 finding: an LLM that compiles a decision library from raw transcripts/code can INVENT
+# provenance — it referenced ADR ids that did not exist in 2/5 fixtures and could just as easily cite
+# a source file that isn't there. A "verified provenance graph" that fabricates its own ids/citations
+# is worse than no library (both council reviewers ranked this a catastrophic-trust failure). This pass
+# makes that fabrication mechanically detectable so it can be a hard gate:
+#   1. every `LABEL NNNN` reference anywhere in a record must resolve to a real record (no ghost ids);
+#   2. every code-path cited in `Sources:` must exist on disk (no ghost citations).
+# Pure stdlib; best-effort on the source-root resolution so it never false-positives on paths that
+# genuinely live outside the checkout.
+
+def _source_roots(root):
+    """Candidate roots a cited `Sources:` path may be relative to, most-specific first: the git repo
+    root (the usual case for the real library), then the decisions root and its parent (covers eval
+    fixtures where a compiled library sits beside the raw corpus it was built from)."""
+    roots = []
+    repo = _git_repo_root(root)
+    if repo is not None:
+        roots.append(repo)
+    roots.append(root)
+    roots.append(root.parent)
+    # de-dup while preserving order
+    seen, out = set(), []
+    for r in roots:
+        rp = r.resolve()
+        if rp not in seen:
+            seen.add(rp)
+            out.append(rp)
+    return out
+
+
+# A "file-shaped" citation: its final segment ends in a short file extension (foo.py, ci.yml,
+# DESIGN.md). Only these are existence-checked — a token whose last segment has no extension is a
+# directory (`tests/`) or a code-symbol citation (`load_counter/save_counter`), which we deliberately
+# do NOT treat as a ghost (the real library cites symbols this way; flagging them is noise, not signal).
+_FILE_TOKEN_RE = re.compile(r"\.[A-Za-z0-9]{1,5}$")
+
+
+def _repo_basenames(roots):
+    """Set of basenames of every file under the source roots — used to ground a basename-only citation
+    (`DESIGN.md`) that the real library writes without a full path. Prefer `git ls-files` (fast, tracked
+    files only); fall back to a bounded rglob when git can't answer. Best-effort: an empty set just
+    means every file-shaped citation must resolve by exact relative path instead."""
+    names = set()
+    for r in roots:
+        try:
+            res = subprocess.run(["git", "-C", str(r), "ls-files"],
+                                 capture_output=True, text=True, timeout=20)
+            if res.returncode == 0 and res.stdout:
+                for line in res.stdout.splitlines():
+                    names.add(line.rsplit("/", 1)[-1])
+                continue
+        except (OSError, subprocess.SubprocessError):
+            pass
+        with contextlib.suppress(OSError):
+            for p in r.rglob("*"):
+                if p.is_file():
+                    names.add(p.name)
+    return names
+
+
+def assess_integrity(records, cfg, root):
+    """Return {dangling_refs: [...], ghost_sources: [...]} — fabricated provenance the compiler emitted.
+    `dangling_refs`: a `LABEL NNNN` reference (in frontmatter OR body) that resolves to no real record.
+    `ghost_sources`: a *file-shaped* code-path cited under `Sources:` that exists under no source root
+    AND whose basename appears nowhere in the repo. Directory/symbol citations are not checked (they're
+    not falsifiable as files). Both lists empty ⇒ every id and file citation is grounded."""
+    valid_labels = {rt["label"].upper() for rt in cfg["record_types"].values()}
+    all_ids = {(rec["label"].upper(), rec["number"]) for rec in records}
+    label_re = re.compile(r"\b(" + "|".join(sorted(valid_labels)) + r")\s+(\d+)\b")
+    roots = _source_roots(root)
+    basenames = _repo_basenames(roots)
+    dangling, ghost = [], []
+    for rec in records:
+        rid = (rec["label"].upper(), rec["number"])
+        name = rec["path"].name
+        text = rec["path"].read_text(errors="replace")
+        seen_refs = set()
+        for lbl, num in label_re.findall(text):
+            ref = (lbl.upper(), int(num))
+            if ref == rid or ref in seen_refs:
+                continue
+            seen_refs.add(ref)
+            if ref not in all_ids:
+                dangling.append({"record": name, "ref": f"{lbl.upper()} {num}"})
+        for p in extract_source_paths(rec["fields"].get("Sources", "")):
+            base = p.rsplit("/", 1)[-1]
+            if not _FILE_TOKEN_RE.search(base):
+                continue                                 # directory or symbol citation — not checkable
+            if any((r / p).exists() for r in roots):     # exact relative path resolves
+                continue
+            if base in basenames:                        # basename grounded somewhere in the repo
+                continue
+            ghost.append({"record": name, "source": p})
+    return {"dangling_refs": dangling, "ghost_sources": ghost}
+
+
+def cmd_integrity(args, root, cfg):
+    """Compiler anti-hallucination gate: report fabricated ADR-id references and ghost source citations
+    in the library. JSON out. Exit 1 when anything is found (always a hard error — fabricated provenance
+    has no benign reading), so this is CI-gateable on its own and via `validate --integrity`."""
+    records = collect_records(root, cfg)
+    result = assess_integrity(records, cfg, root)
+    n = len(result["dangling_refs"]) + len(result["ghost_sources"])
+    out = {"checked_records": len(records),
+           "dangling_refs": result["dangling_refs"],
+           "ghost_sources": result["ghost_sources"],
+           "ok": n == 0}
+    if n:
+        out["note"] = (f"{len(result['dangling_refs'])} fabricated ADR reference(s) and "
+                       f"{len(result['ghost_sources'])} ghost source citation(s) — the library "
+                       f"asserts provenance that does not exist (likely an LLM-compiler hallucination)")
+    print(json.dumps(out, indent=2))
+    if n:
+        sys.exit(1)
+
+
 def cmd_staleness(args, root, cfg):
     """Flag Accepted records whose cited `Sources:` code paths changed in git after the record's Date —
     so a library can't silently serve a stale-but-Accepted decision (Phase 1 freshness guard). JSON out.
@@ -863,6 +992,13 @@ def main():
     p_val.add_argument("--strict", action="store_true", help="treat warnings as failures (nonzero exit)")
     p_val.add_argument("--staleness", action="store_true",
                        help="also flag Accepted records whose cited code changed in git since their Date")
+    p_val.add_argument("--integrity", action="store_true",
+                       help="also fail on fabricated ADR-id references and ghost source citations "
+                            "(compiler anti-hallucination gate)")
+
+    p_intg = sub.add_parser("integrity", help="report fabricated ADR-id references + ghost source "
+                                              "citations (compiler anti-hallucination gate)")
+    add_root(p_intg)
 
     p_stale = sub.add_parser("staleness", help="flag Accepted records whose cited code moved in git "
                                                "since their Date (freshness/drift guard)")
@@ -918,6 +1054,8 @@ def main():
         cmd_validate(args, root, cfg)
     elif args.cmd == "staleness":
         cmd_staleness(args, root, cfg)
+    elif args.cmd == "integrity":
+        cmd_integrity(args, root, cfg)
     elif args.cmd == "search":
         cmd_search(args, root, cfg)
     elif args.cmd == "get":

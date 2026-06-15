@@ -197,7 +197,11 @@ reconciled history into a decision library (see `references/decision-schema.md` 
   not `Accepted`, until code or an explicit human call confirms it. Record every reversal by
   superseding the prior record — never silently oscillate.
 - Regenerate the index and check the library: `decisions.py index` then `decisions.py validate`
-  (both deterministic — no tokens; `validate` exits nonzero on a broken library).
+  (both deterministic — no tokens; `validate` exits nonzero on a broken library). Add
+  `--integrity` to also fail on **fabricated provenance** — a record that references a non-existent
+  ADR id or cites a `Sources:` file that isn't on disk (the anti-hallucination gate; ADR 0024). Add
+  `--staleness` to flag Accepted records whose cited code moved in git since their Date (ADR; freshness
+  guard). `decisions.py integrity` and `decisions.py staleness` also run as standalone JSON checks.
 - Teams customize types/dirs/fields/templates via a `config.json` at the decisions root — adapt to
   their conventions rather than imposing rosetta's.
 

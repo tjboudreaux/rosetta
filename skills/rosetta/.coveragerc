@@ -6,6 +6,18 @@ branch = True
 source =
     scripts
     evals/adversarial
+# One-shot fixture/corpus generators are experiment apparatus, not maintained product code: each is run
+# once to emit a fixture set and is never imported by a test (the fixtures they produce ARE tested, via
+# run_evals.py / the Tier-A suite). They are omitted so the gate measures the shipped, maintained code
+# (scripts/*, score.py, report.py, measure_tokens.py, fixtures.py, run_evals.py) rather than dead-on-
+# arrival generator branches that would only ever be "covered" by re-running a completed experiment.
+omit =
+    evals/adversarial/goal1_fixture_gen.py
+    evals/adversarial/goal2_gen.py
+    evals/adversarial/scale_fixture_gen.py
+    evals/adversarial/scale_fixture_gen_v4.py
+    evals/adversarial/scale_fixture_gen_v5.py
+    evals/adversarial/phase0_alias_retriever.py
 
 [report]
 fail_under = 90

@@ -56,6 +56,7 @@ asserted, until code or an explicit human call confirms it.
 | 2026-06-13 | [ADR 0021](architecture-decisions/0021-scalable-decision-store.md) | adr | Scalable decision store (O(1) numbering, query subcommands, query-don't-slurp) | Accepted |
 | 2026-06-13 | [ADR 0022](architecture-decisions/0022-eval-calibration-across-model-tiers.md) | adr | Eval calibration across model tiers (judge-independent scoring, no-tools variant, gates) | Accepted |
 | 2026-06-13 | [ADR 0023](architecture-decisions/0023-round3-hardening-fixes.md) | adr | Round-3 hardening fixes (true lock-based allocation; loud failures) | Accepted |
+| 2026-06-14 | [ADR 0024](architecture-decisions/0024-compiler-anti-hallucination-integrity-gate.md) | adr | Compiler anti-hallucination integrity gate | Accepted |
 <!-- ROSETTA:TIMELINE:END -->
 
 ## Notable supersessions & nuances

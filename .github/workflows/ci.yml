@@ -32,8 +32,8 @@ jobs:
       - name: Unit tests (all 18 agent resolvers + parsers, ingest)
         run: python -m unittest discover -s skills/rosetta/tests -v
 
-      - name: Validate decision library
-        run: python skills/rosetta/scripts/decisions.py --root skills/rosetta/decisions validate
+      - name: Validate decision library (with anti-hallucination gate)
+        run: python skills/rosetta/scripts/decisions.py --root skills/rosetta/decisions validate --integrity
 
   coverage:
     # Separate job so the matrix test job above stays pure-stdlib (zero deps, per ADR 0013).
