@@ -432,6 +432,26 @@ class DecisionsScale(unittest.TestCase):
         self.assertTrue(res["conflict"])                                    # the Phase-0 bug, now caught
         self.assertEqual(len(res["current"]), 2)
 
+    def test_resolve_surfaces_what_it_replaced(self):
+        """resolve must answer not just the current decision but the one it immediately replaced —
+        via the reverse edge (Status: Superseded by) and via an explicit Supersedes field."""
+        import io
+        from contextlib import redirect_stdout
+        d = self.root / "architecture-decisions"; d.mkdir(parents=True, exist_ok=True)
+        d.joinpath("0001-old.md").write_text(
+            "# ADR 0001 — gizmo bus: RabbitMQ\n\n- Status: Superseded by ADR 0002\n- Date: 2025-01-01\n"
+            "- Decider: Me\n- Sources: x\n\n## Decision\n\nUse RabbitMQ.\n")
+        d.joinpath("0002-new.md").write_text(
+            "# ADR 0002 — gizmo bus: Kafka\n\n- Status: Accepted\n- Date: 2026-01-01\n"
+            "- Decider: Me\n- Sources: x\n- Supersedes: ADR 0001\n\n## Decision\n\nUse Kafka.\n")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("resolve", "--root", str(self.root), "--text", "gizmo bus")
+        res = json.loads(buf.getvalue())
+        self.assertEqual(res["current"][0]["id"], "ADR 0002")
+        self.assertEqual(res["current"][0]["replaced"]["id"], "ADR 0001")
+        self.assertIn("RabbitMQ", res["current"][0]["replaced"]["title"])
+
     def test_resolve_current_is_cycle_safe(self):
         """A supersede cycle must not hang resolve_current (validate flags the cycle separately)."""
         cfg = decisions.load_config(self.root)

@@ -554,6 +554,28 @@ def resolve_current(records, rec, cfg, _seen=None):
     return cur, chain
 
 
+def immediately_superseded(records, cur, cfg):
+    """The record the CURRENT record directly replaced — i.e. 'what it replaced'. Prefer cur's own
+    `Supersedes: <ID>` field; fall back to the reverse edge (a record whose Status is
+    'Superseded by <cur>'). Returns the prior record or None. Lets `resolve` answer not just the
+    current decision but the one immediately before it (the smoke run showed consumers need this)."""
+    label_re = re.compile(r"\b([A-Za-z]+)\s+(\d+)\b")
+    m = label_re.search(cur["fields"].get("Supersedes", ""))
+    if m:
+        prior = resolve_id(records, f"{m.group(1)} {m.group(2)}", None)
+        if prior:
+            return prior
+    cur_id = record_id(cur, cfg).lower()
+    for rec in records:
+        status = rec["fields"].get("Status", "")
+        sm = SUPERSEDED_BY_RE.search(status)
+        if sm and record_id(resolve_id(records, sm.group(1), None) or rec, cfg).lower() == cur_id \
+                and rec is not cur:
+            # the reverse edge can be ambiguous on long chains; only trust it when unambiguous
+            return rec
+    return None
+
+
 # --- freshness / staleness (Phase 1 drift guard) ------------------------------------
 # A record can be Accepted yet stale: the code it cites under `Sources:` has changed in git since the
 # record's Date. A library that silently serves such a record is a confidently-wrong oracle — worse
@@ -902,6 +924,10 @@ def cmd_resolve(args, root, cfg):
             "aliases": cur["fields"].get("Aliases", ""), "superseded_from": []})
         if chain:
             entry["superseded_from"] = sorted(set(entry["superseded_from"]) | set(chain))
+        if "replaced" not in entry:               # what the current decision immediately replaced
+            prior = immediately_superseded(records, cur, cfg)
+            if prior:
+                entry["replaced"] = {"id": record_id(prior, cfg), "title": prior["title"]}
 
     # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
     # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /

@@ -18,6 +18,9 @@ omit =
     evals/adversarial/scale_fixture_gen_v4.py
     evals/adversarial/scale_fixture_gen_v5.py
     evals/adversarial/phase0_alias_retriever.py
+    evals/adversarial/killtest_gen.py
+    evals/adversarial/killtest_validate.py
+    evals/adversarial/killtest_smoke.py
 
 [report]
 fail_under = 90
