@@ -111,10 +111,23 @@ def _date(rng, year_lo=2024, year_hi=2026):
     return f"{y}-{m:02d}-{d:02d}"
 
 
+def _codenames(n):
+    """Up to len(CITIES) real names, then synthesize unique resolvable codenames (e.g. 'Halifax-2')
+    so the corpus can scale past the base list for the context-window scaling experiment."""
+    if n <= len(CITIES):
+        return CITIES[:n]
+    names = list(CITIES)
+    k = 2
+    while len(names) < n:
+        names += [f"{c}-{k}" for c in CITIES]
+        k += 1
+    return names[:n]
+
+
 def build(n_services, seed):
     rng = random.Random(seed)
     services = []
-    cities = CITIES[:n_services]
+    cities = _codenames(n_services)
     for i, city in enumerate(cities):
         domain = DOMAINS[i % len(DOMAINS)]
         # each service carries 2-4 dimensions
@@ -236,8 +249,12 @@ def main():
     ap.add_argument("--services", type=int, default=60)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--probes", type=int, default=40)
+    ap.add_argument("--out", default=None, help="override output dir (for the scaling experiment)")
     args = ap.parse_args()
 
+    global OUT
+    if args.out:
+        OUT = pathlib.Path(args.out).resolve()
     OUT.mkdir(parents=True, exist_ok=True)
     services = build(args.services, args.seed)
     corpus = render_corpus(services, random.Random(args.seed + 1))

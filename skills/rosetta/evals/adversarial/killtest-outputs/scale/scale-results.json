@@ -1,0 +1,29 @@
+[
+  {
+    "services": 120,
+    "corpus_tok": 107438,
+    "decisions": 1040,
+    "resolve_in_tok": 1384,
+    "resolve_recall": "10/10",
+    "raw_in_tok": 107889,
+    "raw_result": "answered 10/10"
+  },
+  {
+    "services": 300,
+    "corpus_tok": 274972,
+    "decisions": 2617,
+    "resolve_in_tok": 1405,
+    "resolve_recall": "10/10",
+    "raw_in_tok": 275427,
+    "raw_result": "REJECTED (prompt too long)"
+  },
+  {
+    "services": 600,
+    "corpus_tok": 554927,
+    "decisions": 5247,
+    "resolve_in_tok": 1405,
+    "resolve_recall": "10/10",
+    "raw_in_tok": 555384,
+    "raw_result": "REJECTED (prompt too long)"
+  }
+]

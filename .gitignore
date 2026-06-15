@@ -43,3 +43,5 @@ skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib/decisions/
 .idea/
 .vscode/
 skills/rosetta/evals/adversarial/killtest-outputs/**/*.err
+skills/rosetta/evals/adversarial/killtest-outputs/scale/*/corpus.md
+skills/rosetta/evals/adversarial/killtest-outputs/scale/*/decisions/

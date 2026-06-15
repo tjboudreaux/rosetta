@@ -149,6 +149,26 @@ than raw. The dominant failure is **compiler extraction**, not resolution; the b
 now shown to be load-bearing. Closing the remaining 18% is a compiler-quality problem (better extraction
 / chunk overlap / a verification pass), not a thesis problem.
 
+## Context-window scaling — what happens when corpus > the model's window (`killtest_scale.py`)
+The 106K matrix kept `raw` *inside* the window (merely expensive). This sweep grows the corpus past it.
+Solver = Sonnet (~200K window), 10 probes, resolve against the ground-truth graph:
+
+| services | corpus | decisions | resolve input | resolve recall | raw input | raw result |
+|---|---|---|---|---|---|---|
+| 120 | 107K tok | 1,040 | 1,384 tok | 10/10 | 108K | answered 10/10 |
+| 300 | 275K tok | 2,617 | 1,405 tok | **10/10** | 275K | **REJECTED — prompt too long** |
+| 600 | 555K tok | 5,247 | 1,405 tok | **10/10** | 555K | **REJECTED — prompt too long** |
+
+- **`raw` hits a hard cliff**, not a slope: it answers at 108K (inside the window) and is **rejected
+  outright** at ~1.4× and ~2.8× the window. Past the window, raw has no valid configuration — truncating
+  drops the corpus (recall collapses) and chunking *is* RAG/flat. Raw-long-context **ceases to exist.**
+- **`resolve` is invariant:** input held at ~1,400 tokens and recall at **10/10 across a 5× corpus
+  growth** (corpus size lives only in the one-time compile, never in per-query cost). The resolve-vs-raw
+  cost gap, ~14× at 106K, becomes **unbounded** here — raw becomes impossible while resolve stays flat.
+
+This is the scaling form of the thesis: the resolution layer's value *increases* with corpus size, and
+becomes categorical (not just quantitative) once the corpus exceeds the window.
+
 ## Verdict
 The recall-recovery thesis — unproven through Goals 1 & 2 — **holds across five models and three
 providers** (resolve 100% vs flat 57–82%), with the cheap-model-to-frontier result reproduced
