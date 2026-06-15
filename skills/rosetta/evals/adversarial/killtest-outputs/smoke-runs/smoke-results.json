@@ -1,0 +1,88 @@
+{
+  "raw": {
+    "current": 8,
+    "replaced": 8,
+    "parsed": 10,
+    "in_tokens": 106383,
+    "fails": [
+      [
+        "Q005",
+        "Cordoba",
+        "session-auth",
+        "signed JWT (HS256)",
+        "opaque Redis-backed sessions"
+      ],
+      [
+        "Q007",
+        "Utrecht",
+        "message-bus",
+        "Amazon SQS",
+        "Google Pub/Sub"
+      ]
+    ]
+  },
+  "flat": {
+    "current": 3,
+    "replaced": 1,
+    "parsed": 10,
+    "in_tokens": 4817,
+    "fails": [
+      [
+        "Q002",
+        "Cordoba",
+        "deploy-target",
+        "GKE Autopilot",
+        "Nomad"
+      ],
+      [
+        "Q003",
+        "Traralgon",
+        "message-bus",
+        "Google Pub/Sub",
+        "Apache Kafka"
+      ],
+      [
+        "Q004",
+        "Jakarta",
+        "message-bus",
+        "NATS JetStream",
+        ""
+      ],
+      [
+        "Q005",
+        "Cordoba",
+        "session-auth",
+        "signed JWT (HS256)",
+        "JWT RS256/JWKS"
+      ],
+      [
+        "Q007",
+        "Utrecht",
+        "message-bus",
+        "Amazon SQS",
+        "Google Pub/Sub"
+      ],
+      [
+        "Q008",
+        "Devonport",
+        "cache",
+        "Memcached",
+        ""
+      ],
+      [
+        "Q009",
+        "Zeehan",
+        "cache",
+        "in-process LRU",
+        "Hazelcast"
+      ]
+    ]
+  },
+  "resolve": {
+    "current": 10,
+    "replaced": 0,
+    "parsed": 10,
+    "in_tokens": 1673,
+    "fails": []
+  }
+}

@@ -1,0 +1,690 @@
+[
+  {
+    "id": "Q001",
+    "city": "Darwin",
+    "domain": "recommendations",
+    "dimension": "deploy-target",
+    "current": "self-hosted k8s",
+    "replaced": "GKE Autopilot",
+    "chain": [
+      "HashiCorp Nomad",
+      "ECS Fargate",
+      "GKE Autopilot",
+      "self-hosted k8s"
+    ],
+    "avoid": [
+      "HashiCorp Nomad",
+      "ECS Fargate",
+      "GKE Autopilot"
+    ]
+  },
+  {
+    "id": "Q002",
+    "city": "Cordoba",
+    "domain": "catalog",
+    "dimension": "deploy-target",
+    "current": "GKE Autopilot",
+    "replaced": "HashiCorp Nomad",
+    "chain": [
+      "self-hosted k8s",
+      "HashiCorp Nomad",
+      "GKE Autopilot"
+    ],
+    "avoid": [
+      "self-hosted k8s",
+      "HashiCorp Nomad"
+    ]
+  },
+  {
+    "id": "Q003",
+    "city": "Traralgon",
+    "domain": "search",
+    "dimension": "message-bus",
+    "current": "Google Pub/Sub",
+    "replaced": "Amazon SQS",
+    "chain": [
+      "RabbitMQ",
+      "Apache Kafka",
+      "Amazon SQS",
+      "Google Pub/Sub"
+    ],
+    "avoid": [
+      "RabbitMQ",
+      "Apache Kafka",
+      "Amazon SQS"
+    ]
+  },
+  {
+    "id": "Q004",
+    "city": "Jakarta",
+    "domain": "billing",
+    "dimension": "message-bus",
+    "current": "NATS JetStream",
+    "replaced": "Amazon SQS",
+    "chain": [
+      "Amazon SQS",
+      "NATS JetStream"
+    ],
+    "avoid": [
+      "Amazon SQS"
+    ]
+  },
+  {
+    "id": "Q005",
+    "city": "Cordoba",
+    "domain": "catalog",
+    "dimension": "session-auth",
+    "current": "signed JWT (HS256)",
+    "replaced": "opaque Redis-backed sessions",
+    "chain": [
+      "JWT (RS256 via JWKS)",
+      "PASETO v4 (local)",
+      "opaque Redis-backed sessions",
+      "signed JWT (HS256)"
+    ],
+    "avoid": [
+      "JWT (RS256 via JWKS)",
+      "PASETO v4 (local)",
+      "opaque Redis-backed sessions"
+    ]
+  },
+  {
+    "id": "Q006",
+    "city": "Faro",
+    "domain": "payments-ledger",
+    "dimension": "deploy-target",
+    "current": "HashiCorp Nomad",
+    "replaced": "ECS Fargate",
+    "chain": [
+      "GKE Autopilot",
+      "ECS Fargate",
+      "HashiCorp Nomad"
+    ],
+    "avoid": [
+      "GKE Autopilot",
+      "ECS Fargate"
+    ]
+  },
+  {
+    "id": "Q007",
+    "city": "Utrecht",
+    "domain": "search",
+    "dimension": "message-bus",
+    "current": "Amazon SQS",
+    "replaced": "RabbitMQ",
+    "chain": [
+      "Google Pub/Sub",
+      "RabbitMQ",
+      "Amazon SQS"
+    ],
+    "avoid": [
+      "Google Pub/Sub",
+      "RabbitMQ"
+    ]
+  },
+  {
+    "id": "Q008",
+    "city": "Devonport",
+    "domain": "recommendations",
+    "dimension": "cache",
+    "current": "Memcached",
+    "replaced": "Redis",
+    "chain": [
+      "in-process LRU",
+      "Redis",
+      "Memcached"
+    ],
+    "avoid": [
+      "in-process LRU",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q009",
+    "city": "Zeehan",
+    "domain": "catalog",
+    "dimension": "cache",
+    "current": "in-process LRU",
+    "replaced": "Redis",
+    "chain": [
+      "Hazelcast",
+      "Memcached",
+      "Redis",
+      "in-process LRU"
+    ],
+    "avoid": [
+      "Hazelcast",
+      "Memcached",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q010",
+    "city": "Wagga",
+    "domain": "notifications",
+    "dimension": "deploy-target",
+    "current": "GKE Autopilot",
+    "replaced": "self-hosted k8s",
+    "chain": [
+      "self-hosted k8s",
+      "GKE Autopilot"
+    ],
+    "avoid": [
+      "self-hosted k8s"
+    ]
+  },
+  {
+    "id": "Q011",
+    "city": "Renmark",
+    "domain": "checkout",
+    "dimension": "datastore",
+    "current": "Postgres 16",
+    "replaced": "MySQL 8",
+    "chain": [
+      "Cloud Spanner",
+      "CockroachDB",
+      "MySQL 8",
+      "Postgres 16"
+    ],
+    "avoid": [
+      "Cloud Spanner",
+      "CockroachDB",
+      "MySQL 8"
+    ]
+  },
+  {
+    "id": "Q012",
+    "city": "Ulladulla",
+    "domain": "search",
+    "dimension": "cache",
+    "current": "Memcached",
+    "replaced": "Redis",
+    "chain": [
+      "Redis",
+      "Memcached"
+    ],
+    "avoid": [
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q013",
+    "city": "Kumamoto",
+    "domain": "notifications",
+    "dimension": "message-bus",
+    "current": "RabbitMQ",
+    "replaced": "Google Pub/Sub",
+    "chain": [
+      "NATS JetStream",
+      "Google Pub/Sub",
+      "RabbitMQ"
+    ],
+    "avoid": [
+      "NATS JetStream",
+      "Google Pub/Sub"
+    ]
+  },
+  {
+    "id": "Q014",
+    "city": "Kempsey",
+    "domain": "catalog",
+    "dimension": "cache",
+    "current": "Hazelcast",
+    "replaced": "Redis",
+    "chain": [
+      "in-process LRU",
+      "Redis",
+      "Hazelcast"
+    ],
+    "avoid": [
+      "in-process LRU",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q015",
+    "city": "Yei",
+    "domain": "identity",
+    "dimension": "deploy-target",
+    "current": "self-hosted k8s",
+    "replaced": "HashiCorp Nomad",
+    "chain": [
+      "ECS Fargate",
+      "GKE Autopilot",
+      "HashiCorp Nomad",
+      "self-hosted k8s"
+    ],
+    "avoid": [
+      "ECS Fargate",
+      "GKE Autopilot",
+      "HashiCorp Nomad"
+    ]
+  },
+  {
+    "id": "Q016",
+    "city": "Lausanne",
+    "domain": "inventory",
+    "dimension": "datastore",
+    "current": "Cloud Spanner",
+    "replaced": "DynamoDB",
+    "chain": [
+      "MySQL 8",
+      "CockroachDB",
+      "DynamoDB",
+      "Cloud Spanner"
+    ],
+    "avoid": [
+      "MySQL 8",
+      "CockroachDB",
+      "DynamoDB"
+    ]
+  },
+  {
+    "id": "Q017",
+    "city": "Ballina",
+    "domain": "pricing",
+    "dimension": "message-bus",
+    "current": "Apache Kafka",
+    "replaced": "NATS JetStream",
+    "chain": [
+      "Google Pub/Sub",
+      "RabbitMQ",
+      "NATS JetStream",
+      "Apache Kafka"
+    ],
+    "avoid": [
+      "Google Pub/Sub",
+      "RabbitMQ",
+      "NATS JetStream"
+    ]
+  },
+  {
+    "id": "Q018",
+    "city": "Bruges",
+    "domain": "fulfillment",
+    "dimension": "session-auth",
+    "current": "JWT (RS256 via JWKS)",
+    "replaced": "opaque Redis-backed sessions",
+    "chain": [
+      "mutual-TLS client certs",
+      "opaque Redis-backed sessions",
+      "JWT (RS256 via JWKS)"
+    ],
+    "avoid": [
+      "mutual-TLS client certs",
+      "opaque Redis-backed sessions"
+    ]
+  },
+  {
+    "id": "Q019",
+    "city": "Napier",
+    "domain": "fulfillment",
+    "dimension": "message-bus",
+    "current": "Apache Kafka",
+    "replaced": "Amazon SQS",
+    "chain": [
+      "Amazon SQS",
+      "Apache Kafka"
+    ],
+    "avoid": [
+      "Amazon SQS"
+    ]
+  },
+  {
+    "id": "Q020",
+    "city": "Lismore",
+    "domain": "catalog",
+    "dimension": "deploy-target",
+    "current": "GKE Autopilot",
+    "replaced": "HashiCorp Nomad",
+    "chain": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad",
+      "GKE Autopilot"
+    ],
+    "avoid": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad"
+    ]
+  },
+  {
+    "id": "Q021",
+    "city": "Junee",
+    "domain": "identity",
+    "dimension": "datastore",
+    "current": "CockroachDB",
+    "replaced": "Cloud Spanner",
+    "chain": [
+      "Cloud Spanner",
+      "CockroachDB"
+    ],
+    "avoid": [
+      "Cloud Spanner"
+    ]
+  },
+  {
+    "id": "Q022",
+    "city": "Zermatt",
+    "domain": "catalog",
+    "dimension": "cache",
+    "current": "in-process LRU",
+    "replaced": "Redis",
+    "chain": [
+      "Hazelcast",
+      "Redis",
+      "in-process LRU"
+    ],
+    "avoid": [
+      "Hazelcast",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q023",
+    "city": "Macau",
+    "domain": "notifications",
+    "dimension": "session-auth",
+    "current": "JWT (RS256 via JWKS)",
+    "replaced": "mutual-TLS client certs",
+    "chain": [
+      "mutual-TLS client certs",
+      "JWT (RS256 via JWKS)"
+    ],
+    "avoid": [
+      "mutual-TLS client certs"
+    ]
+  },
+  {
+    "id": "Q024",
+    "city": "Quebec",
+    "domain": "pricing",
+    "dimension": "session-auth",
+    "current": "mutual-TLS client certs",
+    "replaced": "PASETO v4 (local)",
+    "chain": [
+      "signed JWT (HS256)",
+      "PASETO v4 (local)",
+      "mutual-TLS client certs"
+    ],
+    "avoid": [
+      "signed JWT (HS256)",
+      "PASETO v4 (local)"
+    ]
+  },
+  {
+    "id": "Q025",
+    "city": "Barwon",
+    "domain": "reviews",
+    "dimension": "datastore",
+    "current": "CockroachDB",
+    "replaced": "DynamoDB",
+    "chain": [
+      "DynamoDB",
+      "CockroachDB"
+    ],
+    "avoid": [
+      "DynamoDB"
+    ]
+  },
+  {
+    "id": "Q026",
+    "city": "Eltham",
+    "domain": "payments-ledger",
+    "dimension": "deploy-target",
+    "current": "GKE Autopilot",
+    "replaced": "HashiCorp Nomad",
+    "chain": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad",
+      "GKE Autopilot"
+    ],
+    "avoid": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad"
+    ]
+  },
+  {
+    "id": "Q027",
+    "city": "Utrecht",
+    "domain": "search",
+    "dimension": "deploy-target",
+    "current": "GKE Autopilot",
+    "replaced": "HashiCorp Nomad",
+    "chain": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad",
+      "GKE Autopilot"
+    ],
+    "avoid": [
+      "ECS Fargate",
+      "self-hosted k8s",
+      "HashiCorp Nomad"
+    ]
+  },
+  {
+    "id": "Q028",
+    "city": "Avalon",
+    "domain": "notifications",
+    "dimension": "datastore",
+    "current": "Postgres 16",
+    "replaced": "CockroachDB",
+    "chain": [
+      "MySQL 8",
+      "CockroachDB",
+      "Postgres 16"
+    ],
+    "avoid": [
+      "MySQL 8",
+      "CockroachDB"
+    ]
+  },
+  {
+    "id": "Q029",
+    "city": "Cessnock",
+    "domain": "reviews",
+    "dimension": "message-bus",
+    "current": "RabbitMQ",
+    "replaced": "Apache Kafka",
+    "chain": [
+      "Apache Kafka",
+      "RabbitMQ"
+    ],
+    "avoid": [
+      "Apache Kafka"
+    ]
+  },
+  {
+    "id": "Q030",
+    "city": "Horsham",
+    "domain": "search",
+    "dimension": "session-auth",
+    "current": "opaque Redis-backed sessions",
+    "replaced": "JWT (RS256 via JWKS)",
+    "chain": [
+      "JWT (RS256 via JWKS)",
+      "opaque Redis-backed sessions"
+    ],
+    "avoid": [
+      "JWT (RS256 via JWKS)"
+    ]
+  },
+  {
+    "id": "Q031",
+    "city": "Walcha",
+    "domain": "identity",
+    "dimension": "message-bus",
+    "current": "Google Pub/Sub",
+    "replaced": "Apache Kafka",
+    "chain": [
+      "NATS JetStream",
+      "Apache Kafka",
+      "Google Pub/Sub"
+    ],
+    "avoid": [
+      "NATS JetStream",
+      "Apache Kafka"
+    ]
+  },
+  {
+    "id": "Q032",
+    "city": "Otaru",
+    "domain": "pricing",
+    "dimension": "cache",
+    "current": "Redis",
+    "replaced": "Memcached",
+    "chain": [
+      "Hazelcast",
+      "in-process LRU",
+      "Memcached",
+      "Redis"
+    ],
+    "avoid": [
+      "Hazelcast",
+      "in-process LRU",
+      "Memcached"
+    ]
+  },
+  {
+    "id": "Q033",
+    "city": "Regina",
+    "domain": "reviews",
+    "dimension": "cache",
+    "current": "in-process LRU",
+    "replaced": "Redis",
+    "chain": [
+      "Hazelcast",
+      "Memcached",
+      "Redis",
+      "in-process LRU"
+    ],
+    "avoid": [
+      "Hazelcast",
+      "Memcached",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q034",
+    "city": "Delft",
+    "domain": "reviews",
+    "dimension": "datastore",
+    "current": "MySQL 8",
+    "replaced": "CockroachDB",
+    "chain": [
+      "DynamoDB",
+      "Postgres 16",
+      "CockroachDB",
+      "MySQL 8"
+    ],
+    "avoid": [
+      "DynamoDB",
+      "Postgres 16",
+      "CockroachDB"
+    ]
+  },
+  {
+    "id": "Q035",
+    "city": "Acton",
+    "domain": "pricing",
+    "dimension": "message-bus",
+    "current": "Google Pub/Sub",
+    "replaced": "RabbitMQ",
+    "chain": [
+      "RabbitMQ",
+      "Google Pub/Sub"
+    ],
+    "avoid": [
+      "RabbitMQ"
+    ]
+  },
+  {
+    "id": "Q036",
+    "city": "Darwin",
+    "domain": "recommendations",
+    "dimension": "cache",
+    "current": "Memcached",
+    "replaced": "Redis",
+    "chain": [
+      "Hazelcast",
+      "Redis",
+      "Memcached"
+    ],
+    "avoid": [
+      "Hazelcast",
+      "Redis"
+    ]
+  },
+  {
+    "id": "Q037",
+    "city": "Ballina",
+    "domain": "pricing",
+    "dimension": "cache",
+    "current": "Hazelcast",
+    "replaced": "Memcached",
+    "chain": [
+      "in-process LRU",
+      "Redis",
+      "Memcached",
+      "Hazelcast"
+    ],
+    "avoid": [
+      "in-process LRU",
+      "Redis",
+      "Memcached"
+    ]
+  },
+  {
+    "id": "Q038",
+    "city": "Limerick",
+    "domain": "identity",
+    "dimension": "session-auth",
+    "current": "mutual-TLS client certs",
+    "replaced": "PASETO v4 (local)",
+    "chain": [
+      "PASETO v4 (local)",
+      "mutual-TLS client certs"
+    ],
+    "avoid": [
+      "PASETO v4 (local)"
+    ]
+  },
+  {
+    "id": "Q039",
+    "city": "Hay",
+    "domain": "inventory",
+    "dimension": "message-bus",
+    "current": "Apache Kafka",
+    "replaced": "RabbitMQ",
+    "chain": [
+      "NATS JetStream",
+      "Google Pub/Sub",
+      "RabbitMQ",
+      "Apache Kafka"
+    ],
+    "avoid": [
+      "NATS JetStream",
+      "Google Pub/Sub",
+      "RabbitMQ"
+    ]
+  },
+  {
+    "id": "Q040",
+    "city": "Walcha",
+    "domain": "identity",
+    "dimension": "deploy-target",
+    "current": "self-hosted k8s",
+    "replaced": "ECS Fargate",
+    "chain": [
+      "ECS Fargate",
+      "self-hosted k8s"
+    ],
+    "avoid": [
+      "ECS Fargate"
+    ]
+  }
+]

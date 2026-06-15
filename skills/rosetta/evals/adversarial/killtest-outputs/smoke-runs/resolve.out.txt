@@ -1,0 +1,14 @@
+```json
+[
+  {"id": "Q001", "current": "self-hosted k8s", "replaced": "ADR 0497"},
+  {"id": "Q002", "current": "GKE Autopilot", "replaced": "ADR 0056"},
+  {"id": "Q003", "current": "Google Pub/Sub", "replaced": "ADR 0880"},
+  {"id": "Q004", "current": "NATS JetStream", "replaced": "ADR 0118"},
+  {"id": "Q005", "current": "signed JWT (HS256)", "replaced": "ADR 0060"},
+  {"id": "Q006", "current": "HashiCorp Nomad", "replaced": "ADR 0288"},
+  {"id": "Q007", "current": "Amazon SQS", "replaced": "ADR 0424"},
+  {"id": "Q008", "current": "Memcached", "replaced": "ADR 0727"},
+  {"id": "Q009", "current": "in-process LRU", "replaced": "ADR 0677"},
+  {"id": "Q010", "current": "GKE Autopilot", "replaced": "ADR 0660"}
+]
+```

@@ -1,0 +1,162 @@
+[
+  {
+    "id": "Q001",
+    "question": "What is the CURRENT deploy-target for Project Darwin, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q002",
+    "question": "What is the CURRENT deploy-target for Project Cordoba, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q003",
+    "question": "What is the CURRENT message-bus for Project Traralgon, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q004",
+    "question": "What is the CURRENT message-bus for Project Jakarta, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q005",
+    "question": "What is the CURRENT session-auth for Project Cordoba, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q006",
+    "question": "What is the CURRENT deploy-target for Project Faro, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q007",
+    "question": "What is the CURRENT message-bus for Project Utrecht, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q008",
+    "question": "What is the CURRENT cache for Project Devonport, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q009",
+    "question": "What is the CURRENT cache for Project Zeehan, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q010",
+    "question": "What is the CURRENT deploy-target for Project Wagga, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q011",
+    "question": "What is the CURRENT datastore for Project Renmark, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q012",
+    "question": "What is the CURRENT cache for Project Ulladulla, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q013",
+    "question": "What is the CURRENT message-bus for Project Kumamoto, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q014",
+    "question": "What is the CURRENT cache for Project Kempsey, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q015",
+    "question": "What is the CURRENT deploy-target for Project Yei, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q016",
+    "question": "What is the CURRENT datastore for Project Lausanne, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q017",
+    "question": "What is the CURRENT message-bus for Project Ballina, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q018",
+    "question": "What is the CURRENT session-auth for Project Bruges, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q019",
+    "question": "What is the CURRENT message-bus for Project Napier, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q020",
+    "question": "What is the CURRENT deploy-target for Project Lismore, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q021",
+    "question": "What is the CURRENT datastore for Project Junee, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q022",
+    "question": "What is the CURRENT cache for Project Zermatt, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q023",
+    "question": "What is the CURRENT session-auth for Project Macau, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q024",
+    "question": "What is the CURRENT session-auth for Project Quebec, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q025",
+    "question": "What is the CURRENT datastore for Project Barwon, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q026",
+    "question": "What is the CURRENT deploy-target for Project Eltham, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q027",
+    "question": "What is the CURRENT deploy-target for Project Utrecht, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q028",
+    "question": "What is the CURRENT datastore for Project Avalon, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q029",
+    "question": "What is the CURRENT message-bus for Project Cessnock, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q030",
+    "question": "What is the CURRENT session-auth for Project Horsham, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q031",
+    "question": "What is the CURRENT message-bus for Project Walcha, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q032",
+    "question": "What is the CURRENT cache for Project Otaru, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q033",
+    "question": "What is the CURRENT cache for Project Regina, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q034",
+    "question": "What is the CURRENT datastore for Project Delft, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q035",
+    "question": "What is the CURRENT message-bus for Project Acton, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q036",
+    "question": "What is the CURRENT cache for Project Darwin, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q037",
+    "question": "What is the CURRENT cache for Project Ballina, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q038",
+    "question": "What is the CURRENT session-auth for Project Limerick, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q039",
+    "question": "What is the CURRENT message-bus for Project Hay, and what did it replace? Name the current choice and the immediately prior one."
+  },
+  {
+    "id": "Q040",
+    "question": "What is the CURRENT deploy-target for Project Walcha, and what did it replace? Name the current choice and the immediately prior one."
+  }
+]

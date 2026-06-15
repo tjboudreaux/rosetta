@@ -29,8 +29,15 @@ skills/rosetta/decisions/INDEX.json
 skills/rosetta/evals/adversarial/results-tier-a.json
 skills/rosetta/evals/adversarial/REPORT.html
 
+# Kill-test bulky regenerable fixtures (corpus + the 1025-file ground-truth library are deterministic
+# from killtest_gen.py --seed; probes/gold/smoke-runs ARE committed — they define the experiment and
+# capture real model spend).
+skills/rosetta/evals/adversarial/killtest-outputs/corpus.md
+skills/rosetta/evals/adversarial/killtest-outputs/decisions/
+
 # Editor / OS
 *.swp
 *~
 .idea/
 .vscode/
+killtest-outputs/smoke-runs/*.err
