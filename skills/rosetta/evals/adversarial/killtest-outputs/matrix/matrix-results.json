@@ -1,0 +1,130 @@
+{
+  "raw__claude-haiku-4-5-20251001": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.908,
+    "recall_samples": [
+      35,
+      39,
+      35
+    ],
+    "recall_majority": 0.95,
+    "replaced_mean": 0.85,
+    "recall_stdev": 0.047,
+    "in_tokens": 107410,
+    "est_cost_usd": 0.3522,
+    "usd_per_correct": 0.0093
+  },
+  "rag__claude-haiku-4-5-20251001": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.85,
+    "recall_samples": [
+      34,
+      33,
+      35
+    ],
+    "recall_majority": 0.85,
+    "replaced_mean": 0.833,
+    "recall_stdev": 0.02,
+    "in_tokens": 13406,
+    "est_cost_usd": 0.0702,
+    "usd_per_correct": 0.0021
+  },
+  "resolve__claude-haiku-4-5-20251001": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 1.0,
+    "recall_samples": [
+      40,
+      40,
+      40
+    ],
+    "recall_majority": 1.0,
+    "replaced_mean": 1.0,
+    "recall_stdev": 0.0,
+    "in_tokens": 7345,
+    "est_cost_usd": 0.052,
+    "usd_per_correct": 0.0013
+  },
+  "flat__claude-haiku-4-5-20251001": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.592,
+    "recall_samples": [
+      18,
+      26,
+      27
+    ],
+    "recall_majority": 0.65,
+    "replaced_mean": 0.025,
+    "recall_stdev": 0.101,
+    "in_tokens": 5845,
+    "est_cost_usd": 0.0475,
+    "usd_per_correct": 0.0018
+  },
+  "raw__claude-sonnet-4-6": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.992,
+    "recall_samples": [
+      40,
+      39,
+      40
+    ],
+    "recall_majority": 1.0,
+    "replaced_mean": 0.992,
+    "recall_stdev": 0.012,
+    "in_tokens": 107410,
+    "est_cost_usd": 1.0567,
+    "usd_per_correct": 0.0264
+  },
+  "rag__claude-sonnet-4-6": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.85,
+    "recall_samples": [
+      34,
+      34,
+      34
+    ],
+    "recall_majority": 0.85,
+    "replaced_mean": 0.85,
+    "recall_stdev": 0.0,
+    "in_tokens": 13406,
+    "est_cost_usd": 0.2107,
+    "usd_per_correct": 0.0062
+  },
+  "resolve__claude-sonnet-4-6": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 1.0,
+    "recall_samples": [
+      40,
+      40,
+      40
+    ],
+    "recall_majority": 1.0,
+    "replaced_mean": 1.0,
+    "recall_stdev": 0.0,
+    "in_tokens": 7345,
+    "est_cost_usd": 0.1561,
+    "usd_per_correct": 0.0039
+  },
+  "flat__claude-sonnet-4-6": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.508,
+    "recall_samples": [
+      32,
+      29,
+      0
+    ],
+    "recall_majority": 0.725,
+    "replaced_mean": 0.267,
+    "recall_stdev": 0.361,
+    "in_tokens": 5845,
+    "est_cost_usd": 0.1426,
+    "usd_per_correct": 0.0049
+  }
+}

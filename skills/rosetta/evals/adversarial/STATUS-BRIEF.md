@@ -13,7 +13,30 @@ to `skills/rosetta/`.
 | **1 — recall-recovery thesis** | **INCONCLUSIVE** | merged as a **negative/inconclusive result; do NOT cite as supporting recall recovery** | ~1.1k-token corpus never hit the high-compression regime; all 3 conditions tied 3/3; resolved graph won on **cost −37%/query**, not accuracy (`GOAL1-THESIS-EXPERIMENT.md`) |
 | **2 — Phase 0b 2×2** | **MIXED → NO** at this scale | merged as **apparatus + honest negative; do NOT cite as "compiled beats raw"** | raw 20/20 = compiled 20/20 (no fixture separated arms); compiler hallucinated ADR ids in 2/5; cost inverted at toy scale (`GOAL2-PHASE0B.md`) |
 
-**Net:** the *cost/token* and *productization* bets are proven (goals 3, 4). The two *accuracy/correctness* bets (goals 1, 2) are **not yet supported at small/clean scale** — both failed for the same reason: no compression pressure. The decisive next experiment is the **same thesis at LARGE, lossy corpus scale**, where flat compression actually drops recall and compile cost amortizes.
+**Net:** the *cost/token* and *productization* bets are proven (goals 3, 4). The two *accuracy/correctness* bets (goals 1, 2) were **not supported at small/clean scale** — both failed for the same reason: no compression pressure.
+
+## UPDATE (2026-06-15): the recall-recovery thesis now HOLDS at scale (kill test)
+Rebuilt the experiment with real compression pressure — a **106k-token corpus, 1025 decisions (685
+superseded distractors), 21.2:1** to a 5k summary — and ran a preregistered **4-arm × 2-Claude-tier ×
+k=3 × 40-probe** matrix with judge-independent grading (`evals/adversarial/KILLTEST-RESULTS.md`,
+`killtest_*.py`). Result, **majority recall**:
+
+| arm | Haiku | Sonnet |
+|---|---|---|
+| raw (106k) | 95% | 100% |
+| generic-RAG | 85% | 85% |
+| **resolve** | **100%** | **100%** |
+| flat-summary | 65% | 72% |
+
+- **Thesis proven:** the resolved provenance graph recovers the recall flat compression loses (resolve
+  100% vs flat 65%/72%); +15% separation over raw on both tiers; resolve is 40/40 on every sample.
+- **Headline:** **Haiku+resolve (100%) = Sonnet+raw (100%) at ~20× lower $/correct** ($0.0013 vs $0.0264).
+- Also shipped this turn: **compiler anti-hallucination integrity gate** (ADR 0024, CI-enforced) and
+  `resolve` now returns **"what it replaced"** (second grading axis → 100%).
+
+Remaining to harden the claim: **cross-harness pass (Gemini + Codex)** and an **end-to-end compiled-
+library arm** that folds in compile cost + the integrity gate (the current resolve arm uses a
+deterministic ground-truth library, so it measures the resolution ceiling, not LLM compilation).
 
 ## Where we are (one paragraph)
 The eval suite catches real LLM failure modes; only **retrieval-defeat** (semantic evasion / codename

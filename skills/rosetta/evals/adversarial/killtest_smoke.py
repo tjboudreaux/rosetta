@@ -33,16 +33,29 @@ RUNS = OUT / "smoke-runs"
 SUMMARIZER = "claude-sonnet-4-6"
 
 
-def claude(model, instruction, stdin_text, timeout=900):
-    """One non-interactive claude call: instruction via -p, bulk context via stdin. One retry."""
-    for attempt in (1, 2):
-        r = subprocess.run(["claude", "-p", instruction, "--model", model],
-                           input=stdin_text, capture_output=True, text=True, timeout=timeout)
-        if r.returncode == 0 and r.stdout.strip():
-            return r.stdout
+# Per-call wall-clock budget (seconds). A module global so a long matrix run can raise it once
+# (ks.CALL_TIMEOUT = N) without threading the value through every arm function.
+CALL_TIMEOUT = 1800
+
+
+def claude(model, instruction, stdin_text, timeout=None):
+    """One non-interactive claude call: instruction via -p, bulk context via stdin. Retries on
+    nonzero/empty/timeout so a single slow or flaky call never crashes a long matrix run."""
+    timeout = CALL_TIMEOUT if timeout is None else timeout
+    out = ""
+    for attempt in (1, 2, 3):
+        try:
+            r = subprocess.run(["claude", "-p", instruction, "--model", model],
+                               input=stdin_text, capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            sys.stderr.write(f"[claude {model}] attempt {attempt} TIMEOUT after {timeout}s\n")
+            continue
+        out = r.stdout
+        if r.returncode == 0 and out.strip():
+            return out
         sys.stderr.write(f"[claude {model}] attempt {attempt} rc={r.returncode}: "
-                         f"{(r.stderr or r.stdout)[:300]}\n")
-    return r.stdout
+                         f"{(r.stderr or out)[:300]}\n")
+    return out
 
 
 def _chunks(text, max_chars):
@@ -112,6 +125,56 @@ def arm_flat(probes, solver):
     return claude(solver, "Answer strictly from the summary above.", stdin), len(stdin) // 4
 
 
+def _bm25_index(corpus):
+    """Pure-Python BM25 over the corpus's ## R#### records (the generic-RAG arm's retriever).
+    Returns (records[list[str]], score_fn(query)->ranked idxs). No embeddings/model — a standard
+    lexical baseline that retrieves raw chunks WITHOUT resolving supersession (so it can surface a
+    superseded decision as readily as the current one — the generic-memory failure mode)."""
+    import math
+    from collections import Counter
+    blocks = [b for b in re.split(r"(?=^## R\d)", corpus, flags=re.MULTILINE) if b.strip()]
+    def toks(s):
+        return re.findall(r"[a-z0-9]+", s.lower())
+    docs = [toks(b) for b in blocks]
+    N = len(docs)
+    avgdl = sum(len(d) for d in docs) / max(1, N)
+    df = Counter()
+    for d in docs:
+        for t in set(d):
+            df[t] += 1
+    idf = {t: math.log(1 + (N - n + 0.5) / (n + 0.5)) for t, n in df.items()}
+    tfs = [Counter(d) for d in docs]
+    k1, b = 1.5, 0.75
+    def rank(query, top):
+        qt = toks(query)
+        scored = []
+        for i, tf in enumerate(tfs):
+            dl = len(docs[i])
+            s = 0.0
+            for t in qt:
+                if t not in tf:
+                    continue
+                s += idf.get(t, 0.0) * (tf[t] * (k1 + 1)) / (tf[t] + k1 * (1 - b + b * dl / avgdl))
+            if s > 0:
+                scored.append((s, i))
+        scored.sort(reverse=True)
+        return [blocks[i] for _, i in scored[:top]]
+    return rank
+
+
+def arm_rag(probes, gold, solver, top=8):
+    corpus = (OUT / "corpus.md").read_text()
+    rank = _bm25_index(corpus)
+    blobs = []
+    for p in probes:
+        g = gold[p["id"]]
+        chunks = rank(f"{g['city']} {g['dimension']}", top)
+        blobs.append(f'{p["id"]} retrieved for "{g["city"]} {g["dimension"]}":\n' + "\n".join(chunks))
+    stdin = ("RETRIEVED DECISION RECORDS (top-k lexical retrieval; may include superseded ones):\n"
+             + "\n\n".join(blobs) + f"\n\n{ASK}{questions_block(probes)}")
+    return claude(solver, "Answer strictly from the retrieved records above.", stdin), len(stdin) // 4
+
+
 def arm_resolve(probes, gold, solver):
     blobs = []
     for p in probes:
@@ -156,11 +219,11 @@ def main():
     probes = all_probes[: args.k]
     gold = {g["id"]: g for g in json.loads((OUT / "gold.json").read_text())}
 
-    arms = {"raw": arm_raw, "flat": arm_flat, "resolve": arm_resolve}
+    arms = {"raw": arm_raw, "flat": arm_flat, "rag": arm_rag, "resolve": arm_resolve}
     results = {}
     for name in args.arms.split(","):
         fn = arms[name]
-        out, in_tok = (fn(probes, gold, args.solver) if name == "resolve"
+        out, in_tok = (fn(probes, gold, args.solver) if name in ("resolve", "rag")
                        else fn(probes, args.solver))
         (RUNS / f"{name}.out.txt").write_text(out)
         ans = parse_answers(out)
