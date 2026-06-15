@@ -1,0 +1,1 @@
+The current primary datastore for the user-profile service (Project Nimbus) is the unified ledger tier. As of 2026-06-08, the service migrated from its prior document store to this ledger tier for strong consistency. The migration replaced DynamoDB (the legacy datastore documented in 2025-11) and the earlier transition to Postgres that occurred between 2025-11-20 and 2026-05-07.

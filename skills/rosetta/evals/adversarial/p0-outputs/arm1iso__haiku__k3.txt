@@ -1,0 +1,1 @@
+The current primary datastore for the user-profile service is DynamoDB, as documented in the decision log dated 2025-07-02. This decision was made after weighing throughput, data-residency, cost, and migration risk considerations. The legacy store.py file references DynamoDB as well, confirming this as the established choice.
