@@ -1,0 +1,88 @@
+{
+  "experiment": "GOAL 1 — central thesis: does a code-anchored, supersession-resolved decision graph recover factual recall that flat compression/RAG loses, beating both raw long-context AND flat summary on accuracy?",
+  "date": "2026-06-14",
+  "model_under_test": "Haiku (the cheap model we want to lift)",
+  "k": 3,
+  "grading": "read-verified claim-check against GOLD.md rubric (NOT grep)",
+  "fixture": {
+    "name": "Project Halifax session-token history",
+    "corpus_chars": 4389,
+    "corpus_tokens_est": 1097,
+    "records": 32,
+    "difficulty": [
+      "implicit codename (Halifax = checkout, never glossed; inferable only from scattered org/dashboard/runbook/cost co-occurrence)",
+      "three-step supersession chain: JWT(HS256) -> opaque Redis sessions -> PASETO v4",
+      "stale-but-Accepted-looking architecture doc (R18) still calling Redis 'current'",
+      "adjacent-service distractor: billing/Sterling uses JWT RS256 (recent, confident language)"
+    ],
+    "gold": {
+      "current_mechanism": "PASETO v4 (v4.local, paseto-py)",
+      "replaced": "opaque Redis-backed session tokens",
+      "codename": "Halifax = checkout/payments service",
+      "must_not_say_current": ["JWT", "Redis", "RS256 (billing)"]
+    }
+  },
+  "conditions": {
+    "A_raw_long_context": {
+      "context": "full raw corpus.md",
+      "context_tokens_est": 1097,
+      "runs": [
+        {"k": 1, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "also surfaced full chain JWT->Redis->PASETO"},
+        {"k": 2, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "surfaced full chain"},
+        {"k": 3, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": ""}
+      ],
+      "score_total": "3/3",
+      "per_query_input_tokens_est": 1097
+    },
+    "B_flat_rag_summary": {
+      "context": "flat_summary.md (Opus-produced naive flat summary, NO supersession structure; conflicting statements presented flatly)",
+      "context_tokens_est": 736,
+      "compile_cost_note": "one-time Opus flat-summary build ~33k subagent tokens (amortized over queries)",
+      "runs": [
+        {"k": 1, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "surfaced full chain"},
+        {"k": 2, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "surfaced full chain"},
+        {"k": 3, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": ""}
+      ],
+      "score_total": "3/3",
+      "per_query_input_tokens_est": 736
+    },
+    "C_rosetta_resolved_graph": {
+      "context": "decisions.py resolve -> single CURRENT ADR (ADR 0003); supersession + codename pre-resolved",
+      "resolve_returns_single_current": true,
+      "conflict_flag": false,
+      "context_tokens_est": 690,
+      "context_breakdown": "resolve JSON (~80 tok) + ADR 0003 (~690 tok); optionally superseded ADR 0002 if prior-mechanism detail wanted",
+      "compile_cost_note": "one-time Opus compile of 9 validated ADRs ~76k subagent tokens (amortized); library ~2872 tokens total but only the resolved record is read per query",
+      "runs": [
+        {"k": 1, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "ADR 0003 names it CURRENT; codename pre-decoded in record"},
+        {"k": 2, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "cited ADR 0003/0002"},
+        {"k": 3, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0, "notes": "rerun after a first attempt used the wrong --root (answerer error, not library error)"}
+      ],
+      "first_attempt_failure": "one C run initially ran resolve against the default ./decisions root (the main repo) instead of the goal1-outputs root and found nothing; re-run with the correct --root resolved cleanly. Operational note about absolute-path discipline, not a thesis result.",
+      "score_total": "3/3",
+      "per_query_input_tokens_est": 690
+    }
+  },
+  "stress_arm_B2_high_compression": {
+    "rationale": "B at 68% compression was too generous; the documented ~33-35pt recall loss is a HIGH-compression phenomenon. B2 forces <=900 chars (20% / ~4.9x compression) to try to make flat summary actually lossy.",
+    "context": "flat_summary_hi.md (Opus, 894 chars, ~224 tokens)",
+    "context_tokens_est": 224,
+    "runs": [
+      {"k": 1, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0},
+      {"k": 2, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0},
+      {"k": 3, "current": "PASETO v4", "replaced": "opaque Redis sessions", "codename_ok": true, "distractor_error": false, "score": 1.0}
+    ],
+    "score_total": "3/3",
+    "finding": "Even at 20% compression a COMPETENT Opus summarizer preserved the auth chain in temporal order ('JWT -> then Redis -> then PASETO'), so the superseding fact survived and Haiku answered correctly. Flat compression did not lose recall even when forced small. The thesis differentiator requires the summary to actually DROP or SCRAMBLE the chain (e.g. a much larger corpus, a weaker/cheaper summarizer, or a summary that keeps the stale doc's claim while dropping the migration)."
+  },
+  "summary_table": {
+    "columns": ["condition", "correctness_haiku_k3", "per_query_input_tokens_est", "one_time_compile_tokens"],
+    "rows": [
+      ["A raw long-context", "3/3", 1097, 0],
+      ["B flat RAG/summary (68% compress)", "3/3", 736, 33000],
+      ["B2 flat RAG/summary (20% compress)", "3/3", 224, 31000],
+      ["C Rosetta resolved graph", "3/3", 690, 76000]
+    ]
+  },
+  "verdict": "INCONCLUSIVE on the recall-recovery thesis. All three conditions scored 3/3, so the decision graph did NOT demonstrate a recall advantage over flat compression on THIS fixture: the corpus was small enough (~1.1k tokens) that neither raw long-context nor a faithful flat summary actually lost the facts. Flat compression's predicted ~33-35pt recall loss did not occur, so there was no loss for provenance to recover. The graph DID win on per-query tokens (690 vs 736 vs 1097, -37% vs raw) and produced a single pre-resolved record with no conflict flag, but accuracy parity means the central accuracy claim is not supported here. A decisive test requires a corpus large enough to force lossy compression (so flat summary must drop or conflate the superseding fact) and/or a higher distractor density that defeats a flat summary's flat presentation of conflicts."
+}

@@ -1,0 +1,1 @@
+What is the CURRENT session-token mechanism for Project Halifax, and what mechanism did it replace? Be specific about the current choice and the immediately prior one.
