@@ -58,6 +58,43 @@ def claude(model, instruction, stdin_text, timeout=None):
     return out
 
 
+def _gemini(model, instruction, stdin_text, timeout):
+    import os
+    env = dict(os.environ, GEMINI_CLI_TRUST_WORKSPACE="true")
+    r = subprocess.run(["gemini", "-m", model, "--skip-trust", "-p", instruction],
+                       input=stdin_text, capture_output=True, text=True, timeout=timeout, env=env)
+    return r.returncode, r.stdout, r.stderr
+
+
+def _codex(model, instruction, stdin_text, timeout):
+    # codex reads the piped context on stdin; the prompt arg carries the instruction. Output is wrapped
+    # in hook/token noise — the tolerant JSON parser strips that downstream.
+    r = subprocess.run(["codex", "exec", "--skip-git-repo-check", "-m", model, instruction],
+                       input=stdin_text, capture_output=True, text=True, timeout=timeout)
+    return r.returncode, r.stdout, r.stderr
+
+
+def run_model(model, instruction, stdin_text, timeout=None):
+    """Harness-agnostic single call, routed by model id: claude-* → claude CLI, gemini* → gemini CLI,
+    everything else (gpt-*/codex) → codex CLI. Retries on nonzero/empty/timeout so one flaky provider
+    call never crashes a long matrix. Returns the raw stdout (the tolerant parser extracts the answer)."""
+    timeout = CALL_TIMEOUT if timeout is None else timeout
+    if model.startswith("claude"):
+        return claude(model, instruction, stdin_text, timeout)
+    runner = _gemini if model.startswith("gemini") else _codex
+    out = ""
+    for attempt in (1, 2, 3):
+        try:
+            rc, out, err = runner(model, instruction, stdin_text, timeout)
+        except subprocess.TimeoutExpired:
+            sys.stderr.write(f"[{model}] attempt {attempt} TIMEOUT after {timeout}s\n")
+            continue
+        if rc == 0 and out.strip():
+            return out
+        sys.stderr.write(f"[{model}] attempt {attempt} rc={rc}: {(err or out)[:300]}\n")
+    return out
+
+
 def _chunks(text, max_chars):
     """Split on record boundaries (## R...) into pieces under max_chars (map-reduce summarization)."""
     parts, buf = [], []
@@ -102,7 +139,7 @@ def questions_block(probes):
 def arm_raw(probes, solver):
     corpus = (OUT / "corpus.md").read_text()
     stdin = f"DECISION HISTORY (raw):\n{corpus}\n\n{ASK}{questions_block(probes)}"
-    return claude(solver, "Answer strictly from the decision history above.", stdin), len(stdin) // 4
+    return run_model(solver, "Answer strictly from the decision history above.", stdin), len(stdin) // 4
 
 
 def arm_flat(probes, solver):
@@ -122,7 +159,7 @@ def arm_flat(probes, solver):
         summ_path.write_text("\n\n".join(p.strip() for p in pieces if p.strip()))
     summary = summ_path.read_text()
     stdin = f"ARCHITECTURE SUMMARY:\n{summary}\n\n{ASK}{questions_block(probes)}"
-    return claude(solver, "Answer strictly from the summary above.", stdin), len(stdin) // 4
+    return run_model(solver, "Answer strictly from the summary above.", stdin), len(stdin) // 4
 
 
 def _bm25_index(corpus):
@@ -172,20 +209,31 @@ def arm_rag(probes, gold, solver, top=8):
         blobs.append(f'{p["id"]} retrieved for "{g["city"]} {g["dimension"]}":\n' + "\n".join(chunks))
     stdin = ("RETRIEVED DECISION RECORDS (top-k lexical retrieval; may include superseded ones):\n"
              + "\n\n".join(blobs) + f"\n\n{ASK}{questions_block(probes)}")
-    return claude(solver, "Answer strictly from the retrieved records above.", stdin), len(stdin) // 4
+    return run_model(solver, "Answer strictly from the retrieved records above.", stdin), len(stdin) // 4
 
 
-def arm_resolve(probes, gold, solver):
+def _resolve_arm(probes, gold, solver, root):
     blobs = []
     for p in probes:
         g = gold[p["id"]]
-        r = subprocess.run([sys.executable, str(DECISIONS), "--root", str(OUT / "decisions"),
+        r = subprocess.run([sys.executable, str(DECISIONS), "--root", str(root),
                             "resolve", "--text", f"{g['city']} {g['dimension']}", "--no-stale-check"],
                            capture_output=True, text=True)
         blobs.append(f'{p["id"]} resolve({g["city"]} {g["dimension"]}): {r.stdout.strip()}')
     stdin = "RESOLVED CURRENT DECISIONS (from the provenance graph):\n" + "\n\n".join(blobs) + \
             f"\n\n{ASK}{questions_block(probes)}"
-    return claude(solver, "Answer strictly from the resolved decisions above.", stdin), len(stdin) // 4
+    return run_model(solver, "Answer strictly from the resolved decisions above.", stdin), len(stdin) // 4
+
+
+def arm_resolve(probes, gold, solver):
+    """resolve against the DETERMINISTIC ground-truth library (resolution recall CEILING)."""
+    return _resolve_arm(probes, gold, solver, OUT / "decisions")
+
+
+def arm_compiled(probes, gold, solver):
+    """resolve against the LLM-COMPILED library (end-to-end Rosetta: extraction fallibility folded in;
+    compile cost is in compiled-lib/compile-meta.json). Build it first: python3 killtest_compile.py."""
+    return _resolve_arm(probes, gold, solver, OUT / "compiled-lib" / "decisions")
 
 
 def score(answers, probes, gold):
@@ -219,11 +267,11 @@ def main():
     probes = all_probes[: args.k]
     gold = {g["id"]: g for g in json.loads((OUT / "gold.json").read_text())}
 
-    arms = {"raw": arm_raw, "flat": arm_flat, "rag": arm_rag, "resolve": arm_resolve}
+    arms = {"raw": arm_raw, "flat": arm_flat, "rag": arm_rag, "resolve": arm_resolve, "compiled": arm_compiled}
     results = {}
     for name in args.arms.split(","):
         fn = arms[name]
-        out, in_tok = (fn(probes, gold, args.solver) if name in ("resolve", "rag")
+        out, in_tok = (fn(probes, gold, args.solver) if name in ("resolve", "rag", "compiled")
                        else fn(probes, args.solver))
         (RUNS / f"{name}.out.txt").write_text(out)
         ans = parse_answers(out)

@@ -20,6 +20,7 @@ Pure stdlib + the `claude` CLI. Writes killtest-outputs/matrix/.
 """
 import argparse
 import json
+import re
 import statistics
 import pathlib
 
@@ -28,34 +29,45 @@ import killtest_smoke as ks    # reuse claude(), arms, parse_answers, score, ASK
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE / "killtest-outputs"
 MX = OUT / "matrix"
-PRICING = json.loads((HERE / "pricing.json").read_text()) if (HERE / "pricing.json").exists() else {}
+# Build an id→(input,output) map from the versioned price sheet (sheets.<latest>.models).
+def _load_prices():
+    out = {}
+    try:
+        sheets = json.loads((HERE / "pricing.json").read_text())["sheets"]
+        latest = sorted(sheets)[-1]
+        for name, v in sheets[latest]["models"].items():
+            if v.get("input") is None:
+                continue
+            rate = (v["input"], v.get("output", v["input"] * 5))
+            out[name] = rate
+            if v.get("id"):
+                out[v["id"]] = rate
+    except (OSError, KeyError, ValueError):
+        pass
+    return out
 
-# rough price fallback (USD per 1M tok, input/output) if pricing.json lacks an entry
-PRICE = {
-    "claude-haiku-4-5-20251001": (1.0, 5.0),
-    "claude-sonnet-4-6": (3.0, 15.0),
-}
+
+PRICES = _load_prices()
+_FALLBACK = (3.0, 15.0)
 
 
 def price_for(model):
-    p = PRICING.get(model) or PRICING.get(model.split("-2025")[0])
-    if isinstance(p, dict) and "input" in p:
-        return p["input"], p.get("output", p["input"] * 5)
-    return PRICE.get(model, (3.0, 15.0))
+    # exact id, then prefix before a date suffix (e.g. claude-haiku-4-5-20251001 → claude-haiku-4-5)
+    return PRICES.get(model) or PRICES.get(re.sub(r"-20\d{6}$", "", model)) or _FALLBACK
 
 
 def run_cell(arm, tier, probes, gold, k):
     """Run k samples of one (arm, tier) cell. RESUMABLE: a sample whose .out.txt already exists and
     parses to all probes is reused (so a crashed/timed-out run re-runs only the missing work).
     Returns per-sample answer dicts + input token estimate."""
-    fn = {"raw": ks.arm_raw, "flat": ks.arm_flat, "rag": ks.arm_rag, "resolve": ks.arm_resolve}[arm]
+    fn = {"raw": ks.arm_raw, "flat": ks.arm_flat, "rag": ks.arm_rag, "resolve": ks.arm_resolve, "compiled": ks.arm_compiled}[arm]
     samples, in_tok = [], 0
     for s in range(k):
         path = MX / f"{arm}__{tier}__k{s+1}.out.txt"
         if path.exists() and len(ks.parse_answers(path.read_text())) == len(probes):
             samples.append(ks.parse_answers(path.read_text()))
             continue
-        out, it = (fn(probes, gold, tier) if arm in ("rag", "resolve") else fn(probes, tier))
+        out, it = (fn(probes, gold, tier) if arm in ("rag", "resolve", "compiled") else fn(probes, tier))
         in_tok = it
         path.write_text(out)
         samples.append(ks.parse_answers(out))
