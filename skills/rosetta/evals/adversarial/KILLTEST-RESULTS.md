@@ -167,18 +167,55 @@ Solver = Sonnet (~200K window), 10 probes, resolve against the ground-truth grap
   cost gap, ~14× at 106K, becomes **unbounded** here — raw becomes impossible while resolve stays flat.
 
 This is the scaling form of the thesis: the resolution layer's value *increases* with corpus size, and
-becomes categorical (not just quantitative) once the corpus exceeds the window.
+becomes categorical (not just quantitative) once the corpus exceeds the window — **for the raw-dump
+baseline.** The next section corrects an important strawman.
+
+## The REAL baseline — a tool-calling agent (grep/read), not a context dump (`killtest_agentic.py`)
+`raw` dumps the whole corpus into context (and cliffs past the window). A modern agent instead
+**greps/reads on demand**, so it never hits the wall. Each probe = a fresh Claude Code agent session
+with real Grep/Read/Bash tools on `corpus.md`; tokens/turns/time/$ are measured from the CLI's JSON.
+
+| corpus | model | recall | $/correct | tokens/probe | time/probe | tool turns |
+|---|---|---|---|---|---|---|
+| 106K (20 probes) | Sonnet | **100%** | $0.107 | 70,900 | 13.0s | 2.3 |
+| 565K / ~2.8× window (10 probes) | Sonnet | **100%** | $0.116 | 73,052 | 14.3s | 2.4 |
+
+Findings:
+- **Accuracy does NOT degrade** — 100% at both scales, *including* past the context window. A competent
+  tool-calling model greps the entity, reads its chain, and reasons through the supersession + stale-doc
+  distractors. "grep is the equalizer" holds.
+- **Tokens (~50×) and latency (~13–14s, sequential turns) blow up** vs resolve's single ~1.4k-token,
+  near-instant call.
+- **Agentic cost is corpus-size-invariant** ($0.107 → $0.116 across a 5× corpus) — grep is targeted, so
+  it reads the entity's footprint, not the whole repo. So tool-calling, unlike raw-dump, *scales*.
+
+### Honest head-to-head (corrects the earlier "accuracy moat" framing)
+| baseline | accuracy | $/correct | latency | tokens | determinism | past window |
+|---|---|---|---|---|---|---|
+| raw context-dump (Sonnet) | ties strong models | $0.026 | 1 slow call | 107k | — | **no (cliffs)** |
+| **agentic tool-calling (Sonnet)** | **100% (ties resolve)** | $0.11 | ~14s / 2.4 turns | ~72k | earned per-query | yes |
+| **resolve (Sonnet)** | 100% | **$0.004** | 1 instant call | ~1.4k | **structural** | yes |
+
+**Against the strongest baseline (tool-calling), resolve does NOT win on accuracy — it ties at 100%.**
+Resolve's durable moat over a tool-calling agent is **~27× lower $/correct, ~10–20× lower latency, ~50×
+fewer tokens, and *deterministic* correctness** — resolve's 100% is guaranteed by the graph, whereas the
+agent earns its 100% per query and is the one whose accuracy could slip on harder distractors, higher k,
+or weaker models. The accuracy advantage is real only vs flat compression and generic RAG (57–98%) and
+vs raw on weak models / past the window — **not vs a competent tool-calling agent.**
 
 ## Verdict
 The recall-recovery thesis — unproven through Goals 1 & 2 — **holds across five models and three
-providers** (resolve 100% vs flat 57–82%), with the cheap-model-to-frontier result reproduced
-cross-harness (~64× cost edge at equal recall). End-to-end, a real LLM-compiled library reaches **82%**
-(ceiling 100%), gated clean by ADR 0024, with the gap localized to compiler extraction and a quantified
-canonicalization lever. **The accuracy moat is real; the remaining work is compiler quality, not the
-mechanism.**
+providers** vs flat compression / generic RAG (resolve 100% vs flat 57–82%, RAG 85–98%), with the
+cheap-model-to-frontier result reproduced cross-harness. **But vs a tool-calling agent — the strongest
+real baseline — accuracy TIES at 100%; resolve's win there is cost (~27×), latency (~10–20×),
+token-efficiency (~50×), and determinism, not accuracy.** End-to-end, a real LLM-compiled library reaches
+**82%** (ceiling 100%), gated clean by ADR 0024, gap localized to compiler extraction + a quantified
+canonicalization lever. Net: **resolve's moat is efficiency + determinism against the best baseline, and
+accuracy against the weaker ones — claim it precisely, not as a blanket accuracy moat.**
 
-Remaining (smaller) next steps: push compiler extraction past 82% (overlap chunks / add a self-check
-pass), and a real-repo corpus to replace the synthetic one.
+Remaining next steps: push compiler extraction past 82% (overlap chunks / self-check pass); stress the
+agentic tie with harder retrieval-defeat probes + higher k (where the agent's *earned* 100% may crack
+while resolve's *structural* 100% holds); a real-repo corpus.
 
 ## Artifacts
 `killtest_gen.py` · `killtest_validate.py` · `killtest_smoke.py` (arms + `run_model` dispatcher) ·

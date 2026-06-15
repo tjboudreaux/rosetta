@@ -103,8 +103,14 @@ Both passes ran at k=3, 40 probes; combined matrix in `KILLTEST-RESULTS.md`.
    canonicalization 82%** (the alias step Phase 1 named, now shown load-bearing); compile cost ~146k tok
    one-time. Remaining 18% = compiler extraction error, not the mechanism.
 
-**Net: the accuracy moat is real and provider-independent.** Remaining work is compiler quality (push
-extraction past 82%) and a real-repo corpus — not the thesis.
+**Net (precise, post tool-calling baseline): resolve beats flat-compression/RAG/raw-on-weak-models on
+ACCURACY (100% vs 57–98%), provider-independent. But vs a competent TOOL-CALLING agent — the strongest
+real baseline — accuracy TIES at 100%; resolve's win there is efficiency + determinism: ~27× lower
+$/correct, ~10–20× lower latency, ~50× fewer tokens, and a structurally-guaranteed 100% (the agent earns
+its 100% per query at ~$0.11 and ~14s, and is the one that could slip on harder probes).** Both resolve
+and the agent are corpus-size-invariant (grep is targeted); only raw-dump cliffs past the window. Claim
+the moat precisely — efficiency/determinism vs the best baseline, accuracy vs the weaker ones. Remaining:
+compiler quality past 82%; stress the agentic tie with harder probes + higher k; a real-repo corpus.
 
 ## Candidate goals to choose from (pick one to set) — post-orchestration
 Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:
