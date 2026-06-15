@@ -107,8 +107,26 @@ loudly** (never silently downgraded) when `git` is unavailable.
    `gold.json`.
 2. Have the **solver** (a Rosetta run under test) produce `ground-truth.md` from only the `prompt` +
    the fixture `$HOME` + the project checkout — *not* the bundle (the bundle contains gold).
-3. Have a **judge** model grade the output using `judge_prompt.md` against `gold.json`, returning the
+3. Grade the output. **Deterministic-scoring-first (default for scorable scenarios):** run `score.py`
+   FIRST; only fall back to the LLM judge when it can't score deterministically. This is the H2 lever
+   from `TOKEN-REDUCTION-HYPOTHESES.md` — a scorable scenario costs **zero judge tokens**:
+
+   ```bash
+   # default grading path: try the deterministic scorer first
+   python3 score.py --scenario decision-supersession-lookup-100 --solver-output ground-truth.md
+   # exit 0 = pass, 1 = fail (judge-independent), 2 = scorable:false → route to the LLM judge below
+   ```
+
+   `score.py` is authoritative when the solver emits a ```` ```rosetta-verdict {…}``` ```` block (it
+   re-derives the needle/near-miss from the deterministic fixture and checks the block exactly — no
+   prose parsing, no model call). The scorable set is `score.SCORERS` (the decision-supersession-*
+   and decision-already-recorded families). On `scorable: false` (exit 2), and for all free-form
+   scenarios, fall through to:
+4. Have a **judge** model grade the output using `judge_prompt.md` against `gold.json`, returning the
    structured verdict. The solver and judge must be isolated; the judge sees gold, the solver never.
+
+See `GOAL3-TOKEN-REDUCTION-RESULTS.md` for the measured before/after token accounting of this path
+(`measure_tokens.py` is the harness).
 
 ## Adding a scenario
 
