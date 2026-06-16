@@ -1,0 +1,27 @@
+{
+  "aliases": {
+    "alias layer": [
+      {
+        "id": "ADR 0025",
+        "title": "Alias/glossary codename-resolution layer",
+        "status": "Accepted"
+      }
+    ],
+    "codename resolution": [
+      {
+        "id": "ADR 0025",
+        "title": "Alias/glossary codename-resolution layer",
+        "status": "Accepted"
+      }
+    ],
+    "the glossary": [
+      {
+        "id": "ADR 0025",
+        "title": "Alias/glossary codename-resolution layer",
+        "status": "Accepted"
+      }
+    ]
+  },
+  "_alias_conflicts": [],
+  "_invalid_chains": []
+}

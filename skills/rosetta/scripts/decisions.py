@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
     "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
     "required_fields": ["Status", "Date", "Decider"],
     "recommended_fields": ["Sources"],
-    "optional_fields": ["Decided originally", "Related", "Supersedes"],
+    "optional_fields": ["Decided originally", "Related", "Supersedes", "Aliases"],
     "record_types": {
         "adr": {"label": "ADR", "name": "Architecture Decision Record",
                 "dir": "architecture-decisions", "template": "templates/adr-template.md"},
@@ -50,6 +50,7 @@ DEFAULT_CONFIG = {
                 "dir": "business-decisions", "template": "templates/bdr-template.md"},
     },
     "index": {"path": "README.md", "columns": ["Date", "ID", "Type", "Decision", "Status"]},
+    "alias_stoplist": ["api", "app", "web", "auth", "prod", "test", "db", "data", "core", "service"],
 }
 
 FRONT_RE = re.compile(r"^-\s+([A-Za-z][A-Za-z ]*?):\s*(.*)$")      # "- Status: Accepted"
@@ -81,6 +82,8 @@ def atomic_write_text(path, text):
 MAX_SLUG = 80
 COUNTER_FILE = ".counter.json"
 INDEX_JSON = "INDEX.json"
+GLOSSARY_MD = "GLOSSARY.md"
+GLOSSARY_JSON = "GLOSSARY.json"
 
 
 def load_counter(path):
@@ -349,6 +352,18 @@ def cmd_index(args, root, cfg):
                     "path": rec["path"].relative_to(root).as_posix()})
     save_counter(root / COUNTER_FILE, counter)
     atomic_write_text(root / INDEX_JSON, json.dumps(idx, indent=2) + "\n")
+
+    # Derived alias glossary (SPEC-04): GLOSSARY.md (human) + GLOSSARY.json (machine). index is a
+    # generator (exit 0) but surfaces ambiguous codenames / broken chains LOUDLY on stderr — `validate`
+    # is the hard gate. resolve/validate always rebuild the map from records; this is never a cache.
+    gmd, gjson, ares = build_glossary_artifacts(records, cfg)
+    atomic_write_text(root / GLOSSARY_MD, gmd)
+    atomic_write_text(root / GLOSSARY_JSON, json.dumps(gjson, indent=2) + "\n")
+    for alias, ids in ares["collisions"].items():
+        print(f"WARNING: alias '{alias}' is ambiguous -> {', '.join(ids)} "
+              f"(`validate` will fail until disambiguated)", file=sys.stderr)
+    for rid, why in sorted(ares["invalid_chains"].items()):
+        print(f"WARNING: {rid}: invalid supersession chain on an aliased record ({why})", file=sys.stderr)
     print(f"indexed {len(records)} records → {index_path}")
 
 
@@ -435,6 +450,16 @@ def cmd_validate(args, root, cfg):
     if cycle:
         chain = " → ".join(f"{lbl} {num}" for lbl, num in cycle)
         errors.append(f"supersede cycle (oscillation): {chain}")
+
+    # alias glossary hard gate (SPEC-04): an ambiguous codename (one alias → >=2 distinct current
+    # decisions) or a broken alias-bearing supersession chain silently misresolves — so this is a HARD
+    # error (exits nonzero even WITHOUT --strict, joining integrity's "ambiguous provenance" class).
+    ares = build_alias_map(records, cfg)
+    for alias, aids in sorted(ares["collisions"].items()):
+        errors.append(f"alias '{alias}' is ambiguous — maps to {len(aids)} distinct current decisions "
+                      f"({', '.join(aids)}); disambiguate by scope or supersede")
+    for rid, why in sorted(ares["invalid_chains"].items()):
+        errors.append(f"{rid}: invalid supersession chain on an aliased record ({why})")
 
     # optional integrity pass: fabricated ADR-id references and ghost source citations anywhere in a
     # record (the compiler-hallucination gate). These are hard errors — fabricated provenance has no
@@ -574,6 +599,214 @@ def immediately_superseded(records, cur, cfg):
             # the reverse edge can be ambiguous on long chains; only trust it when unambiguous
             return rec
     return None
+
+
+# --- alias / glossary layer (the moat: deterministic codename resolution, SPEC-04) ---
+# A record's optional `Aliases:` field lists `;`-separated codenames/synonyms for the concept it
+# decides. Each alias maps to the record's CURRENT endpoint (following supersession) so a codename
+# query resolves to the live decision. Precision-safe by construction: alias-FIELD text is excluded
+# from the literal haystack (it matches ONLY via this map), one normalized phrase maps to one current
+# decision, and an alias mapping to >=2 distinct current decisions is a HARD error (an ambiguous
+# codename silently misresolves — the exact failure Rosetta exists to prevent). The signal is split:
+# `conflict` stays literal-only; `resolved_unique` is the union-aware "did this uniquely resolve?" flag.
+# Hardened across 4 adversarial-review rounds — see specs/SPEC-04-alias-glossary.md.
+
+_ALIAS_SEP_RE = re.compile(r"[\s\-_/\\]+")            # separators: whitespace, - _ / \ (others kept)
+_ALIAS_LINE_RE = re.compile(r"(?im)^[ \t]*-[ \t]*Aliases:.*$")        # the frontmatter Aliases line
+_IDREF_RE = re.compile(r"\b([A-Za-z]+)\s*0*(\d+)\b")
+DEFAULT_ALIAS_STOPLIST = DEFAULT_CONFIG["alias_stoplist"]
+
+
+def normalize_alias(s):
+    """Casefold; collapse runs of separator chars (whitespace, - _ / \\) to one space; strip. All other
+    characters are preserved verbatim, so `C++`/`C#`/`.NET`/`A.1` stay distinct while `Project-Meridian`,
+    `project_meridian`, `project meridian` all normalize equal. Returns '' if nothing survives."""
+    return _ALIAS_SEP_RE.sub(" ", (s or "").casefold()).strip()
+
+
+def parse_alias_field(value):
+    """A record's raw `Aliases:` value -> de-duplicated, order-preserving list of normalized alias
+    phrases. Splits on ';', drops blank segments (`foo;;bar`) and separator-only segments whose
+    normalized form is empty (`-`), so no empty alias can ever enter the map (SPEC-04 R4 guard)."""
+    out, seen = [], set()
+    for seg in (value or "").split(";"):
+        norm = normalize_alias(seg)
+        if not norm or norm in seen:
+            continue
+        seen.add(norm)
+        out.append(norm)
+    return out
+
+
+def literal_haystack(rec):
+    """The text `resolve` matches literally: title + every field value EXCEPT `Aliases` + the record
+    body (raw text with the `- Aliases:` frontmatter line removed). So alias-FIELD text never
+    participates in literal matching (it matches only via the alias map), while body-prose mentions of
+    a codename remain legitimate literal content."""
+    fields = " ".join(v for k, v in rec["fields"].items() if k.lower() != "aliases")
+    body = _ALIAS_LINE_RE.sub("", rec["path"].read_text(errors="replace"))
+    return (rec["title"] + " " + fields + " " + body).lower()
+
+
+def _norm_idref(lbl, num, cfg):
+    return f"{lbl.upper()} {str(int(num)).zfill(cfg['number_width'])}"
+
+
+def _superseded_by_edges(records, cfg):
+    """Map id -> set(ids that supersede it), from both `Status: Superseded by X` and `Supersedes: Y`.
+    Only edges between existing records are kept (used to detect forked chains)."""
+    valid = {record_id(r, cfg) for r in records}
+    edges = {}
+    for rec in records:
+        rid = record_id(rec, cfg)
+        sm = SUPERSEDED_BY_RE.search(rec["fields"].get("Status", ""))
+        if sm:
+            m = _IDREF_RE.search(sm.group(1))
+            if m:
+                tgt = _norm_idref(m.group(1), m.group(2), cfg)
+                if tgt in valid:
+                    edges.setdefault(rid, set()).add(tgt)
+        for m in _IDREF_RE.finditer(rec["fields"].get("Supersedes", "")):
+            y = _norm_idref(m.group(1), m.group(2), cfg)
+            if y in valid:
+                edges.setdefault(y, set()).add(rid)
+    return edges
+
+
+def _chain_invalid_reason(rec, records, cfg, sup_by, by_id):
+    """Why a declaring record's supersession chain cannot be collapsed deterministically (or None):
+    a fork (a record superseded by >=2 distinct records), a missing named superseder, or a
+    contradiction (X says 'Superseded by Y' but Y's Supersedes omits X). Cycle-safe."""
+    seen = set()
+    cur = rec
+    while True:
+        rid = record_id(cur, cfg)
+        if rid in seen:
+            return "supersede cycle"
+        seen.add(rid)
+        if len(sup_by.get(rid, set())) >= 2:
+            return f"forked — superseded by {', '.join(sorted(sup_by[rid]))}"
+        sm = SUPERSEDED_BY_RE.search(cur["fields"].get("Status", ""))
+        if not sm:
+            return None
+        m = _IDREF_RE.search(sm.group(1))
+        nxt_id = _norm_idref(m.group(1), m.group(2), cfg) if m else None
+        nxt = by_id.get(nxt_id)
+        if nxt is None:
+            return f"names missing superseder {nxt_id}"
+        sup_field = nxt["fields"].get("Supersedes", "")
+        if sup_field:
+            back = {_norm_idref(mm.group(1), mm.group(2), cfg) for mm in _IDREF_RE.finditer(sup_field)}
+            if rid not in back:
+                return f"{rid} says superseded by {nxt_id}, but {nxt_id} does not list it under Supersedes"
+        cur = nxt
+
+
+def build_alias_map(records, cfg):
+    """Return a dict:
+        map:             {normalized_alias: [current Accepted endpoint id, ...]} (sorted)
+        collisions:      {alias: [ids]} for an alias mapping to >=2 distinct current endpoints
+        invalid_chains:  {record_id: reason} for alias-declaring records with broken chains
+        invalid_aliases: {alias: [record_ids]} aliases dropped because their chain is invalid
+    Aliases along one supersession chain collapse to the single live endpoint (NOT a collision)."""
+    by_id = {record_id(r, cfg): r for r in records}
+    sup_by = _superseded_by_edges(records, cfg)
+    raw, invalid, invalid_aliases = {}, {}, {}
+    for rec in records:
+        aliases = parse_alias_field(rec["fields"].get("Aliases", ""))
+        if not aliases:
+            continue
+        rid = record_id(rec, cfg)
+        reason = _chain_invalid_reason(rec, records, cfg, sup_by, by_id)
+        if reason:
+            invalid[rid] = reason
+            for a in aliases:
+                invalid_aliases.setdefault(a, []).append(rid)
+            continue
+        cur, _chain = resolve_current(records, rec, cfg)
+        if not cur["fields"].get("Status", "").lower().startswith("accepted"):
+            continue                               # no live endpoint; contributes nothing live
+        cid = record_id(cur, cfg)
+        for a in aliases:
+            raw.setdefault(a, set()).add(cid)
+    alias_map = {a: sorted(ids) for a, ids in sorted(raw.items())}
+    collisions = {a: ids for a, ids in alias_map.items() if len(ids) > 1}
+    return {"map": alias_map, "collisions": collisions,
+            "invalid_chains": invalid, "invalid_aliases": invalid_aliases}
+
+
+def find_query_aliases(query, alias_map, stoplist):
+    """Alias phrases present in `query`, matched on whole-token phrase boundaries, longest-then-leftmost
+    greedy (a consumed span is not reused). Single-token aliases in `stoplist` are ignored. Returns an
+    order-preserving, de-duplicated list of normalized alias phrases."""
+    qtokens = normalize_alias(query).split()
+    if not qtokens:
+        return []
+    cands = []
+    for a in alias_map:
+        atoks = a.split()
+        if not atoks or (len(atoks) == 1 and atoks[0] in stoplist):
+            continue
+        cands.append(atoks)
+    cands.sort(key=lambda t: (-len(t), t))            # longest first, then lexical (determinism)
+    matched, used, i = [], [False] * len(qtokens), 0
+    while i < len(qtokens):
+        hit = None
+        for atoks in cands:
+            n = len(atoks)
+            if i + n <= len(qtokens) and not any(used[i:i + n]) and qtokens[i:i + n] == atoks:
+                hit = atoks
+                break
+        if hit:
+            n = len(hit)
+            for j in range(i, i + n):
+                used[j] = True
+            phrase = " ".join(hit)
+            if phrase not in matched:
+                matched.append(phrase)
+            i += n
+        else:
+            i += 1
+    return matched
+
+
+def _type_of_id(idstr, records, cfg):
+    for r in records:
+        if record_id(r, cfg) == idstr:
+            return r["type"]
+    return None
+
+
+def build_glossary_artifacts(records, cfg):
+    """Build (glossary_md, glossary_json_obj, alias_result) — the human + machine artifacts `index`
+    emits. Deterministically sorted. `_alias_conflicts`/`_invalid_chains` are surfaced in the artifact
+    so the ambiguous codenames are visible (validate is the hard gate)."""
+    res = build_alias_map(records, cfg)
+    by_id = {record_id(r, cfg): r for r in records}
+    rows, entries = [], {}
+    for alias, ids in res["map"].items():
+        targets = []
+        for cid in ids:
+            rec = by_id.get(cid)
+            title = rec["title"] if rec else ""
+            status = rec["fields"].get("Status", "") if rec else ""
+            targets.append({"id": cid, "title": title, "status": status})
+            rows.append((alias, title, cid, status))
+        entries[alias] = targets
+    obj = {"aliases": entries,
+           "_alias_conflicts": [{"alias": a, "candidates": ids} for a, ids in res["collisions"].items()],
+           "_invalid_chains": [{"record": rid, "reason": why}
+                               for rid, why in sorted(res["invalid_chains"].items())]}
+    header = "| Alias | Canonical concept | Record id | Status |\n|---|---|---|---|\n"
+    body = "".join(f"| {a} | {t} | {cid} | {st} |\n" for a, t, cid, st in sorted(rows))
+    md = ("# Glossary — codename -> current decision\n\n"
+          "Derived from each record's `Aliases:` field by `decisions.py index`. Do not edit by hand.\n\n"
+          + header + (body or "| _(no aliases declared)_ |  |  |  |\n"))
+    if res["collisions"]:
+        md += "\n## Ambiguous codenames (FIX — `validate` fails on these)\n\n"
+        for a, ids in res["collisions"].items():
+            md += f"- `{a}` -> {', '.join(ids)}\n"
+    return md, obj, res
 
 
 # --- freshness / staleness (Phase 1 drift guard) ------------------------------------
@@ -903,14 +1136,17 @@ def cmd_resolve(args, root, cfg):
     conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
     records = collect_records(root, cfg)
     q = (args.text or "").lower()
+    type_filter = args.type.lower() if args.type else None
+    no_alias = getattr(args, "no_alias_expand", False)
+
+    # literal matches — alias-FIELD text is excluded from the haystack (it matches ONLY via the map)
     matched = []
     for rec in records:
-        if args.type and rec["type"] != args.type.lower():
+        if type_filter and rec["type"] != type_filter:
             continue
-        hay = (rec["title"] + " " + " ".join(rec["fields"].values())).lower()
-        if not q or q in hay or q in rec["path"].read_text(errors="replace").lower():
+        if not q or q in literal_haystack(rec):
             matched.append(rec)
-    current = {}                                   # id -> {record, superseded_from}
+    current = {}                                   # id -> entry (literal current endpoints)
     current_recs = {}                              # id -> live record object (for the freshness pass)
     for rec in matched:
         cur, chain = resolve_current(records, rec, cfg)
@@ -929,6 +1165,40 @@ def cmd_resolve(args, root, cfg):
             if prior:
                 entry["replaced"] = {"id": record_id(prior, cfg), "title": prior["title"]}
 
+    conflict = len(current) > 1                    # LITERAL-only conflict signal (unchanged semantics)
+
+    # alias layer (Direct Record Mapping): union an unambiguous alias's target record by id; report an
+    # ambiguous alias separately. This NEVER rewrites the query and NEVER flips `conflict` (SPEC-04).
+    via_alias, alias_conflict, invalid_note = [], [], None
+    if not no_alias and args.text:
+        ares = build_alias_map(records, cfg)
+        amap, inv_aliases = ares["map"], ares["invalid_aliases"]
+        stoplist = {normalize_alias(s) for s in cfg.get("alias_stoplist", DEFAULT_ALIAS_STOPLIST)}
+        by_id = {record_id(r, cfg): r for r in records}
+        for a in find_query_aliases(args.text, amap, stoplist):
+            ids = amap.get(a, [])
+            if type_filter:                        # resolve ambiguity is --type-scoped
+                ids = [i for i in ids if _type_of_id(i, records, cfg) == type_filter]
+            if not ids:
+                continue
+            if len(ids) > 1:                       # ambiguous within scope → report, inject nothing
+                alias_conflict.append({"alias": a, "candidates": ids})
+                continue
+            cid = ids[0]
+            if cid in current:
+                continue                           # already a literal match (dedup; stays in `current`)
+            rec = by_id.get(cid)
+            if rec is None:
+                continue
+            via_alias.append({"id": cid, "title": rec["title"], "alias": a, "target_id": cid,
+                              "path": rec["path"].relative_to(root).as_posix()})
+        bad = find_query_aliases(args.text, inv_aliases, stoplist)
+        if bad:
+            invalid_note = ("query alias(es) " + ", ".join(f"'{a}'" for a in bad) +
+                            " map through an invalid supersession chain; cannot resolve deterministically")
+        via_alias.sort(key=lambda v: (v["id"], v["alias"]))
+        alias_conflict.sort(key=lambda c: (c["alias"], c["candidates"]))
+
     # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
     # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /
     # False / null(unknown) so a consumer never reads "absent flag" as "fresh".
@@ -944,15 +1214,30 @@ def cmd_resolve(args, root, cfg):
                     entry["stale_paths"] = info["stale_paths"]
 
     live = list(current.values())
-    out = {"query": args.text, "current": live, "matched_records": len(matched),
-           "conflict": len(live) > 1, "freshness_checked": git_stale}
+    union_ids = set(current.keys()) | {v["id"] for v in via_alias}
+    resolved_unique = (len(union_ids) == 1 and not alias_conflict and invalid_note is None)
+    out = {"query": args.text, "current": live, "matched_records": len(matched), "conflict": conflict}
+    if not no_alias:
+        out["via_alias"] = via_alias
+        if alias_conflict:
+            out["alias_conflict"] = alias_conflict
+    out["resolved_unique"] = resolved_unique
+    out["freshness_checked"] = git_stale
     if git_stale and any(e.get("stale") for e in live):
         out["stale"] = True
-    if len(live) > 1:
-        out["note"] = ("MULTIPLE current records match — unresolved conflict; the library does not "
-                       "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
-    elif not live:
-        out["note"] = "no current (Accepted) record matches; all matches are superseded or none found"
+    notes = []
+    if conflict:
+        notes.append("MULTIPLE current records match — unresolved conflict; the library does not "
+                     "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
+    elif not live and not via_alias:
+        notes.append("no current (Accepted) record matches; all matches are superseded or none found")
+    if alias_conflict:
+        notes.append("ambiguous codename(s) — an alias maps to multiple current decisions; "
+                     "disambiguate by scope.")
+    if invalid_note:
+        notes.append(invalid_note)
+    if notes:
+        out["note"] = " ".join(notes)
     print(json.dumps(out, indent=2))
 
 
@@ -1061,6 +1346,8 @@ def main():
     p_res.add_argument("--type", default=None, help="restrict to a record type (adr|pdr|bdr|…)")
     p_res.add_argument("--no-stale-check", action="store_true",
                        help="skip the git freshness annotation on resolved records")
+    p_res.add_argument("--no-alias-expand", action="store_true",
+                       help="disable alias/codename resolution (literal matching only)")
 
     args = ap.parse_args()
 

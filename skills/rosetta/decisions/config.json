@@ -5,7 +5,7 @@
   "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
   "required_fields": ["Status", "Date", "Decider"],
   "recommended_fields": ["Sources"],
-  "optional_fields": ["Decided originally", "Related", "Supersedes"],
+  "optional_fields": ["Decided originally", "Related", "Supersedes", "Aliases"],
   "record_types": {
     "adr": {
       "label": "ADR",
@@ -29,5 +29,6 @@
   "index": {
     "path": "README.md",
     "columns": ["Date", "ID", "Type", "Decision", "Status"]
-  }
+  },
+  "alias_stoplist": ["api", "app", "web", "auth", "prod", "test", "db", "data", "core", "service"]
 }

@@ -222,6 +222,13 @@ necessary. The CLI is the index — use it deterministically (no tokens) instead
   path) you can read once to orient, and maintains an O(1) numbering counter so `new` stays fast at
   any library size. Numbering, search, and supersession are all O(1)/O(n)-deterministic — spend model
   tokens only on the judgment of *which* record matters, never on scanning the corpus.
+- **Resolve a query to the live decision(s)** with `decisions.py resolve --text "<topic-or-codename>"`
+  — it follows supersession to the current record, flags an unresolved `conflict`, and returns
+  `resolved_unique` (true only when the whole query points to exactly ONE current decision). Teams
+  refer to work by **codename**, so records carry an optional `Aliases:` field (`;`-separated): a
+  codename query resolves through that map (`via_alias`), `index` emits a derived
+  `GLOSSARY.md`/`GLOSSARY.json`, and `validate` is a **hard error** if one alias maps to two live
+  decisions — an ambiguous codename is a bug, not a warning. `--no-alias-expand` for literal-only.
 
 Decisions made **outside** code and agent chat (meetings via Circleback, Slack threads, trackers) can
 be ingested too: query the source's MCP tools for the project/time window, emit the extracted decisions
