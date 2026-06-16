@@ -1,0 +1,8 @@
+ANSWER: The IdP settled on for Beacon is Keycloak.
+
+RESOLUTION: The corpus contains three decision records. On 2026-03-04 there were two contradictory decisions made the same day: the morning meeting (01-decision-morning.md) selected Ping, and the afternoon meeting (02-decision-afternoon.md) selected Auth0, with a note that the conflict was unresolved at end of day. Neither of these is the final answer. On 2026-04-19, a follow-up amendment (03-amendment.md) explicitly superseded both same-day decisions, explaining that neither Ping nor Auth0 met SCIM requirements and declaring Keycloak the final choice. This supersession is corroborated by two pieces of code/git evidence: git-log.txt shows commit 33cc44d on 2026-04-19 with the message "configure Keycloak as IdP for Beacon", and code/notify_svc.py contains IDP_PROVIDER = "keycloak" with a comment "# SCIM-capable". The final answer is therefore Keycloak, not Ping or Auth0.
+
+CITATIONS:
+- 03-amendment.md: final decision record (2026-04-19), supersedes both March decisions
+- git-log.txt: commit 33cc44d confirming Keycloak configuration
+- code/notify_svc.py: runtime code showing keycloak as active provider

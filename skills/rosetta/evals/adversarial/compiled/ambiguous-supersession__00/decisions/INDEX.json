@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "Beacon IdP: Ping (morning call)",
+    "status": "Superseded by ADR 0003",
+    "date": "2026-03-04",
+    "path": "architecture-decisions/0001-beacon-idp-ping-am.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "Beacon IdP: Auth0 (afternoon call)",
+    "status": "Superseded by ADR 0003",
+    "date": "2026-03-04",
+    "path": "architecture-decisions/0002-beacon-idp-auth0-pm.md"
+  },
+  {
+    "id": "ADR 0003",
+    "type": "adr",
+    "number": 3,
+    "title": "Beacon IdP: Keycloak (SCIM-capable, supersedes both 2026-03-04 calls)",
+    "status": "Accepted",
+    "date": "2026-04-19",
+    "path": "architecture-decisions/0003-beacon-idp-keycloak.md"
+  }
+]

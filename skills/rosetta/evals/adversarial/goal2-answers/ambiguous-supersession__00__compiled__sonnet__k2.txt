@@ -1,0 +1,5 @@
+The final, settled identity provider for Beacon is Keycloak (ADR 0003, Accepted, 2026-04-19).
+
+The resolution required untangling an ambiguous same-day conflict: ADR 0001 recorded a morning decision on 2026-03-04 to adopt Ping, while ADR 0002 recorded a separate afternoon decision on the same day to adopt Auth0 — the two calls were in direct conflict and unresolved at day's end. A later audit on 2026-04-19 tested both candidates against Beacon's mandatory SCIM (provisioning) requirements; neither Ping (ADR 0001) nor Auth0 (ADR 0002) qualified. ADR 0003 was issued to formally supersede both prior decisions and adopt Keycloak as the authoritative IdP. The decision is corroborated by code evidence: `notify_svc.py` sets `IDP_PROVIDER = "keycloak"  # SCIM-capable` and git commit 33cc44d ("configure Keycloak as IdP for Beacon") lands the change on 2026-04-19.
+
+Full supersession chain: ADR 0001 (Ping, superseded by ADR 0003) → ADR 0002 (Auth0, superseded by ADR 0003) → ADR 0003 (Keycloak, current).

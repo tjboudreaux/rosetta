@@ -1,0 +1,1 @@
+The payments write-path uses NO automatic retry policy for write operations. This is an explicit exception to the platform's standard retry policy (exponential backoff with jitter), documented in the decision log [2026-05-20]: idempotency keys dedupe writes, and automatic retries would risk double-charging customers, so payments write operations must not be auto-retried.

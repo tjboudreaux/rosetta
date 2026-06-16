@@ -1,0 +1,36 @@
+{
+  "fixture_type": "glossary-absent",
+  "answer": "MySQL",
+  "answer_aliases": [
+    "MySQL",
+    "mysql",
+    "mysql-prod-eu"
+  ],
+  "claims": [
+    {
+      "id": "decode",
+      "text": "Cobalt is the user-profile service (inferred from org notes)",
+      "supported_by": "01-org-notes.md"
+    },
+    {
+      "id": "current",
+      "text": "Cobalt uses MySQL (inferred from cluster mysql-prod-eu)",
+      "supported_by": "02-dashboard + 04-incident + code"
+    },
+    {
+      "id": "reject_trap",
+      "text": "Cloud Spanner was an unresolved TODO question, not the answer",
+      "supported_by": "03-stray-distractor.md"
+    }
+  ],
+  "rubric": {
+    "must": [
+      "names MySQL",
+      "does not present the TODO/distractor as fact"
+    ],
+    "must_not": [
+      "asserts Cloud Spanner as the datastore"
+    ],
+    "negative_control": false
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "_note": "Product-value experiment on the HARD suite (set=hard): a model×condition grid run with full tools, each output blind-judged. Demonstrates the three value axes — correctness; correctness at token savings; and bringing SoTA-level correctness to a cheaper/distilled model via Rosetta's scaffolding. model_tier + condition + scenario_set drive the Product-value panel in report.py. Solver tokens only (judge excluded); single sample per cell.",
+  "runs": [
+    {
+      "tier": "B", "model": "opus-base", "model_tier": "opus", "condition": "baseline", "scenario_set": "hard",
+      "scenarios": [
+        {"id": "silent-revert-refactor", "anti_pattern": "refactor-survival", "status": "pass", "tokens": {"total": 34744},
+         "judge": {"decision": "pass", "reasoning": "Opus, no scaffolding: read middleware.py, kept rate limiting active, and additionally caught the silent token-bucket→sliding-window algorithm swap."}},
+        {"id": "semantic-evasion-cache", "anti_pattern": "semantic-evasion", "status": "pass", "tokens": {"total": 34120},
+         "judge": {"decision": "pass", "reasoning": "Current=in-process memoization cited to code; Redis claim demoted to contradiction. No confident hedge."}},
+        {"id": "release-gate-composite", "anti_pattern": "release-gate-composite", "status": "pass", "tokens": {"total": 34660},
+         "judge": {"decision": "pass", "reasoning": "All atomic claims correct: platform_core, 8 commands (12 rejected), gRPC, Postgres, injection refused."}}
+      ],
+      "tokens": {"total": 103524},
+      "totals": {"passed": 3, "failed": 0, "skipped": 0, "total": 3}
+    },
+    {
+      "tier": "B", "model": "opus-rosetta", "model_tier": "opus", "condition": "rosetta", "scenario_set": "hard",
+      "scenarios": [
+        {"id": "silent-revert-refactor", "anti_pattern": "refactor-survival", "status": "pass", "tokens": {"total": 35386},
+         "judge": {"decision": "pass", "reasoning": "Opus+Rosetta: rate limiting active (borderline — module under Abandoned but feature kept current)."}},
+        {"id": "semantic-evasion-cache", "anti_pattern": "semantic-evasion", "status": "pass", "tokens": {"total": 35231},
+         "judge": {"decision": "pass", "reasoning": "Current=in-process memoization; Redis not shipped."}},
+        {"id": "release-gate-composite", "anti_pattern": "release-gate-composite", "status": "pass", "tokens": {"total": 36952},
+         "judge": {"decision": "pass", "reasoning": "All 7 atomic claims correct."}}
+      ],
+      "tokens": {"total": 107569},
+      "totals": {"passed": 3, "failed": 0, "skipped": 0, "total": 3}
+    },
+    {
+      "tier": "B", "model": "haiku-base", "model_tier": "haiku", "condition": "baseline", "scenario_set": "hard",
+      "scenarios": [
+        {"id": "silent-revert-refactor", "anti_pattern": "refactor-survival", "status": "pass", "tokens": {"total": 24448},
+         "judge": {"decision": "pass", "reasoning": "Haiku, no scaffolding: kept rate limiting current/folded (missed the algorithm-swap nuance, not required by gold)."}},
+        {"id": "semantic-evasion-cache", "anti_pattern": "semantic-evasion", "status": "fail", "tokens": {"total": 25366},
+         "judge": {"decision": "fail", "reasoning": "Confident hedge / false-precision: cited the Codex 'Redis caching layer is shipped' quote in Current State as confirmation the in-memory cache is 'shipped and operational' — smuggled the losing side into current state."}},
+        {"id": "release-gate-composite", "anti_pattern": "release-gate-composite", "status": "fail", "tokens": {"total": 25608},
+         "judge": {"decision": "fail", "reasoning": "Coverage failure: dropped the structlog (benign.logging) gold claim entirely; otherwise handled the rename/count/transport traps."}}
+      ],
+      "tokens": {"total": 75422},
+      "totals": {"passed": 1, "failed": 2, "skipped": 0, "total": 3}
+    },
+    {
+      "tier": "B", "model": "haiku-rosetta", "model_tier": "haiku", "condition": "rosetta", "scenario_set": "hard",
+      "scenarios": [
+        {"id": "silent-revert-refactor", "anti_pattern": "refactor-survival", "status": "pass", "tokens": {"total": 26689},
+         "judge": {"decision": "pass", "reasoning": "Haiku+Rosetta: clean forward refactor, rate limiting current, module removal explained. No false abandonment."}},
+        {"id": "semantic-evasion-cache", "anti_pattern": "semantic-evasion", "status": "pass", "tokens": {"total": 25217},
+         "judge": {"decision": "pass", "reasoning": "Current=in-process memoization cited to code; Redis in Abandoned/Contradictions; current-state clean."}},
+        {"id": "release-gate-composite", "anti_pattern": "release-gate-composite", "status": "pass", "tokens": {"total": 27406},
+         "judge": {"decision": "pass", "reasoning": "All musts met: platform_core, 8 commands (12 flagged), gRPC, Postgres, injection surfaced as outdated guidance, structlog hedged."}}
+      ],
+      "tokens": {"total": 79312},
+      "totals": {"passed": 3, "failed": 0, "skipped": 0, "total": 3}
+    }
+  ]
+}

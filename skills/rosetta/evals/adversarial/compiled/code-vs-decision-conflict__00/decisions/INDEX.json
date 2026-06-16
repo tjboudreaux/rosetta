@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "Beacon notification dispatcher datastore: Postgres",
+    "status": "Superseded by ADR 0002",
+    "date": "2026-02-01",
+    "path": "architecture-decisions/0001-beacon-datastore-postgres.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "Beacon notification dispatcher datastore: MySQL (shipped to production)",
+    "status": "Accepted",
+    "date": "2026-05-24",
+    "path": "architecture-decisions/0002-beacon-datastore-mysql-shipped.md"
+  }
+]

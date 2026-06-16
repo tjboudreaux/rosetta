@@ -1,0 +1,9 @@
+{
+  "resolve": {
+    "current": 3,
+    "replaced": 3,
+    "parsed": 3,
+    "in_tokens": 680,
+    "fails": []
+  }
+}

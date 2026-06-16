@@ -1,0 +1,1 @@
+Which identity provider (IdP) did we settle on for Beacon (notification dispatcher)?

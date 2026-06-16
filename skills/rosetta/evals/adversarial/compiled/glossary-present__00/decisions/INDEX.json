@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "Beacon (notification dispatcher) ledger tier on MySQL",
+    "status": "Superseded by ADR 0002",
+    "date": "2025-10-12",
+    "path": "architecture-decisions/0001-beacon-ledger-tier-mysql.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "Beacon (notification dispatcher) ledger tier migrated to Postgres",
+    "status": "Accepted",
+    "date": "2026-04-22",
+    "path": "architecture-decisions/0002-beacon-ledger-tier-postgres.md"
+  }
+]

@@ -1,0 +1,1 @@
+The current primary datastore for the user-profile service (Project Nimbus) is Cloud Spanner, part of the "unified ledger tier" deployment. This represents a migration from the prior document store (DynamoDB) to Cloud Spanner for strong consistency. The decision to migrate prioritized throughput, data-residency, cost, and migration risk considerations.

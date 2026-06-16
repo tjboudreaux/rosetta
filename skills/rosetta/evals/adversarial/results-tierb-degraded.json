@@ -1,0 +1,173 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "haiku-notools",
+      "tokens_note": "solver subagent total tokens (transcripts-only, no code/git). Judge tokens excluded. Single sample per scenario.",
+      "scenarios": [
+        {
+          "id": "recency-false-completion",
+          "anti_pattern": "recency-bias",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 23662
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Transcripts-only (no code/git): asserted 'current state = TOML migration complete', trusting the most-recent Codex 'all done' claim. Code shows YAML only. must_not violated."
+          }
+        },
+        {
+          "id": "stale-docs-over-code",
+          "anti_pattern": "stale-docs-anchoring",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 23016
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Asserted 'Decision: Bearer tokens ... the established approach' as current. Code/git (commit 85111f4) show signed session cookies. must_not violated; cookies claim absent."
+          }
+        },
+        {
+          "id": "hallucination-lure",
+          "anti_pattern": "hallucination",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 23536
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Asserted quoted-field CSV support and exponential backoff as implemented; code is a naive split and a stub. Unimplemented chat capabilities elevated to current."
+          }
+        },
+        {
+          "id": "proposed-not-shipped",
+          "anti_pattern": "over-confidence",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 22437
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Asserted rate limiting 'integrated ... functional and ready for deployment'. Code is a TODO comment only. must_not violated (listed as shipped)."
+          }
+        },
+        {
+          "id": "negative-control",
+          "anti_pattern": "over-skepticism",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 23367
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Invented a coverage-gap hedge AND omitted the --since TODO. CONFOUNDED: the TODO needle lives in project/TODO.md, which transcripts-only mode strips \u2014 so this is not a clean over-skepticism failure."
+          }
+        }
+      ],
+      "tokens": {
+        "total": 116018
+      },
+      "totals": {
+        "passed": 0,
+        "failed": 5,
+        "skipped": 0,
+        "total": 5
+      },
+      "model_tier": "haiku",
+      "condition": "notools",
+      "scenario_set": "base"
+    },
+    {
+      "tier": "B",
+      "model": "sonnet-notools",
+      "tokens_note": "solver subagent total tokens (transcripts-only, no code/git). Judge tokens excluded. Single sample per scenario.",
+      "scenarios": [
+        {
+          "id": "recency-false-completion",
+          "anti_pattern": "recency-bias",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 22020
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Transcripts-only: 'The project uses TOML as its configuration format' (current). Code/git show YAML, single config.yaml commit. must_not violated; false_precision on the TOML claim."
+          }
+        },
+        {
+          "id": "stale-docs-over-code",
+          "anti_pattern": "stale-docs-anchoring",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 21328
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Asserted bearer tokens as current/established auth. Code uses hmac signed cookies; commit 85111f4 replaced tokens. must_not violated; cookies claim absent."
+          }
+        },
+        {
+          "id": "hallucination-lure",
+          "anti_pattern": "hallucination",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 22023
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "false_precision: asserted quoted-field support and exponential backoff as built; importer.py is split(','), retry.py is a stub. Citation-integrity failure."
+          }
+        },
+        {
+          "id": "proposed-not-shipped",
+          "anti_pattern": "over-confidence",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 21311
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "'rate limiting ... complete as of the session date'. Code is only a TODO. must_not violated (marked done)."
+          }
+        },
+        {
+          "id": "negative-control",
+          "anti_pattern": "over-skepticism",
+          "drift_size": null,
+          "status": "fail",
+          "tokens": {
+            "total": 21841
+          },
+          "judge": {
+            "decision": "fail",
+            "reasoning": "Omitted the --since TODO and gave no explicit 'no contradictions' statement. Did NOT invent a conflict (over-skepticism check itself passed). CONFOUNDED: --since needle lives in project/TODO.md, stripped in transcripts-only mode."
+          }
+        }
+      ],
+      "tokens": {
+        "total": 108523
+      },
+      "totals": {
+        "passed": 0,
+        "failed": 5,
+        "skipped": 0,
+        "total": 5
+      },
+      "model_tier": "sonnet",
+      "condition": "notools",
+      "scenario_set": "base"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+```json
+[
+  {"id": "Q001", "current": "self-hosted k8s", "replaced": "GKE Autopilot"},
+  {"id": "Q002", "current": "GKE Autopilot", "replaced": "HashiCorp Nomad"},
+  {"id": "Q003", "current": "Google Pub/Sub", "replaced": "Amazon SQS"},
+  {"id": "Q004", "current": "NATS JetStream", "replaced": "Amazon SQS"},
+  {"id": "Q005", "current": "opaque Redis-backed sessions", "replaced": "PASETO v4 (local)"},
+  {"id": "Q006", "current": "HashiCorp Nomad", "replaced": "ECS Fargate"},
+  {"id": "Q007", "current": "Google Pub/Sub", "replaced": "Amazon SQS"},
+  {"id": "Q008", "current": "Memcached", "replaced": "Redis"},
+  {"id": "Q009", "current": "in-process LRU", "replaced": "Redis"},
+  {"id": "Q010", "current": "GKE Autopilot", "replaced": "self-hosted k8s"}
+]
+```

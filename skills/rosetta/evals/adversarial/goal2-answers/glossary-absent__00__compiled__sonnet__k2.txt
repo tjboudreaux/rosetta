@@ -1,0 +1,5 @@
+The Cobalt service stores its profile data in MySQL, on the cluster mysql-prod-eu (database name: profiles).
+
+Supporting resolution: "Cobalt" has no explicit glossary definition in the corpus; ADR 0001 (Accepted) infers from three independent sources (org roster, dashboard export, incident review) that Cobalt is the user-profile service. ADR 0002 (Accepted) determines the datastore via authoritative code and git evidence: billing_core.py contains DSN = "mysql://mysql-prod-eu/profiles", and git commit 44ee55f (2026-03-15) explicitly wires Cobalt to mysql-prod-eu. A dashboard export and a 2026-05-01 incident review (MySQL replica failover, no datastore change) corroborate MySQL as the persistent store. The one potential distractor — Cloud Spanner — is captured in ADR 0003 (Rejected) as an unresolved planning TODO from 2026-01-09, phrased as an open question, never confirmed, and predating the MySQL wiring; it does not represent an adopted decision.
+
+ADR citations: ADR 0001 (Cobalt = user-profile service, Accepted), ADR 0002 (datastore = MySQL on mysql-prod-eu, Accepted), ADR 0003 (Cloud Spanner TODO distractor, Rejected).

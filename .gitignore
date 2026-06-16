@@ -14,8 +14,34 @@ __pycache__/
 venv/
 .pytest_cache/
 
+# Coverage (CI/dev tool; .coveragerc IS committed, data files are not)
+.coverage
+.coverage.*
+htmlcov/
+
+# Regenerable decision-library caches (the committed README timeline is the canonical index;
+# INDEX.json + the numbering counter are derived by `decisions.py index` and would only drift in git)
+skills/rosetta/decisions/.counter.json
+skills/rosetta/decisions/INDEX.json
+
+# Eval report build artifacts (REPORT.md + REPORT.drift.svg are committed as a rendered example;
+# the Tier-A results json and the heavy HTML dashboard are regenerable — see evals/adversarial/README)
+skills/rosetta/evals/adversarial/results-tier-a.json
+skills/rosetta/evals/adversarial/REPORT.html
+
+# Kill-test bulky regenerable fixtures (corpus + the 1025-file ground-truth library are deterministic
+# from killtest_gen.py --seed; probes/gold/smoke-runs ARE committed — they define the experiment and
+# capture real model spend).
+skills/rosetta/evals/adversarial/killtest-outputs/corpus.md
+skills/rosetta/evals/adversarial/killtest-outputs/decisions/
+# the LLM-compiled library is regenerable from extracted.json via `killtest_compile.py --reassemble`
+skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib/decisions/
+
 # Editor / OS
 *.swp
 *~
 .idea/
 .vscode/
+skills/rosetta/evals/adversarial/killtest-outputs/**/*.err
+# per-size scale fixtures are fully regenerable (killtest_gen.py --services --out); keep only the results
+skills/rosetta/evals/adversarial/killtest-outputs/scale/n*/

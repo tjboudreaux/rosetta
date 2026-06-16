@@ -1,0 +1,1 @@
+The current primary datastore for the user-profile service is Cloud Spanner, as specified in ADR 0651. This represents a migration from DynamoDB to Cloud Spanner (referred to as the "unified ledger tier") for the Project Nimbus user-profile service, chosen to provide strong consistency guarantees. This is now the standard for new user-profile code as of June 8, 2026.

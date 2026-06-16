@@ -1,0 +1,233 @@
+{
+  "design": "Phase 0b preregistered: 2 arms (raw vs Rosetta-compiled-library+resolve) x {Haiku,Sonnet} x k=2 over 5 fixture types",
+  "arms": [
+    "raw",
+    "compiled"
+  ],
+  "models": [
+    "haiku",
+    "sonnet"
+  ],
+  "k": 2,
+  "grading": "read-verified, two-axis (axis_answer = decoded current value; axis_resolution = supported supersession/alias/code-wins per rubric.must/must_not); never grep-graded; Opus judge with judge-only gold",
+  "fixture_types": [
+    "glossary-present",
+    "glossary-absent",
+    "scattered-alias",
+    "ambiguous-supersession",
+    "code-vs-decision-conflict"
+  ],
+  "totals": {
+    "raw": "20/20",
+    "compiled": "20/20"
+  },
+  "matrix": [
+    {
+      "fixture": "ambiguous-supersession__00",
+      "fixture_type": "ambiguous-supersession",
+      "gold_answer": "Keycloak",
+      "cells": [
+        {
+          "arm": "compiled",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "compiled",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        }
+      ]
+    },
+    {
+      "fixture": "code-vs-decision-conflict__00",
+      "fixture_type": "code-vs-decision-conflict",
+      "gold_answer": "MySQL",
+      "cells": [
+        {
+          "arm": "compiled",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "compiled",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        }
+      ]
+    },
+    {
+      "fixture": "glossary-absent__00",
+      "fixture_type": "glossary-absent",
+      "gold_answer": "MySQL",
+      "cells": [
+        {
+          "arm": "compiled",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "compiled",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        }
+      ]
+    },
+    {
+      "fixture": "glossary-present__00",
+      "fixture_type": "glossary-present",
+      "gold_answer": "Postgres",
+      "cells": [
+        {
+          "arm": "compiled",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "compiled",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        }
+      ]
+    },
+    {
+      "fixture": "scattered-alias__00",
+      "fixture_type": "scattered-alias",
+      "gold_answer": "Pub/Sub",
+      "cells": [
+        {
+          "arm": "compiled",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "compiled",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "haiku",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        },
+        {
+          "arm": "raw",
+          "model": "sonnet",
+          "k": 2,
+          "pass_k": 2,
+          "axis_answer": 2,
+          "axis_resolution": 2
+        }
+      ]
+    }
+  ],
+  "token_cost_note": {
+    "compile_per_fixture_avg": 36455,
+    "answer_raw_per_run_avg": 21063,
+    "answer_compiled_per_run_avg": 22193,
+    "judge_per_fixture_avg": 36177
+  },
+  "caveats": [
+    "n=1 fixture per type (5 total); k=2. A signal, not a population estimate.",
+    "Both arms used a scaffolded answerer prompt that cued supersession/alias/code-wins reasoning; this lifts the RAW arm and is the most likely reason raw did not fail.",
+    "Compiled arm hallucinated ADR numbers in 2/5 fixtures (scattered-alias, code-vs-decision). Final answers stayed correct so the two-axis rubric did not fail them, but it is a real compiler-as-LLM artifact worth a citation-integrity gate.",
+    "Corpora are small (3-5 short notes). Raw-reading advantage of compilation (token collapse, multi-hop caching) only appears at scale; these fixtures are too small to show it."
+  ]
+}

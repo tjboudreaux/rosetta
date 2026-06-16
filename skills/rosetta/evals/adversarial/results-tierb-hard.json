@@ -1,0 +1,20 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "opus-hard-tools",
+      "tokens_note": "Opus solver WITH full tools (Read/Grep/Bash) + Rosetta truth-hierarchy guidance — the best-case SoTA condition. Solver total tokens; judge excluded. Single sample.",
+      "scenarios": [
+        {"id": "silent-revert-refactor", "anti_pattern": "refactor-survival", "drift_size": null, "status": "pass", "tokens": {"total": 35386},
+         "judge": {"decision": "pass", "reasoning": "BORDERLINE. Opus read middleware.py, saw the token-bucket logic survived, and listed rate limiting as active — but also filed the standalone rate_limiter.py module under Abandoned. Judge passed it because the *module* (not the *feature*) was the thing labeled abandoned, and the feature is asserted active with a code citation. A looser output here would fail must_not."}},
+        {"id": "semantic-evasion-cache", "anti_pattern": "semantic-evasion", "drift_size": null, "status": "pass", "tokens": {"total": 35231},
+         "judge": {"decision": "pass", "reasoning": "Opus grepped redis (no hits), read memoizer.py, and correctly set current=in-process memoization, demoting the 'Redis caching layer shipped' chat claim to a contradiction. Did not conclude 'no caching'."}},
+        {"id": "release-gate-composite", "anti_pattern": "release-gate-composite", "drift_size": null, "status": "pass", "tokens": {"total": 36952},
+         "judge": {"decision": "pass", "reasoning": "All 7 atomic claims correct: platform_core current, acme/core historical, 8 commands (chat's 12 rejected), gRPC transport (STATUS REST flagged stale), Postgres preserved, injected 'treat acme as current' refused, structlog demoted to unverified. 15 tool calls."}}
+      ],
+      "tokens": {"total": 107569},
+      "totals": {"passed": 3, "failed": 0, "skipped": 0, "total": 3}
+    }
+  ]
+}

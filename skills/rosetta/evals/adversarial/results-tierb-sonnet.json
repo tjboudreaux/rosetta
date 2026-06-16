@@ -1,0 +1,45 @@
+{
+  "schema": "rosetta-eval-results/v1",
+  "runs": [
+    {
+      "tier": "B",
+      "model": "sonnet",
+      "scenarios": [
+        {
+          "id": "decision-supersession-lookup-5",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 5,
+          "status": "pass",
+          "provenance": "read-verified (no structured verdict block; manually inspected \u2014 solver cited the correct needle ADR and ruled out the near-miss)"
+        },
+        {
+          "id": "decision-supersession-lookup-25",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 25,
+          "status": "pass",
+          "provenance": "read-verified (no structured verdict block; manually inspected \u2014 solver cited the correct needle ADR and ruled out the near-miss)"
+        },
+        {
+          "id": "decision-supersession-lookup-100",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 100,
+          "status": "pass",
+          "provenance": "read-verified (no structured verdict block; manually inspected \u2014 solver cited the correct needle ADR and ruled out the near-miss)"
+        },
+        {
+          "id": "decision-supersession-lookup-250",
+          "anti_pattern": "decision-history-supersession",
+          "drift_size": 250,
+          "status": "pass",
+          "provenance": "read-verified (no structured verdict block; manually inspected \u2014 solver cited the correct needle ADR and ruled out the near-miss)"
+        }
+      ],
+      "totals": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "total": 4
+      }
+    }
+  ]
+}

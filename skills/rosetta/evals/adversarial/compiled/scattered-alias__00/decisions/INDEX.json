@@ -1,0 +1,29 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "Canonical service identity: svc-flags_api (feature-flag service, fka \"Drift\")",
+    "status": "Accepted",
+    "date": "2026-05-18",
+    "path": "architecture-decisions/0001-canonical-service-identity-flags-api.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "svc-flags_api event bus: Pub/Sub (migrated off RabbitMQ)",
+    "status": "Accepted",
+    "date": "2026-05-18",
+    "path": "architecture-decisions/0002-event-bus-pubsub.md"
+  },
+  {
+    "id": "ADR 0003",
+    "type": "adr",
+    "number": 3,
+    "title": "svc-flags_api event bus: RabbitMQ (early architecture)",
+    "status": "Superseded by ADR 0002",
+    "date": "2025-11-02",
+    "path": "architecture-decisions/0003-event-bus-rabbitmq.md"
+  }
+]

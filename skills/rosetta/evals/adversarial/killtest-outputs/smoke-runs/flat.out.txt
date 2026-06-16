@@ -1,0 +1,14 @@
+```json
+[
+  {"id":"Q001","current":"self-hosted k8s","replaced":"Nomad"},
+  {"id":"Q002","current":"Nomad","replaced":""},
+  {"id":"Q003","current":"Apache Kafka","replaced":""},
+  {"id":"Q004","current":"","replaced":""},
+  {"id":"Q005","current":"JWT RS256/JWKS","replaced":""},
+  {"id":"Q006","current":"Nomad","replaced":""},
+  {"id":"Q007","current":"Google Pub/Sub","replaced":""},
+  {"id":"Q008","current":"","replaced":""},
+  {"id":"Q009","current":"Hazelcast","replaced":""},
+  {"id":"Q010","current":"GKE Autopilot","replaced":"self-hosted k8s"}
+]
+```

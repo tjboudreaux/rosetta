@@ -1,0 +1,644 @@
+Reading additional input from stdin...
+OpenAI Codex v0.139.0
+--------
+workdir: /private/tmp/v6/A3_aggregation
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: read-only
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019ec53e-a125-75a1-b586-2a0597ff7315
+--------
+user
+Answer using your tools over the project in the current directory (read/grep history/ — it is large, search it; do not read gold.json). QUESTION: How many DISTINCT subsystems currently use Kafka as their MESSAGE QUEUE (current/accepted decisions only — exclude subsystems that later migrated off Kafka, and exclude Kafka used for non-queue purposes such as event-store)? Give the exact integer and list the subsystems.
+2026-06-14T08:27:57.263877Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer realm=\"OAuth\", resource_metadata=\"https://mcp.cloudflare.com/.well-known/oauth-protected-resource/mcp\", error=\"invalid_token\", error_description=\"Missing or invalid access token\"" })
+hook: SessionStart
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll search the project artifacts directly and avoid `gold.json`. I’m going to look for Kafka mentions first, then trace each mention to whether it is a current accepted message-queue decision versus a superseded or non-queue use.
+exec
+/bin/zsh -lc "rg --files -g '"'!gold.json'"'" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+history/2025-10.md
+history/2025-04.md
+history/2025-05.md
+history/2025-11.md
+history/2025-01.md
+history/2026-04.md
+history/2026-05.md
+history/2026-01.md
+history/2026-02.md
+history/2025-08.md
+history/2026-03.md
+history/2025-09.md
+history/2025-06.md
+history/2025-12.md
+history/2025-02.md
+history/2025-03.md
+history/2025-07.md
+README.md
+git-log.txt
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "rg -n -i \"kafka|message queue|queue|event-store|event store|migrated|accepted|current\" -g '"'!gold.json'"'" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+history/2026-01.md:3:## [2026-01-01] search / event-store / eu / pro
+history/2026-01.md:4:search event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:6:## [2026-01-02] billing / event-store / eu / pro
+history/2026-01.md:7:billing event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:9:## [2026-01-03] inventory / event-store / eu / pro
+history/2026-01.md:10:inventory event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:33:## [2026-01-24] identity / event-store / latam / pro
+history/2026-01.md:34:identity event-store [latam/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:72:## [2026-01-24] ledger / event-store / apac / free
+history/2026-01.md:73:ledger event-store [apac/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:78:## [2026-01-24] risk / event-store / us / pro
+history/2026-01.md:79:risk event-store [us/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:123:## [2026-01-24] shipping / event-store / us / free
+history/2026-01.md:124:shipping event-store [us/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:15:## [2025-02-10] media / event-store / us / free
+history/2025-02.md:16:media event-store [us/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:21:## [2025-02-10] pricing / event-store / latam / free
+history/2025-02.md:22:pricing event-store [latam/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:33:## [2025-02-10] pricing / event-store / eu / pro
+history/2025-02.md:34:pricing event-store [eu/pro]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:54:## [2025-02-10] fraud / event-store / latam / pro
+history/2025-02.md:55:fraud event-store [latam/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:66:## [2025-02-10] identity / event-store / us / enterprise
+history/2025-02.md:67:identity event-store [us/enterprise]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-02.md:102:## [2025-02-10] catalog / event-store / eu / pro
+history/2025-02.md:103:catalog event-store [eu/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:27:## [2025-04-03] media / event-store / apac / enterprise
+history/2025-04.md:28:media event-store [apac/enterprise]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:78:## [2025-04-03] identity / event-store / eu / pro
+history/2025-04.md:79:identity event-store [eu/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:93:## [2025-04-03] catalog / event-store / eu / free
+history/2025-04.md:94:catalog event-store [eu/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:108:## [2025-04-03] catalog / event-store / us / pro
+history/2025-04.md:109:catalog event-store [us/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:123:## [2025-04-03] ledger / event-store / eu / free
+history/2025-04.md:124:ledger event-store [eu/free]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:129:## [2025-04-03] ledger / event-store / us / free
+history/2025-04.md:130:ledger event-store [us/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-04.md:147:## [2025-04-03] fraud / event-store / apac / pro
+history/2025-04.md:148:fraud event-store [apac/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-07.md:3:## [2025-07-10] catalog / event-store / latam / pro
+history/2025-07.md:4:catalog event-store [latam/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-07.md:6:## [2025-07-10] risk / event-store / apac / enterprise
+history/2025-07.md:7:risk event-store [apac/enterprise]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-07.md:9:## [2025-07-10] ingest / event-store / us / pro
+history/2025-07.md:10:ingest event-store [us/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-07.md:57:## [2025-07-10] ledger / event-store / eu / free
+history/2025-07.md:58:ledger event-store [eu/free]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+git-log.txt:16:2025-01-25 identity: event-store
+git-log.txt:23:2025-01-25 notify: event-store
+git-log.txt:26:2025-01-25 media: event-store
+git-log.txt:41:2025-01-25 search: event-store
+git-log.txt:53:2025-02-10 media: event-store
+git-log.txt:55:2025-02-10 pricing: event-store
+git-log.txt:59:2025-02-10 pricing: event-store
+git-log.txt:66:2025-02-10 fraud: event-store
+git-log.txt:70:2025-02-10 identity: event-store
+git-log.txt:82:2025-02-10 catalog: event-store
+git-log.txt:91:2025-03-27 pricing: event-store
+git-log.txt:97:2025-03-27 risk: event-store
+git-log.txt:101:2025-03-27 ingest: event-store
+git-log.txt:105:2025-03-27 shipping: event-store
+git-log.txt:109:2025-03-27 notify: event-store
+git-log.txt:132:2025-03-27 inventory: event-store
+git-log.txt:134:2025-03-27 risk: event-store
+git-log.txt:151:2025-04-03 media: event-store
+git-log.txt:168:2025-04-03 identity: event-store
+git-log.txt:173:2025-04-03 catalog: event-store
+git-log.txt:178:2025-04-03 catalog: event-store
+git-log.txt:183:2025-04-03 ledger: event-store
+git-log.txt:185:2025-04-03 ledger: event-store
+git-log.txt:191:2025-04-03 fraud: event-store
+git-log.txt:195:2025-05-01 pricing: event-store
+git-log.txt:198:2025-05-01 risk: event-store
+git-log.txt:217:2025-05-01 inventory: event-store
+git-log.txt:219:2025-05-01 catalog: event-store
+git-log.txt:234:2025-06-19 reporting: event-store
+git-log.txt:247:2025-06-19 pricing: event-store
+git-log.txt:251:2025-06-19 search: event-store
+git-log.txt:264:2025-07-10 catalog: event-store
+git-log.txt:265:2025-07-10 risk: event-store
+git-log.txt:266:2025-07-10 ingest: event-store
+git-log.txt:282:2025-07-10 ledger: event-store
+git-log.txt:298:2025-08-01 catalog: queue
+git-log.txt:299:2025-08-02 media: queue
+git-log.txt:300:2025-08-03 pricing: queue
+git-log.txt:312:2025-08-14 notify: event-store
+git-log.txt:316:2025-08-14 shipping: event-store
+git-log.txt:328:2025-08-14 risk: event-store
+git-log.txt:337:2025-08-14 ledger: event-store
+git-log.txt:347:2025-09-13 identity: event-store
+git-log.txt:349:2025-09-13 ledger: event-store
+git-log.txt:371:2025-09-13 billing: event-store
+git-log.txt:372:2025-09-13 catalog: event-store
+git-log.txt:378:2025-09-13 risk: event-store
+git-log.txt:447:2025-11-12 fraud: event-store
+git-log.txt:458:2025-11-12 notify: event-store
+git-log.txt:466:2025-11-12 reporting: event-store
+git-log.txt:473:2025-12-05 reporting: event-store
+git-log.txt:475:2025-12-05 identity: event-store
+git-log.txt:476:2025-12-05 search: event-store
+git-log.txt:490:2025-12-05 billing: event-store
+git-log.txt:494:2025-12-05 pricing: event-store
+git-log.txt:508:2025-12-05 notify: event-store
+git-log.txt:509:2025-12-05 pricing: event-store
+git-log.txt:510:2026-01-01 search: event-store
+git-log.txt:511:2026-01-02 billing: event-store
+git-log.txt:512:2026-01-03 inventory: event-store
+git-log.txt:520:2026-01-24 identity: event-store
+git-log.txt:533:2026-01-24 ledger: event-store
+git-log.txt:535:2026-01-24 risk: event-store
+git-log.txt:550:2026-01-24 shipping: event-store
+git-log.txt:554:2026-02-07 ingest: event-store
+git-log.txt:564:2026-02-07 search: event-store
+git-log.txt:584:2026-02-07 fraud: event-store
+git-log.txt:597:2026-03-01 ledger: queue
+git-log.txt:598:2026-03-02 ingest: queue
+git-log.txt:599:2026-03-03 fraud: queue
+git-log.txt:600:2026-03-04 notify: queue
+git-log.txt:601:2026-03-05 shipping: queue
+git-log.txt:602:2026-03-06 risk: queue
+git-log.txt:603:2026-03-09 reporting: event-store
+git-log.txt:641:2026-03-09 media: event-store
+git-log.txt:643:2026-04-01 catalog: queue
+git-log.txt:644:2026-04-02 media: queue
+git-log.txt:645:2026-04-03 pricing: queue
+git-log.txt:650:2026-04-15 pricing: event-store
+git-log.txt:651:2026-04-15 catalog: event-store
+git-log.txt:655:2026-04-15 media: event-store
+git-log.txt:661:2026-04-15 notify: event-store
+git-log.txt:665:2026-04-15 media: event-store
+git-log.txt:683:2026-04-15 media: event-store
+git-log.txt:696:2026-05-01 fraud: event-store
+git-log.txt:702:2026-05-01 reporting: event-store
+git-log.txt:716:2026-05-01 reporting: event-store
+history/2026-02.md:9:## [2026-02-07] ingest / event-store / eu / enterprise
+history/2026-02.md:10:ingest event-store [eu/enterprise]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-02.md:39:## [2026-02-07] search / event-store / apac / pro
+history/2026-02.md:40:search event-store [apac/pro]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-02.md:99:## [2026-02-07] fraud / event-store / us / free
+history/2026-02.md:100:fraud event-store [us/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:12:## [2025-03-27] pricing / event-store / apac / pro
+history/2025-03.md:13:pricing event-store [apac/pro]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:30:## [2025-03-27] risk / event-store / apac / free
+history/2025-03.md:31:risk event-store [apac/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:42:## [2025-03-27] ingest / event-store / eu / enterprise
+history/2025-03.md:43:ingest event-store [eu/enterprise]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:54:## [2025-03-27] shipping / event-store / eu / enterprise
+history/2025-03.md:55:shipping event-store [eu/enterprise]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:66:## [2025-03-27] notify / event-store / us / pro
+history/2025-03.md:67:notify event-store [us/pro]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:135:## [2025-03-27] inventory / event-store / apac / enterprise
+history/2025-03.md:136:inventory event-store [apac/enterprise]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-03.md:141:## [2025-03-27] risk / event-store / us / free
+history/2025-03.md:142:risk event-store [us/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-05.md:9:## [2025-05-01] pricing / event-store / us / pro
+history/2025-05.md:10:pricing event-store [us/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-05.md:18:## [2025-05-01] risk / event-store / latam / free
+history/2025-05.md:19:risk event-store [latam/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-05.md:75:## [2025-05-01] inventory / event-store / apac / enterprise
+history/2025-05.md:76:inventory event-store [apac/enterprise]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-05.md:81:## [2025-05-01] catalog / event-store / latam / free
+history/2025-05.md:82:catalog event-store [latam/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-09.md:21:## [2025-09-13] identity / event-store / us / free
+history/2025-09.md:22:identity event-store [us/free]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-09.md:27:## [2025-09-13] ledger / event-store / apac / free
+history/2025-09.md:28:ledger event-store [apac/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-09.md:93:## [2025-09-13] billing / event-store / latam / pro
+history/2025-09.md:94:billing event-store [latam/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-09.md:96:## [2025-09-13] catalog / event-store / latam / pro
+history/2025-09.md:97:catalog event-store [latam/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-09.md:114:## [2025-09-13] risk / event-store / us / enterprise
+history/2025-09.md:115:risk event-store [us/enterprise]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:18:## [2025-12-05] reporting / event-store / eu / pro
+history/2025-12.md:19:reporting event-store [eu/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:24:## [2025-12-05] identity / event-store / eu / enterprise
+history/2025-12.md:25:identity event-store [eu/enterprise]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:27:## [2025-12-05] search / event-store / us / enterprise
+history/2025-12.md:28:search event-store [us/enterprise]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:69:## [2025-12-05] billing / event-store / us / enterprise
+history/2025-12.md:70:billing event-store [us/enterprise]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:81:## [2025-12-05] pricing / event-store / latam / free
+history/2025-12.md:82:pricing event-store [latam/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:123:## [2025-12-05] notify / event-store / eu / free
+history/2025-12.md:124:notify event-store [eu/free]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-12.md:126:## [2025-12-05] pricing / event-store / apac / pro
+history/2025-12.md:127:pricing event-store [apac/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-08.md:3:## [2025-08-01] catalog / queue / us / pro
+history/2025-08.md:4:catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+history/2025-08.md:6:## [2025-08-02] media / queue / us / pro
+history/2025-08.md:7:media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+history/2025-08.md:9:## [2025-08-03] pricing / queue / us / pro
+history/2025-08.md:10:pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+history/2025-08.md:45:## [2025-08-14] notify / event-store / latam / free
+history/2025-08.md:46:notify event-store [latam/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-08.md:57:## [2025-08-14] shipping / event-store / us / enterprise
+history/2025-08.md:58:shipping event-store [us/enterprise]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-08.md:93:## [2025-08-14] risk / event-store / us / free
+history/2025-08.md:94:risk event-store [us/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-08.md:120:## [2025-08-14] ledger / event-store / us / pro
+history/2025-08.md:121:ledger event-store [us/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-11.md:63:## [2025-11-12] fraud / event-store / eu / enterprise
+history/2025-11.md:64:fraud event-store [eu/enterprise]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-11.md:96:## [2025-11-12] notify / event-store / eu / free
+history/2025-11.md:97:notify event-store [eu/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-11.md:120:## [2025-11-12] reporting / event-store / us / pro
+history/2025-11.md:121:reporting event-store [us/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:3:## [2026-03-01] ledger / queue / us / enterprise
+history/2026-03.md:4:ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:6:## [2026-03-02] ingest / queue / us / enterprise
+history/2026-03.md:7:ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:9:## [2026-03-03] fraud / queue / us / enterprise
+history/2026-03.md:10:fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:12:## [2026-03-04] notify / queue / us / enterprise
+history/2026-03.md:13:notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:15:## [2026-03-05] shipping / queue / us / enterprise
+history/2026-03.md:16:shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:18:## [2026-03-06] risk / queue / us / enterprise
+history/2026-03.md:19:risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:21:## [2026-03-09] reporting / event-store / eu / enterprise
+history/2026-03.md:22:reporting event-store [eu/enterprise]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:135:## [2026-03-09] media / event-store / eu / pro
+history/2026-03.md:136:media event-store [eu/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-06.md:15:## [2025-06-19] reporting / event-store / us / pro
+history/2025-06.md:16:reporting event-store [us/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-06.md:54:## [2025-06-19] pricing / event-store / latam / pro
+history/2025-06.md:55:pricing event-store [latam/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-06.md:66:## [2025-06-19] search / event-store / us / pro
+history/2025-06.md:67:search event-store [us/pro]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:3:## [2026-04-01] catalog / queue / us / pro
+history/2026-04.md:4:catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:6:## [2026-04-02] media / queue / us / pro
+history/2026-04.md:7:media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:9:## [2026-04-03] pricing / queue / us / pro
+history/2026-04.md:10:pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:24:## [2026-04-15] pricing / event-store / apac / free
+history/2026-04.md:25:pricing event-store [apac/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:27:## [2026-04-15] catalog / event-store / us / pro
+history/2026-04.md:28:catalog event-store [us/pro]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:39:## [2026-04-15] media / event-store / latam / enterprise
+history/2026-04.md:40:media event-store [latam/enterprise]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:57:## [2026-04-15] notify / event-store / apac / free
+history/2026-04.md:58:notify event-store [apac/free]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:69:## [2026-04-15] media / event-store / us / enterprise
+history/2026-04.md:70:media event-store [us/enterprise]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:123:## [2026-04-15] media / event-store / us / free
+history/2026-04.md:124:media event-store [us/free]: adopt DuckDB. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-01.md:48:## [2025-01-25] identity / event-store / us / pro
+history/2025-01.md:49:identity event-store [us/pro]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-01.md:69:## [2025-01-25] notify / event-store / eu / pro
+history/2025-01.md:70:notify event-store [eu/pro]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-01.md:78:## [2025-01-25] media / event-store / us / free
+history/2025-01.md:79:media event-store [us/free]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-01.md:123:## [2025-01-25] search / event-store / apac / free
+history/2025-01.md:124:search event-store [apac/free]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-05.md:9:## [2026-05-01] fraud / event-store / apac / enterprise
+history/2026-05.md:10:fraud event-store [apac/enterprise]: adopt Cassandra. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-05.md:27:## [2026-05-01] reporting / event-store / apac / free
+history/2026-05.md:28:reporting event-store [apac/free]: adopt managed Postgres (CloudSQL). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-05.md:69:## [2026-05-01] reporting / event-store / eu / pro
+history/2026-05.md:70:reporting event-store [eu/pro]: adopt BigQuery. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The first pass shows Kafka appears both as an event-store choice and as queue decisions. I found the likely split: older `catalog/media/pricing` queue adoptions were later migrated to SQS, while a March 2026 batch explicitly says “Kafka as the message queue”; I’m checking for any later queue changes that supersede those.
+exec
+/bin/zsh -lc "rg -n -i \"queue\" -g '"'!gold.json'"' history README.md git-log.txt" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+git-log.txt:298:2025-08-01 catalog: queue
+git-log.txt:299:2025-08-02 media: queue
+git-log.txt:300:2025-08-03 pricing: queue
+git-log.txt:597:2026-03-01 ledger: queue
+git-log.txt:598:2026-03-02 ingest: queue
+git-log.txt:599:2026-03-03 fraud: queue
+git-log.txt:600:2026-03-04 notify: queue
+git-log.txt:601:2026-03-05 shipping: queue
+git-log.txt:602:2026-03-06 risk: queue
+git-log.txt:643:2026-04-01 catalog: queue
+git-log.txt:644:2026-04-02 media: queue
+git-log.txt:645:2026-04-03 pricing: queue
+history/2025-08.md:3:## [2025-08-01] catalog / queue / us / pro
+history/2025-08.md:4:catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+history/2025-08.md:6:## [2025-08-02] media / queue / us / pro
+history/2025-08.md:7:media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+history/2025-08.md:9:## [2025-08-03] pricing / queue / us / pro
+history/2025-08.md:10:pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+history/2026-03.md:3:## [2026-03-01] ledger / queue / us / enterprise
+history/2026-03.md:4:ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:6:## [2026-03-02] ingest / queue / us / enterprise
+history/2026-03.md:7:ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:9:## [2026-03-03] fraud / queue / us / enterprise
+history/2026-03.md:10:fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:12:## [2026-03-04] notify / queue / us / enterprise
+history/2026-03.md:13:notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:15:## [2026-03-05] shipping / queue / us / enterprise
+history/2026-03.md:16:shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:18:## [2026-03-06] risk / queue / us / enterprise
+history/2026-03.md:19:risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:3:## [2026-04-01] catalog / queue / us / pro
+history/2026-04.md:4:catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:6:## [2026-04-02] media / queue / us / pro
+history/2026-04.md:7:media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:9:## [2026-04-03] pricing / queue / us / pro
+history/2026-04.md:10:pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:4:search event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:7:billing event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:10:inventory event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "rg -n -i \"kafka\" -g '"'!gold.json'"' history README.md git-log.txt" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+history/2026-04.md:4:catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:7:media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:10:pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:4:search event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:7:billing event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:10:inventory event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2025-08.md:4:catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+history/2025-08.md:7:media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+history/2025-08.md:10:pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+history/2026-03.md:4:ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:7:ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:10:fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:13:notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:16:shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:19:risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "rg -n -i \"migrate|moved|move|supersed|later|sqs|rabbit|pubsub|pub/sub|queue\" -g '"'!gold.json'"' history README.md git-log.txt" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+git-log.txt:298:2025-08-01 catalog: queue
+git-log.txt:299:2025-08-02 media: queue
+git-log.txt:300:2025-08-03 pricing: queue
+git-log.txt:597:2026-03-01 ledger: queue
+git-log.txt:598:2026-03-02 ingest: queue
+git-log.txt:599:2026-03-03 fraud: queue
+git-log.txt:600:2026-03-04 notify: queue
+git-log.txt:601:2026-03-05 shipping: queue
+git-log.txt:602:2026-03-06 risk: queue
+git-log.txt:643:2026-04-01 catalog: queue
+git-log.txt:644:2026-04-02 media: queue
+git-log.txt:645:2026-04-03 pricing: queue
+history/2025-08.md:3:## [2025-08-01] catalog / queue / us / pro
+history/2025-08.md:4:catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+history/2025-08.md:6:## [2025-08-02] media / queue / us / pro
+history/2025-08.md:7:media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+history/2025-08.md:9:## [2025-08-03] pricing / queue / us / pro
+history/2025-08.md:10:pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+history/2026-03.md:3:## [2026-03-01] ledger / queue / us / enterprise
+history/2026-03.md:4:ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:6:## [2026-03-02] ingest / queue / us / enterprise
+history/2026-03.md:7:ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:9:## [2026-03-03] fraud / queue / us / enterprise
+history/2026-03.md:10:fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:12:## [2026-03-04] notify / queue / us / enterprise
+history/2026-03.md:13:notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:15:## [2026-03-05] shipping / queue / us / enterprise
+history/2026-03.md:16:shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:18:## [2026-03-06] risk / queue / us / enterprise
+history/2026-03.md:19:risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:3:## [2026-04-01] catalog / queue / us / pro
+history/2026-04.md:4:catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:6:## [2026-04-02] media / queue / us / pro
+history/2026-04.md:7:media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:9:## [2026-04-03] pricing / queue / us / pro
+history/2026-04.md:10:pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:4:search event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:7:billing event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:10:inventory event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The full `queue` search only returns twelve queue decisions in history plus matching `git-log` summaries. No later queue decisions appear after the April SQS migrations, so the March Kafka message-queue decisions remain current for those six subsystems.
+exec
+/bin/zsh -lc "sed -n '1,40p' history/2026-03.md" in /private/tmp/v6/A3_aggregation
+exec
+/bin/zsh -lc "sed -n '1,16p' history/2025-08.md" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+# engineering decision log — 2025-08
+
+## [2025-08-01] catalog / queue / us / pro
+catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+
+## [2025-08-02] media / queue / us / pro
+media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+
+## [2025-08-03] pricing / queue / us / pro
+pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+
+## [2025-08-14] billing / auth / latam / free
+billing auth [latam/free]: adopt OAuth2. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2025-08-14] shipping / partitioning / eu / enterprise
+shipping partitioning [eu/enterprise]: adopt by-region. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+ succeeded in 0ms:
+# engineering decision log — 2026-03
+
+## [2026-03-01] ledger / queue / us / enterprise
+ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-02] ingest / queue / us / enterprise
+ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-03] fraud / queue / us / enterprise
+fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-04] notify / queue / us / enterprise
+notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-05] shipping / queue / us / enterprise
+shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-06] risk / queue / us / enterprise
+risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] reporting / event-store / eu / enterprise
+reporting event-store [eu/enterprise]: adopt ClickHouse. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] search / cache / latam / free
+search cache [latam/free]: adopt Redis. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] shipping / auth / us / pro
+shipping auth [us/pro]: adopt OAuth2. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] fraud / cache / apac / pro
+fraud cache [apac/pro]: adopt Memcached. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] inventory / partitioning / latam / free
+inventory partitioning [latam/free]: adopt by-tenant. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] risk / partitioning / latam / free
+risk partitioning [latam/free]: adopt by-tenant. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-03-09] notify / index / eu / enterprise
+notify index [eu/enterprise]: adopt btree. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' README.md" in /private/tmp/v6/A3_aggregation
+exec
+/bin/zsh -lc "sed -n '1,20p' history/2026-04.md" in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+# platform
+Decision history in history/.
+
+ succeeded in 0ms:
+# engineering decision log — 2026-04
+
+## [2026-04-01] catalog / queue / us / pro
+catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-04-02] media / queue / us / pro
+media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-04-03] pricing / queue / us / pro
+pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-04-15] ingest / ratelimit / us / free
+ingest ratelimit [us/free]: adopt token bucket. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-04-15] inventory / cache / latam / free
+inventory cache [latam/free]: adopt in-process LRU. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+## [2026-04-15] media / cache / apac / free
+media cache [apac/free]: adopt Memcached. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I’m doing one final inventory check for hidden or non-`rg` files before I answer, still excluding `gold.json`. The visible project points to `history/` as the source of truth, with `git-log.txt` agreeing on the queue decision dates.
+exec
+/bin/zsh -lc 'ls -la' in /private/tmp/v6/A3_aggregation
+exec
+/bin/zsh -lc "awk 'BEGIN{IGNORECASE=1} /queue/ {print FILENAME \":\" FNR \":\" "'$0}'"' history/*.md git-log.txt README.md" in /private/tmp/v6/A3_aggregation
+exec
+/bin/zsh -lc 'find . -maxdepth 3 -type f ! -name gold.json -print | sort' in /private/tmp/v6/A3_aggregation
+ succeeded in 0ms:
+total 64
+drwxr-xr-x@  6 tjboudreaux  wheel    192 Jun 14 03:25 .
+drwxr-xr-x@  8 tjboudreaux  wheel    256 Jun 14 03:25 ..
+-rw-r--r--@  1 tjboudreaux  wheel     41 Jun 14 03:25 README.md
+-rw-r--r--@  1 tjboudreaux  wheel  20874 Jun 14 03:25 git-log.txt
+-rw-r--r--@  1 tjboudreaux  wheel    233 Jun 14 03:25 gold.json
+drwxr-xr-x@ 19 tjboudreaux  wheel    608 Jun 14 03:25 history
+
+ succeeded in 0ms:
+history/2025-08.md:3:## [2025-08-01] catalog / queue / us / pro
+history/2025-08.md:4:catalog queue: adopt Kafka. (NOTE: later moved to SQS — see catalog 2026 queue decision)
+history/2025-08.md:6:## [2025-08-02] media / queue / us / pro
+history/2025-08.md:7:media queue: adopt Kafka. (NOTE: later moved to SQS — see media 2026 queue decision)
+history/2025-08.md:9:## [2025-08-03] pricing / queue / us / pro
+history/2025-08.md:10:pricing queue: adopt Kafka. (NOTE: later moved to SQS — see pricing 2026 queue decision)
+history/2026-01.md:4:search event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:7:billing event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-01.md:10:inventory event-store [eu/pro]: adopt Kafka log as the event store (not the message queue). Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:3:## [2026-03-01] ledger / queue / us / enterprise
+history/2026-03.md:4:ledger queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:6:## [2026-03-02] ingest / queue / us / enterprise
+history/2026-03.md:7:ingest queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:9:## [2026-03-03] fraud / queue / us / enterprise
+history/2026-03.md:10:fraud queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:12:## [2026-03-04] notify / queue / us / enterprise
+history/2026-03.md:13:notify queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:15:## [2026-03-05] shipping / queue / us / enterprise
+history/2026-03.md:16:shipping queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-03.md:18:## [2026-03-06] risk / queue / us / enterprise
+history/2026-03.md:19:risk queue [us/enterprise]: adopt Kafka as the message queue. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:3:## [2026-04-01] catalog / queue / us / pro
+history/2026-04.md:4:catalog queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:6:## [2026-04-02] media / queue / us / pro
+history/2026-04.md:7:media queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+history/2026-04.md:9:## [2026-04-03] pricing / queue / us / pro
+history/2026-04.md:10:pricing queue: migrate from Kafka to SQS. Throughput, data-residency, cost, and migration risk were weighed before sign-off.
+git-log.txt:298:2025-08-01 catalog: queue
+git-log.txt:299:2025-08-02 media: queue
+git-log.txt:300:2025-08-03 pricing: queue
+git-log.txt:597:2026-03-01 ledger: queue
+git-log.txt:598:2026-03-02 ingest: queue
+git-log.txt:599:2026-03-03 fraud: queue
+git-log.txt:600:2026-03-04 notify: queue
+git-log.txt:601:2026-03-05 shipping: queue
+git-log.txt:602:2026-03-06 risk: queue
+git-log.txt:643:2026-04-01 catalog: queue
+git-log.txt:644:2026-04-02 media: queue
+git-log.txt:645:2026-04-03 pricing: queue
+
+ succeeded in 0ms:
+./README.md
+./git-log.txt
+./history/2025-01.md
+./history/2025-02.md
+./history/2025-03.md
+./history/2025-04.md
+./history/2025-05.md
+./history/2025-06.md
+./history/2025-07.md
+./history/2025-08.md
+./history/2025-09.md
+./history/2025-10.md
+./history/2025-11.md
+./history/2025-12.md
+./history/2026-01.md
+./history/2026-02.md
+./history/2026-03.md
+./history/2026-04.md
+./history/2026-05.md
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+6
+
+Current Kafka-as-message-queue subsystems:
+
+- `ledger`
+- `ingest`
+- `fraud`
+- `notify`
+- `shipping`
+- `risk`
+
+I excluded `catalog`, `media`, and `pricing` because their 2025 Kafka queue decisions were later migrated to SQS in [history/2026-04.md](/private/tmp/v6/A3_aggregation/history/2026-04.md:3). I also excluded `search`, `billing`, and `inventory` because their Kafka entries are explicitly event-store usage, not message-queue usage, in [history/2026-01.md](/private/tmp/v6/A3_aggregation/history/2026-01.md:3). I did not read `gold.json`.
+hook: Stop
+hook: Stop Completed
+tokens used
+37,331
+6
+
+Current Kafka-as-message-queue subsystems:
+
+- `ledger`
+- `ingest`
+- `fraud`
+- `notify`
+- `shipping`
+- `risk`
+
+I excluded `catalog`, `media`, and `pricing` because their 2025 Kafka queue decisions were later migrated to SQS in [history/2026-04.md](/private/tmp/v6/A3_aggregation/history/2026-04.md:3). I also excluded `search`, `billing`, and `inventory` because their Kafka entries are explicitly event-store usage, not message-queue usage, in [history/2026-01.md](/private/tmp/v6/A3_aggregation/history/2026-01.md:3). I did not read `gold.json`.

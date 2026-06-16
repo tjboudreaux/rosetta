@@ -1,0 +1,5 @@
+The Drift service publishes to Pub/Sub today.
+
+Resolution: "Drift" is a stale codename that aliases to the canonical service svc-flags_api (also known as "the feature-flag service"). ADR 0001 unified all three names, with svc-flags_api as canonical since it matches the code path (flags_api.py). For the event bus, the supersession chain runs: ADR 0003 (Superseded) originally decided svc-flags_api would publish to RabbitMQ (2025-11-02). This was superseded by ADR 0002 (Accepted), which records the platform team's migration to Pub/Sub for ordering guarantees, completed via git commit 77aa88b on 2026-05-17. The ops runbook still references RabbitMQ but is explicitly noted as stale post-cutover in ADR 0002. The authoritative current state is Pub/Sub, as confirmed by the code (EVENT_BUS = "pub/sub") and the accepted ADR.
+
+Cited ADRs: ADR 0001 (alias map: Drift = feature-flag service = svc-flags_api), ADR 0002 (current decision: Pub/Sub, supersedes ADR 0003), ADR 0003 (historical: RabbitMQ, now superseded).

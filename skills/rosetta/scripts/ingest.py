@@ -114,12 +114,11 @@ def main():
         rt = cfg["record_types"][rtype]
         d = root / rt["dir"]
         d.mkdir(parents=True, exist_ok=True)
-        num = next_number(d, cfg["number_width"])
-        out = d / f"{num}-{decisions.slugify(item['title'])}.md"
-        if out.exists():
-            print(f"skip (exists): {out}", file=sys.stderr)
-            continue
-        out.write_text(build_record(item, rt["label"], num))
+        # Share the lock-serialized, counter-based allocation with `decisions.py new` (ADR 0023) so
+        # ingest is O(1) and race-safe too — no glob, no duplicate-number race.
+        out, _ = decisions.allocate_and_write(
+            root, d, rtype, decisions.slugify(item["title"]),
+            lambda num: build_record(item, rt["label"], num), cfg)
         print(out)
         written += 1
     print(f"ingested {written} decision(s) as Proposed records — review, then "

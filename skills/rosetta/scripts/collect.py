@@ -32,6 +32,7 @@ import os
 import re
 import sqlite3
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -987,6 +988,27 @@ def write_session_md(path, agent, src, project, data):
     path.write_text("\n".join(lines))
 
 
+# --- crash-safe writes ----------------------------------------------------------------
+# Rosetta's promise is "nothing disappears." A process killed mid-write must never leave a
+# truncated ledger/manifest behind (a corrupt ledger silently reprocesses everything). Write
+# to a temp file in the same dir, then os.replace() — atomic on POSIX and Windows, so a reader
+# sees either the old file or the new one, never a partial one.
+def atomic_write_text(path, text):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=f".{path.name}.", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as fh:
+            fh.write(text)
+        os.replace(tmp, path)
+    except Exception:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        raise
+
+
 # --- processed-session ledger ---------------------------------------------------------
 # Lets `collect` skip sessions it has already normalized. The key is f"{agent}::{unit['id']}",
 # which every agent's resolver already produces uniformly (filename stem, dir name, or a
@@ -998,19 +1020,24 @@ def ledger_path(project, override):
 
 
 def load_ledger(path):
+    path = Path(path)
+    empty = {"version": 1, "entries": {}}   # entries keyed by "agent::id"
+    if not path.exists():
+        return empty                         # normal first run — silent
     try:
-        led = json.loads(Path(path).read_text())
+        led = json.loads(path.read_text())
         if isinstance(led, dict) and isinstance(led.get("entries"), dict):
             return led
-    except Exception:
-        pass
-    return {"version": 1, "entries": {}}   # entries keyed by "agent::id"
+        raise ValueError("unexpected ledger shape")
+    except Exception as e:
+        # Present but unreadable/corrupt: don't crash, but say so loudly — otherwise the
+        # incremental skip silently turns into a full reprocess with no signal to the user.
+        log(f"ledger at {path} was unreadable ({e}); reprocessing all sessions")
+        return empty
 
 
 def save_ledger(path, ledger):
-    path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(ledger, indent=2))
+    atomic_write_text(path, json.dumps(ledger, indent=2))
 
 
 def main():
@@ -1045,7 +1072,7 @@ def main():
             "hermes_note": disc["hermes_note"],
             "unknown_stores": discovery_sweep(),
         }
-        (out / "projects-index.json").write_text(json.dumps(index, indent=2))
+        atomic_write_text(out / "projects-index.json", json.dumps(index, indent=2))
         cols = ["claude", "codex", "factory", "gemini", "opencode", "claude-agent"]
         lines = ["# Agent-conversation projects on this machine", "",
                  f"_Discovered {index['generated_at']} · {index['totals']['projects']} projects_", "",
@@ -1059,7 +1086,7 @@ def main():
         if disc["unscoped_agents"]:
             lines += ["", "Unscoped agents (not project-attributable): " +
                       ", ".join(f"{k}={v}" for k, v in sorted(disc["unscoped_agents"].items()))]
-        (out / "projects-index.md").write_text("\n".join(lines) + "\n")
+        atomic_write_text(out / "projects-index.md", "\n".join(lines) + "\n")
         log(f"discovered {index['totals']['projects']} projects → {out / 'projects-index.json'}")
         print(json.dumps(index["totals"]))
         return
@@ -1156,8 +1183,7 @@ def main():
         log(f"{agent}: {entry['sessions']} sessions, {entry['messages']} messages{skipped_note} "
             f"({res['match_mode']}); extra={res['extra']}")
 
-    with open(out / "manifest.json", "w") as fh:
-        json.dump(manifest, fh, indent=2)
+    atomic_write_text(out / "manifest.json", json.dumps(manifest, indent=2))
     log(f"wrote {out / 'manifest.json'}")
     save_ledger(led_path, ledger)
     log(f"updated ledger: {led_path} ({len(ledger['entries'])} sessions)")

@@ -1,0 +1,7 @@
+```json
+[
+  {"id":"Q001","current":"GKE Autopilot","replaced":"ECS Fargate"},
+  {"id":"Q002","current":"GKE Autopilot","replaced":"HashiCorp Nomad"},
+  {"id":"Q003","current":"Google Pub/Sub","replaced":"Amazon SQS"}
+]
+```

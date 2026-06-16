@@ -49,6 +49,14 @@ asserted, until code or an explicit human call confirms it.
 | 2026-06-08 | [ADR 0014](architecture-decisions/0014-pluggable-per-agent-parsers-and-registry.md) | adr | Pluggable per-agent parsers + agent registry + ROSETTA_HOME injection | Accepted |
 | 2026-06-08 | [ADR 0015](architecture-decisions/0015-expanded-agent-coverage-and-exclusions.md) | adr | Expanded agent coverage to 18 sources; non-agent exclusion list | Accepted |
 | 2026-06-13 | [ADR 0016](architecture-decisions/0016-incremental-collect-via-processed-session-ledger.md) | adr | Incremental collect via processed-session ledger | Accepted |
+| 2026-06-13 | [ADR 0017](architecture-decisions/0017-crash-safe-writes-and-resilience.md) | adr | Crash-safe writes and parse resilience | Accepted |
+| 2026-06-13 | [ADR 0018](architecture-decisions/0018-adversarial-eval-dataset.md) | adr | Adversarial eval dataset for the judgment half | Accepted |
+| 2026-06-13 | [ADR 0019](architecture-decisions/0019-coverage-gate.md) | adr | CI coverage gate (fail under 90%) | Accepted |
+| 2026-06-13 | [ADR 0020](architecture-decisions/0020-decision-library-hardening.md) | adr | Decision-library hardening (atomic writes, race-safe numbering, cycle detection) | Accepted |
+| 2026-06-13 | [ADR 0021](architecture-decisions/0021-scalable-decision-store.md) | adr | Scalable decision store (O(1) numbering, query subcommands, query-don't-slurp) | Accepted |
+| 2026-06-13 | [ADR 0022](architecture-decisions/0022-eval-calibration-across-model-tiers.md) | adr | Eval calibration across model tiers (judge-independent scoring, no-tools variant, gates) | Accepted |
+| 2026-06-13 | [ADR 0023](architecture-decisions/0023-round3-hardening-fixes.md) | adr | Round-3 hardening fixes (true lock-based allocation; loud failures) | Accepted |
+| 2026-06-14 | [ADR 0024](architecture-decisions/0024-compiler-anti-hallucination-integrity-gate.md) | adr | Compiler anti-hallucination integrity gate | Accepted |
 <!-- ROSETTA:TIMELINE:END -->
 
 ## Notable supersessions & nuances

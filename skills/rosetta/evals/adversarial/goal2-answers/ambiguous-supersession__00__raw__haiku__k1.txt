@@ -1,0 +1,5 @@
+FINAL ANSWER: Keycloak
+
+RESOLUTION: On 2026-03-04, there were two same-day conflicting decisions: the morning meeting (09:12) settled on Ping, while the afternoon meeting (16:40) settled on Auth0. However, these were both superseded by a later amendment dated 2026-04-19, which determined that neither Ping nor Auth0 met the SCIM requirements. The team then adopted Keycloak as the final IdP for Beacon. The git log confirms this on 2026-04-19 with commit "configure Keycloak as IdP for Beacon".
+
+CITATIONS: 01-decision-morning.md, 02-decision-afternoon.md, 03-amendment.md, git-log.txt

@@ -1,0 +1,83 @@
+[
+  {
+    "id": "ADR 0001",
+    "type": "adr",
+    "number": 1,
+    "title": "Checkout (Halifax) session tokens: JWT HS256",
+    "status": "Superseded by ADR 0002",
+    "date": "2025-03-05",
+    "path": "architecture-decisions/0001-checkout-halifax-session-tokens-jwt-hs256.md"
+  },
+  {
+    "id": "ADR 0002",
+    "type": "adr",
+    "number": 2,
+    "title": "Checkout (Halifax) session tokens: opaque Redis-backed server-side sessions",
+    "status": "Superseded by ADR 0003",
+    "date": "2025-08-12",
+    "path": "architecture-decisions/0002-checkout-halifax-session-tokens-opaque-redis-backed-server-side-sessions.md"
+  },
+  {
+    "id": "ADR 0003",
+    "type": "adr",
+    "number": 3,
+    "title": "Checkout (Halifax) session tokens: PASETO v4 (v4.local)",
+    "status": "Accepted",
+    "date": "2026-05-18",
+    "path": "architecture-decisions/0003-checkout-halifax-session-tokens-paseto-v4-v4-local.md"
+  },
+  {
+    "id": "ADR 0004",
+    "type": "adr",
+    "number": 4,
+    "title": "Billing (Sterling) service-to-service auth: JWT RS256 via JWKS",
+    "status": "Accepted",
+    "date": "2026-04-22",
+    "path": "architecture-decisions/0004-billing-sterling-service-to-service-auth-jwt-rs256-via-jwks.md"
+  },
+  {
+    "id": "ADR 0005",
+    "type": "adr",
+    "number": 5,
+    "title": "Feature flags via LaunchDarkly",
+    "status": "Accepted",
+    "date": "2025-04-11",
+    "path": "architecture-decisions/0005-feature-flags-via-launchdarkly.md"
+  },
+  {
+    "id": "ADR 0006",
+    "type": "adr",
+    "number": 6,
+    "title": "Adopt OpenTelemetry across all pods",
+    "status": "Accepted",
+    "date": "2025-06-01",
+    "path": "architecture-decisions/0006-adopt-opentelemetry-across-all-pods.md"
+  },
+  {
+    "id": "ADR 0007",
+    "type": "adr",
+    "number": 7,
+    "title": "Standardize on Postgres 16 for transactional stores",
+    "status": "Accepted",
+    "date": "2025-07-10",
+    "path": "architecture-decisions/0007-standardize-on-postgres-16-for-transactional-stores.md"
+  },
+  {
+    "id": "ADR 0008",
+    "type": "adr",
+    "number": 8,
+    "title": "Nightly DB backups to S3 with 30-day retention",
+    "status": "Accepted",
+    "date": "2025-11-03",
+    "path": "architecture-decisions/0008-nightly-db-backups-to-s3-with-30-day-retention.md"
+  },
+  {
+    "id": "ADR 0009",
+    "type": "adr",
+    "number": 9,
+    "title": "Move CI to self-hosted runners",
+    "status": "Accepted",
+    "date": "2026-01-15",
+    "path": "architecture-decisions/0009-move-ci-to-self-hosted-runners.md"
+  }
+]

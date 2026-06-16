@@ -1,0 +1,66 @@
+{
+  "compiled__claude-haiku-4-5-20251001": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.825,
+    "recall_samples": [
+      33,
+      33,
+      33
+    ],
+    "recall_majority": 0.825,
+    "replaced_mean": 0.725,
+    "recall_stdev": 0.0,
+    "in_tokens": 7148,
+    "est_cost_usd": 0.0514,
+    "usd_per_correct": 0.0016
+  },
+  "compiled__claude-sonnet-4-6": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.825,
+    "recall_samples": [
+      33,
+      33,
+      33
+    ],
+    "recall_majority": 0.825,
+    "replaced_mean": 0.725,
+    "recall_stdev": 0.0,
+    "in_tokens": 7148,
+    "est_cost_usd": 0.1543,
+    "usd_per_correct": 0.0047
+  },
+  "compiled__gemini-3-flash-preview": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.825,
+    "recall_samples": [
+      33,
+      33,
+      33
+    ],
+    "recall_majority": 0.825,
+    "replaced_mean": 0.725,
+    "recall_stdev": 0.0,
+    "in_tokens": 7148,
+    "est_cost_usd": 0.0287,
+    "usd_per_correct": 0.0009
+  },
+  "compiled__gpt-5.5": {
+    "n": 40,
+    "k": 3,
+    "recall_mean": 0.825,
+    "recall_samples": [
+      33,
+      33,
+      33
+    ],
+    "recall_majority": 0.825,
+    "replaced_mean": 0.725,
+    "recall_stdev": 0.0,
+    "in_tokens": 7148,
+    "est_cost_usd": 0.2872,
+    "usd_per_correct": 0.0087
+  }
+}

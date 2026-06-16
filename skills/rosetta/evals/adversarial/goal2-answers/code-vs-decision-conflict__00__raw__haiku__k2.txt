@@ -1,0 +1,9 @@
+PRODUCTION DATASTORE: MySQL
+
+RESOLUTION:
+The ADR (01-adr-record.md, session codex, 2026-02-01) decided Beacon should use Postgres. However, the implementation session (02-impl-note.md, session claude, 2026-05-25) documents that a licensing blocker on Postgres triggered a runtime pivot: "shipped on MySQL instead" with "Prod has been on MySQL since cutover." The git history (git-log.txt) materializes this: commit 55dd66e (2026-05-24) is titled "notify_svc: provision MySQL (prod), retire Postgres POC," confirming MySQL is the live production system. The ADR was never updated (acknowledged as oversight). Per code/git truth hierarchy, MySQL is authoritative; the ADR is stale.
+
+CITATIONS:
+- 02-impl-note.md: "shipped on MySQL instead. Prod has been on MySQL since cutover."
+- git-log.txt: 55dd66e "notify_svc: provision MySQL (prod), retire Postgres POC"
+- 01-adr-record.md: Postgres ADR marked stale by implementation divergence

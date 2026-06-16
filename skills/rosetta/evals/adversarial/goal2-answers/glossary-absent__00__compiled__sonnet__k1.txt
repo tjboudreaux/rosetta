@@ -1,0 +1,5 @@
+The Cobalt service uses MySQL as its datastore for profile data, hosted on the cluster mysql-prod-eu (database: profiles).
+
+Supporting resolution: ADR 0001 establishes (by inference from scattered co-occurrence, since no explicit glossary exists) that "Cobalt" is the user-profile service. ADR 0002 confirms the datastore is MySQL on mysql-prod-eu, supported by four independent signals: code (billing_core.py DSN = "mysql://mysql-prod-eu/profiles"), a git commit (44ee55f, 2026-03-15, "point Cobalt at mysql-prod-eu"), a dashboard export confirming the cluster hosts Cobalt workloads with MySQL as the backend engine, and an incident review (2026-05-01) referencing a MySQL read-replica latency spike with no datastore change. ADR 0003 (Status: Rejected) records and quarantines a distractor: a scratch TODO note from 2026-01-09 asking "profile datastore: Cloud Spanner?" — it was never confirmed, explicitly marked TODO, and is contradicted by all authoritative code/git/ops evidence.
+
+ADR citations: ADR 0001 (Cobalt scope, Accepted), ADR 0002 (Cobalt datastore = MySQL/mysql-prod-eu, Accepted), ADR 0003 (Cloud Spanner rejected non-decision, Rejected).

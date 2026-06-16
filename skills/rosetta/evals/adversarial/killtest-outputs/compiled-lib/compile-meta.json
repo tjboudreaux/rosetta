@@ -1,0 +1,8 @@
+{
+  "compiler": "claude-sonnet-4-6",
+  "compile_tokens": 145924,
+  "extracted_rows": 1237,
+  "adrs": 929,
+  "chains": 340,
+  "integrity_clean": true
+}

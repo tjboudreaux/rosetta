@@ -1,0 +1,35 @@
+{
+  "fixture_type": "code-vs-decision-conflict",
+  "answer": "MySQL",
+  "answer_aliases": [
+    "MySQL",
+    "mysql"
+  ],
+  "claims": [
+    {
+      "id": "current",
+      "text": "production runs on MySQL (code + git win)",
+      "supported_by": "code + git + 02-impl-note.md"
+    },
+    {
+      "id": "stale_adr",
+      "text": "the ADR still says Postgres but it is stale/never amended",
+      "supported_by": "01 vs 02/code"
+    },
+    {
+      "id": "truth_hierarchy",
+      "text": "code/git evidence overrides the stale decision record",
+      "supported_by": "truth hierarchy"
+    }
+  ],
+  "rubric": {
+    "must": [
+      "names MySQL as what production runs",
+      "flags the ADR (Postgres) as stale/superseded"
+    ],
+    "must_not": [
+      "asserts Postgres as the production datastore"
+    ],
+    "negative_control": false
+  }
+}

@@ -1,0 +1,15 @@
+ANSWER: 6
+
+Distinct subsystems currently using Kafka as their MESSAGE QUEUE (current/accepted decisions only):
+1. ledger
+2. ingest
+3. fraud
+4. notify
+5. shipping
+6. risk
+
+All six adopted Kafka as the message queue in 2026-03 (history/2026-03.md) and have no later migration off Kafka.
+
+Excluded:
+- catalog, media, pricing: adopted Kafka queue in 2025-08 but later MIGRATED to SQS in 2026-04 (history/2026-04.md). No longer on Kafka.
+- search, billing, inventory: use Kafka log as the EVENT STORE (not the message queue) in 2026-01 (history/2026-01.md). Non-queue purpose, excluded.

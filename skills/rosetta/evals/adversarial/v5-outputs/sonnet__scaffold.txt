@@ -1,0 +1,9 @@
+A new EU enterprise billing service should use **managed Postgres (CloudSQL)** as its event-store backend today.
+
+The decisive evidence is the 2026-06-12 history entry under the codename "Project Meridian" (history/2026-06.md, line 6-7): "For GDPR data-residency, Project Meridian persistence migrates to the managed relational tier, replacing the prior columnar choice for this sink. Effective for all GDPR-zone tier-1 sinks going forward." The codename glossary (history/2025-09.md, line 4, ADR 0300) decodes these terms: "Project Meridian" = the EU enterprise billing (payments) event sink; "managed relational tier" = CloudSQL Postgres; "columnar tier" = ClickHouse.
+
+This 2026-06-12 decision supersedes the 2026-06-05 reaffirmation of ClickHouse (history/2026-06.md, line 3-4), which was itself the latest in a long consistent run of ClickHouse entries from 2025-01-15 through 2026-06-05 (git-log.txt lines 36, 74, 196, 210, 299, 312, 414, 489, 565, 570, 589, 648, 715, 868, 903, 943). The 2025-09-28 history also explicitly states "EU enterprise billing event-store on ClickHouse for analytics throughput" (history/2025-09.md, line 105-106), but the later Meridian GDPR-residency ruling on 2026-06-12 overrides it for all new GDPR-zone tier-1 sinks.
+
+The current code in billing/services/eu_enterprise/store.py is marked "LEGACY" with ENGINE='self-hosted-postgres', which reflects the pre-ClickHouse era and is stale; it does not represent the forward governance standard. The billing/services/eu_pro/store.py (ENGINE='clickhouse') reflects the columnar-era standard that Meridian has now superseded for the enterprise tier in the EU.
+
+Under the Rosetta truth hierarchy, the latest approved governance decision (2026-06-12 Meridian ruling) governs new services — it is a forward-looking standard scoped explicitly to all GDPR-zone tier-1 sinks, and the legacy eu_enterprise code predates even the ClickHouse era and cannot arbitrate the forward standard here.

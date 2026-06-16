@@ -1,0 +1,1 @@
+33cc44d 2026-04-19 configure Keycloak as IdP for Beacon
