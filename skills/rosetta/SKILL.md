@@ -229,6 +229,12 @@ necessary. The CLI is the index — use it deterministically (no tokens) instead
   codename query resolves through that map (`via_alias`), `index` emits a derived
   `GLOSSARY.md`/`GLOSSARY.json`, and `validate` is a **hard error** if one alias maps to two live
   decisions — an ambiguous codename is a bug, not a warning. `--no-alias-expand` for literal-only.
+- **Measure library health** with `decisions.py coverage` (JSON): the headline `anchoring.rate` is the
+  share of Accepted decisions whose `Sources:` cite a real code path (provenance the resolver can
+  trust); it also reports supersession stats, an agent-retrieval `ambiguous_topics` diagnostic (topics
+  that don't resolve to a unique record), orphans, staleness, and alias coverage. Report-only by
+  default; `--min-coverage 0.8` turns the anchoring rate into a CI gate (nonzero exit below the floor).
+  See ADR 0026.
 
 Decisions made **outside** code and agent chat (meetings via Circleback, Slack threads, trackers) can
 be ingested too: query the source's MCP tools for the project/time window, emit the extracted decisions

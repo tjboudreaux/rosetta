@@ -1129,15 +1129,14 @@ def cmd_get(args, root, cfg):
         print(rec["path"].read_text())
 
 
-def cmd_resolve(args, root, cfg):
-    """Decision-resolution primitive (the product's core capability): given a query, find matching
-    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
-    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
-    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
-    records = collect_records(root, cfg)
-    q = (args.text or "").lower()
-    type_filter = args.type.lower() if args.type else None
-    no_alias = getattr(args, "no_alias_expand", False)
+def resolve_query(records, cfg, root, text, type_filter=None, no_alias=False):
+    """Pure decision resolution (no git/freshness, no printing) — the shared core of `resolve` and the
+    `coverage` retrieval diagnostic, so the two can NEVER diverge (SPEC-03). `root` is needed to build
+    each entry's relative `path`. Returns: `current` (insertion-ordered dict, NEVER reordered here so
+    `cmd_resolve` stays byte-identical), `current_recs` (live record objects, for the freshness pass),
+    `conflict` (literal-only), `via_alias`, `alias_conflict`, `resolved_unique`, `invalid_note`,
+    `matched_records`, and `endpoints` (current ∪ via_alias target ids)."""
+    q = (text or "").lower()
 
     # literal matches — alias-FIELD text is excluded from the haystack (it matches ONLY via the map)
     matched = []
@@ -1170,12 +1169,12 @@ def cmd_resolve(args, root, cfg):
     # alias layer (Direct Record Mapping): union an unambiguous alias's target record by id; report an
     # ambiguous alias separately. This NEVER rewrites the query and NEVER flips `conflict` (SPEC-04).
     via_alias, alias_conflict, invalid_note = [], [], None
-    if not no_alias and args.text:
+    if not no_alias and text:
         ares = build_alias_map(records, cfg)
         amap, inv_aliases = ares["map"], ares["invalid_aliases"]
         stoplist = {normalize_alias(s) for s in cfg.get("alias_stoplist", DEFAULT_ALIAS_STOPLIST)}
         by_id = {record_id(r, cfg): r for r in records}
-        for a in find_query_aliases(args.text, amap, stoplist):
+        for a in find_query_aliases(text, amap, stoplist):
             ids = amap.get(a, [])
             if type_filter:                        # resolve ambiguity is --type-scoped
                 ids = [i for i in ids if _type_of_id(i, records, cfg) == type_filter]
@@ -1192,12 +1191,33 @@ def cmd_resolve(args, root, cfg):
                 continue
             via_alias.append({"id": cid, "title": rec["title"], "alias": a, "target_id": cid,
                               "path": rec["path"].relative_to(root).as_posix()})
-        bad = find_query_aliases(args.text, inv_aliases, stoplist)
+        bad = find_query_aliases(text, inv_aliases, stoplist)
         if bad:
             invalid_note = ("query alias(es) " + ", ".join(f"'{a}'" for a in bad) +
                             " map through an invalid supersession chain; cannot resolve deterministically")
         via_alias.sort(key=lambda v: (v["id"], v["alias"]))
         alias_conflict.sort(key=lambda c: (c["alias"], c["candidates"]))
+
+    endpoints = set(current.keys()) | {v["id"] for v in via_alias}
+    resolved_unique = (len(endpoints) == 1 and not alias_conflict and invalid_note is None)
+    return {"current": current, "current_recs": current_recs, "conflict": conflict,
+            "via_alias": via_alias, "alias_conflict": alias_conflict,
+            "resolved_unique": resolved_unique, "invalid_note": invalid_note,
+            "matched_records": len(matched), "endpoints": endpoints}
+
+
+def cmd_resolve(args, root, cfg):
+    """Decision-resolution primitive (the product's core capability): given a query, find matching
+    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
+    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
+    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
+    records = collect_records(root, cfg)
+    type_filter = args.type.lower() if args.type else None
+    no_alias = getattr(args, "no_alias_expand", False)
+    res = resolve_query(records, cfg, root, args.text, type_filter, no_alias)
+    current, current_recs = res["current"], res["current_recs"]
+    via_alias, alias_conflict = res["via_alias"], res["alias_conflict"]
+    conflict, invalid_note = res["conflict"], res["invalid_note"]
 
     # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
     # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /
@@ -1214,14 +1234,13 @@ def cmd_resolve(args, root, cfg):
                     entry["stale_paths"] = info["stale_paths"]
 
     live = list(current.values())
-    union_ids = set(current.keys()) | {v["id"] for v in via_alias}
-    resolved_unique = (len(union_ids) == 1 and not alias_conflict and invalid_note is None)
-    out = {"query": args.text, "current": live, "matched_records": len(matched), "conflict": conflict}
+    out = {"query": args.text, "current": live, "matched_records": res["matched_records"],
+           "conflict": conflict}
     if not no_alias:
         out["via_alias"] = via_alias
         if alias_conflict:
             out["alias_conflict"] = alias_conflict
-    out["resolved_unique"] = resolved_unique
+    out["resolved_unique"] = res["resolved_unique"]
     out["freshness_checked"] = git_stale
     if git_stale and any(e.get("stale") for e in live):
         out["stale"] = True
@@ -1239,6 +1258,178 @@ def cmd_resolve(args, root, cfg):
     if notes:
         out["note"] = " ".join(notes)
     print(json.dumps(out, indent=2))
+
+
+def _is_within(parent, child):
+    """True if `child` is `parent` or nested under it (after resolving symlinks/.. ), else False."""
+    try:
+        child.resolve().relative_to(parent.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _anchor_roots(root):
+    """Repo-bounded source roots for coverage anchoring (SPEC-03): `root` and `root.parent`, restricted
+    to those inside the git repo boundary when git is available — so a citation can never anchor to an
+    unrelated SIBLING project outside the repo (the `../other-project/x.py` leak). Git-absent fallback
+    keeps both candidates. Returns (roots, repo_root)."""
+    repo_root = _git_repo_root(root)
+    roots, seen = [], set()
+    for c in (root, root.parent):
+        key = c.resolve()
+        if key in seen:
+            continue
+        seen.add(key)
+        if repo_root is not None and not _is_within(repo_root, c):
+            continue
+        roots.append(c)
+    return (roots or [root]), repo_root
+
+
+def _record_code_anchored(rec, anchor_roots, repo_root):
+    """True iff the record's `Sources:` cites >=1 path that resolves by EXACT relative path (file OR
+    directory) under an anchor root, with the resolved real path inside the repo boundary when git is
+    present. Reuses `extract_source_paths` (which already ignores transcript-style citations) and adds a
+    directory addendum for bare dir tokens like `Sources: scripts` that the path heuristic drops."""
+    sources = rec["fields"].get("Sources", "")
+    tokens = set(extract_source_paths(sources))
+    for raw in re.split(r"[,;`\s]+", sources):     # directory addendum: bare tokens, existence-filtered
+        raw = raw.strip()
+        if raw:
+            tokens.add(raw)
+    for t in tokens:
+        for r in anchor_roots:
+            cand = r / t
+            try:
+                if cand.exists() and (repo_root is None or _is_within(repo_root, cand)):
+                    return True
+            except OSError:
+                continue
+    return False
+
+
+def assess_coverage(records, cfg, root):
+    """Deterministic decision-library HEALTH report (SPEC-03): provenance/code-anchoring (PRIMARY),
+    supersession stats, an agent-retrieval ambiguous-topics DIAGNOSTIC, and structural fields. No
+    external gold set; reuses the existing resolver/staleness/integrity machinery. Never mutates.
+    Denominator for the gated rate is Accepted records."""
+    def _status(rec):
+        return rec["fields"].get("Status", "").strip().lower()
+
+    def _bucket(s):
+        if s.startswith("superseded"):
+            return "superseded"
+        for b in ("accepted", "proposed", "deprecated", "rejected"):
+            if s.startswith(b):
+                return b
+        return "other"
+
+    accepted = [r for r in records if _status(r).startswith("accepted")]
+    anchor_roots, repo_root = _anchor_roots(root)
+
+    # 3.1 provenance / code-anchoring (PRIMARY, gated on rate_raw)
+    anchored = {record_id(r, cfg): _record_code_anchored(r, anchor_roots, repo_root) for r in records}
+    acc_anchored_n = sum(1 for r in accepted if anchored[record_id(r, cfg)])
+    unanchored = sorted(record_id(r, cfg) for r in accepted if not anchored[record_id(r, cfg)])
+    a_rate_raw = (acc_anchored_n / len(accepted)) if accepted else None
+    anchoring = {"accepted_anchored": acc_anchored_n, "accepted_total": len(accepted),
+                 "rate": round(a_rate_raw, 3) if a_rate_raw is not None else None,
+                 "rate_raw": a_rate_raw, "unanchored": unanchored,
+                 "all_anchored": sum(1 for v in anchored.values() if v), "all_total": len(records)}
+
+    # 3.2 supersession (reported SIGNAL, not gated); depth = supersession chain length per origin record
+    dist = {"accepted": 0, "proposed": 0, "superseded": 0, "deprecated": 0, "rejected": 0, "other": 0}
+    for r in records:
+        dist[_bucket(_status(r))] += 1
+    retired = dist["superseded"] + dist["deprecated"] + dist["rejected"]
+    depths = [len(resolve_current(records, r, cfg)[1]) for r in records]
+    chain_depths = [d for d in depths if d >= 1]
+    supersession = {"active": dist["accepted"], "retired": retired,
+                    "rate": round(retired / len(records), 3) if records else None,
+                    "max_chain_depth": max(depths) if depths else 0,
+                    "mean_chain_depth": round(sum(chain_depths) / len(chain_depths), 3)
+                    if chain_depths else None}
+
+    # 3.3 agent-retrieval ambiguous-topics DIAGNOSTIC (Option A — not a rate, not gated)
+    ambiguous = []
+    for r in accepted:
+        self_id = record_id(r, cfg)
+        res = resolve_query(records, cfg, root, r["title"])
+        cand = set(res["endpoints"])
+        for ac in res["alias_conflict"]:
+            cand.update(ac["candidates"])         # alias-conflict candidates may be outside `endpoints`
+        if not res["resolved_unique"] or res["endpoints"] != {self_id}:
+            ambiguous.append({"id": self_id, "title": r["title"],
+                              "collides_with": sorted(cand - {self_id})})
+    ambiguous.sort(key=lambda x: x["id"])
+    retrieval = {"checked": len(accepted), "ambiguous_count": len(ambiguous),
+                 "ambiguous_topics": ambiguous}
+
+    # 3.5 structural / supporting signals
+    valid_labels = {rt["label"].upper() for rt in cfg["record_types"].values()}
+    label_re = re.compile(r"\b(" + "|".join(sorted(valid_labels)) + r")\s+(\d+)\b")
+    all_ids = {record_id(r, cfg) for r in records}
+    inbound = set()
+    outbound = {}
+    for r in records:
+        rid = record_id(r, cfg)
+        links = " ".join(r["fields"].get(k, "") for k in ("Status", "Supersedes", "Related"))
+        refs = {_norm_idref(lbl, num, cfg) for lbl, num in label_re.findall(links)} & all_ids
+        refs.discard(rid)
+        outbound[rid] = refs
+        inbound |= refs
+    orphans = sorted(rid for r in accepted
+                     for rid in [record_id(r, cfg)] if not outbound.get(rid) and rid not in inbound)
+
+    git_ok, assessed = assess_staleness(records, root, cfg, ("accepted",))
+    if not git_ok:
+        staleness = {"git": False, "skipped": True}
+    else:
+        stale_ids = sorted(a["id"] for a in assessed if a["stale"] is True)
+        staleness = {"git": True, "checked": len(assessed), "stale": len(stale_ids),
+                     "unknown": sum(1 for a in assessed if a["stale"] is None), "stale_ids": stale_ids}
+
+    with_aliases = sum(1 for r in accepted if parse_alias_field(r["fields"].get("Aliases", "")))
+    alias_coverage = {"with_aliases": with_aliases, "accepted_total": len(accepted),
+                      "rate": round(with_aliases / len(accepted), 3) if accepted else None}
+
+    return {"root": root.name, "records_total": len(records), "accepted_total": len(accepted),
+            "anchoring": anchoring, "supersession": supersession, "status_distribution": dist,
+            "retrieval": retrieval, "orphans": orphans, "staleness": staleness,
+            "alias_coverage": alias_coverage}
+
+
+def _unit_float(s):
+    """argparse type: a float in [0,1] (a coverage threshold)."""
+    f = float(s)
+    if not (0.0 <= f <= 1.0):
+        raise argparse.ArgumentTypeError("must be a float in [0,1]")
+    return f
+
+
+def cmd_coverage(args, root, cfg):
+    """Decision-library health report (SPEC-03): provenance-anchoring (gated), supersession stats, an
+    agent-retrieval ambiguous-topics diagnostic, and structural fields. JSON out; report-only by
+    default. `--min-coverage` gates the anchoring rate_raw (exit 1 on violation; a null rate is
+    skipped, never a TypeError)."""
+    records = collect_records(root, cfg)
+    report = assess_coverage(records, cfg, root)
+    min_cov = getattr(args, "min_coverage", None)
+    report["thresholds"] = {"min_coverage": min_cov}
+    failures = []
+    if min_cov is not None:
+        rate_raw = report["anchoring"]["rate_raw"]
+        if rate_raw is None:
+            report.setdefault("notes", []).append(
+                "no Accepted records — anchoring rate is null; --min-coverage skipped")
+        elif rate_raw < min_cov:
+            failures.append(f"anchoring rate {round(rate_raw, 3)} < --min-coverage {min_cov}")
+    report["failures"] = failures
+    report["ok"] = not failures
+    print(json.dumps(report, indent=2))
+    if failures:
+        sys.exit(1)
 
 
 def _set_frontmatter_line(text, field, value):
@@ -1349,6 +1540,12 @@ def main():
     p_res.add_argument("--no-alias-expand", action="store_true",
                        help="disable alias/codename resolution (literal matching only)")
 
+    p_cov = sub.add_parser("coverage", help="decision-library health report: provenance-anchoring "
+                                            "(gated), supersession stats, retrieval diagnostic")
+    add_root(p_cov)
+    p_cov.add_argument("--min-coverage", type=_unit_float, default=None,
+                       help="fail (exit 1) if the anchoring rate is below this floor in [0,1]")
+
     args = ap.parse_args()
 
     if args.root:
@@ -1377,6 +1574,8 @@ def main():
         cmd_supersede(args, root, cfg)
     elif args.cmd == "resolve":
         cmd_resolve(args, root, cfg)
+    elif args.cmd == "coverage":
+        cmd_coverage(args, root, cfg)
 
 
 if __name__ == "__main__":

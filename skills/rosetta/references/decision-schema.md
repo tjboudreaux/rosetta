@@ -88,6 +88,26 @@ resolves to the live decision instead of silently missing it:
   codename → decision map, plus any ambiguous codenames printed loudly. Both are regenerated from the
   records on every run — never a cache.
 
+### Library health (`coverage`)
+
+`decisions.py coverage` prints a deterministic JSON health report so a library's *trustworthiness* is
+measurable, not assumed (ADR 0026). It reads only the records on disk and never mutates them.
+
+- **`anchoring` (primary, gateable)** — the share of **Accepted** records whose `Sources:` cite at
+  least one real code path (matched by **exact relative path**, file or directory, under the repo
+  boundary — never by basename, so a citation can't anchor to an unrelated sibling file). `rate` is the
+  rounded headline; `rate_raw` is the exact value the gate compares; `unanchored` lists the gaps. This
+  is the closest deterministic proxy for "does this decision point at the code it governs?"
+- **`supersession`** — status distribution plus active/retired counts and chain depth (how deeply
+  decisions have been revised); a reported signal, not a gate.
+- **`retrieval.ambiguous_topics`** — a non-gated **diagnostic**: each Accepted record's own title is
+  resolved; any that don't resolve to a unique record (a literal or alias collision) are listed with
+  the ids they `collides_with`, so a human can disambiguate or add an alias.
+- **`orphans`, `staleness`, `alias_coverage`** — supporting structural signals (unlinked records;
+  git-detected drift, skipped cleanly when git is absent; share of records carrying a codename).
+- **Gate** — report-only by default. `--min-coverage FLOAT` (in `[0,1]`) fails with a nonzero exit if
+  `anchoring.rate_raw` is below the floor; a null rate (no Accepted records) is skipped, never an error.
+
 ## Customize for your team
 
 Drop a `config.json` in your decisions root (see `decisions/config.json` for the annotated default).

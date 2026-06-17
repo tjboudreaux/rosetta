@@ -58,6 +58,7 @@ asserted, until code or an explicit human call confirms it.
 | 2026-06-13 | [ADR 0023](architecture-decisions/0023-round3-hardening-fixes.md) | adr | Round-3 hardening fixes (true lock-based allocation; loud failures) | Accepted |
 | 2026-06-14 | [ADR 0024](architecture-decisions/0024-compiler-anti-hallucination-integrity-gate.md) | adr | Compiler anti-hallucination integrity gate | Accepted |
 | 2026-06-16 | [ADR 0025](architecture-decisions/0025-alias-glossary-resolution-layer.md) | adr | Alias/glossary codename-resolution layer | Accepted |
+| 2026-06-16 | [ADR 0026](architecture-decisions/0026-decision-coverage-health-metric.md) | adr | Decision-coverage library-health metric | Accepted |
 <!-- ROSETTA:TIMELINE:END -->
 
 ## Notable supersessions & nuances
