@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-07
 - Decided originally: 2026-06-07
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · 4b80b004 · 2026-06-07` (found + fixed + verified); code `scripts/collect.py` (`enc_path`)
 - Related: ADR 0002; supersedes the original `/`-only `enc_path`

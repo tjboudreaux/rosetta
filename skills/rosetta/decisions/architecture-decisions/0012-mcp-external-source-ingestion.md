@@ -3,6 +3,7 @@
 - Status: Accepted (scaffolder + workflow shipped 2026-06-08; live-MCP connectors unverified)
 - Date: 2026-06-08
 - Decided originally: 2026-06-07
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · 4b80b004 · 2026-06-08` (this conversation, requirement #2); `scripts/ingest.py`; `references/external-sources.md`
 - Related: PDR 0004, ADR 0002, ADR 0007
