@@ -1,0 +1,119 @@
+{
+  "baseline": {
+    "variant": "compiled-lib-baseline",
+    "recall": 33,
+    "total": 40,
+    "recall_pct": 82.5,
+    "conflicts": 0,
+    "compile_tokens": 145924,
+    "extracted_rows": 1237,
+    "adrs": 929,
+    "chains": 340,
+    "integrity_clean": true,
+    "overlap": 0,
+    "self_check": false,
+    "selfcheck_added": 0,
+    "selfcheck_fixed": 0,
+    "selfcheck_dropped": 0,
+    "misses": [
+      {
+        "id": "Q004",
+        "city": "Jakarta",
+        "dimension": "message-bus",
+        "want": "NATS JetStream",
+        "got": "Jakarta message-bus: Amazon SQS",
+        "chain": [
+          "Amazon SQS",
+          "NATS JetStream"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q006",
+        "city": "Faro",
+        "dimension": "deploy-target",
+        "want": "HashiCorp Nomad",
+        "got": "Faro deploy-target: ECS Fargate",
+        "chain": [
+          "GKE Autopilot",
+          "ECS Fargate",
+          "HashiCorp Nomad"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q017",
+        "city": "Ballina",
+        "dimension": "message-bus",
+        "want": "Apache Kafka",
+        "got": "Ballina message-bus: RabbitMQ",
+        "chain": [
+          "Google Pub/Sub",
+          "RabbitMQ",
+          "NATS JetStream",
+          "Apache Kafka"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q025",
+        "city": "Barwon",
+        "dimension": "datastore",
+        "want": "CockroachDB",
+        "got": "Barwon datastore: DynamoDB",
+        "chain": [
+          "DynamoDB",
+          "CockroachDB"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q026",
+        "city": "Eltham",
+        "dimension": "deploy-target",
+        "want": "GKE Autopilot",
+        "got": "Eltham deploy-target: HashiCorp Nomad",
+        "chain": [
+          "ECS Fargate",
+          "self-hosted k8s",
+          "HashiCorp Nomad",
+          "GKE Autopilot"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q034",
+        "city": "Delft",
+        "dimension": "datastore",
+        "want": "MySQL 8",
+        "got": "Delft datastore: CockroachDB",
+        "chain": [
+          "DynamoDB",
+          "Postgres 16",
+          "CockroachDB",
+          "MySQL 8"
+        ],
+        "taxonomy": "wrong-value"
+      },
+      {
+        "id": "Q038",
+        "city": "Limerick",
+        "dimension": "session-auth",
+        "want": "mutual-TLS client certs",
+        "got": "Limerick session-auth: PASETO v4 (local)",
+        "chain": [
+          "PASETO v4 (local)",
+          "mutual-TLS client certs"
+        ],
+        "taxonomy": "wrong-value"
+      }
+    ],
+    "corpus_sha256": "845ad39e088dd12cf17e6d079259bb7ce17c88fd27650e616103c0e525680e50",
+    "probes_sha256": "d416de5456d31046e4ea384ee567d60c42ccffb6d4a61ffef5bce5a09f6d8780",
+    "gold_sha256": "e40c9e7d8e5c522ba6eeec2493f42c6852ec962b677f727f9a1905f69d67f83d",
+    "miss_taxonomy": {
+      "wrong-value": 7
+    }
+  },
+  "diffs": {}
+}
