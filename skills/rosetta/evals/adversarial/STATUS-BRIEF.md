@@ -98,10 +98,14 @@ Both passes ran at k=3, 40 probes; combined matrix in `KILLTEST-RESULTS.md`.
    Gemini-3.1-pro, GPT-5.5) via a `run_model` dispatcher. **resolve = 100% recall on every provider**;
    flat compression loses recall everywhere (57–82%). resolve is the cheapest-correct path on every
    model; cheapest **Gemini-flash+resolve $0.0007/correct @100% = GPT-5.5-raw @100% at ~64× lower cost**.
-2. **End-to-end compiled-library arm — DONE.** An LLM compiles the library (Sonnet, ADR-0024 gate CLEAN);
-   resolve-on-compiled = **82%** end-to-end (vs 100% ground-truth ceiling). Naive compile 50% → **+entity
-   canonicalization 82%** (the alias step Phase 1 named, now shown load-bearing); compile cost ~146k tok
-   one-time. Remaining 18% = compiler extraction error, not the mechanism.
+2. **End-to-end compiled-library arm — DONE + RE-VERIFIED.** An LLM compiles the library (Sonnet,
+   ADR-0024 gate CLEAN); resolve-on-compiled was **82%** end-to-end (vs 100% ground-truth ceiling) in
+   the original hardening-pass-2 run. A **live A0 gate** (2026-06-18, fresh `claude-sonnet-4-6` via
+   OAuth-routed `claude` CLI) scored **40/40 (100%)** — the compiler drift eliminated the 18% gap.
+   The original misses were all `wrong-value` (earlier superseded link resolved as current); the live
+   compiler extracted all 7 missing final/current decisions. Naive compile 50% → **+entity
+   canonicalization 82% → live re-compile 100%** (the alias step Phase 1 named, now shown load-bearing);
+   compile cost ~146k tok one-time. See `ADVERSARIAL-REVIEW-FINDINGS.md` for the full gate analysis.
 
 **Net (precise, post tool-calling baseline): resolve beats flat-compression/RAG/raw-on-weak-models on
 ACCURACY (100% vs 57–98%), provider-independent. But vs a competent TOOL-CALLING agent — the strongest
@@ -109,8 +113,9 @@ real baseline — accuracy TIES at 100%; resolve's win there is efficiency + det
 $/correct, ~10–20× lower latency, ~50× fewer tokens, and a structurally-guaranteed 100% (the agent earns
 its 100% per query at ~$0.11 and ~14s, and is the one that could slip on harder probes).** Both resolve
 and the agent are corpus-size-invariant (grep is targeted); only raw-dump cliffs past the window. Claim
-the moat precisely — efficiency/determinism vs the best baseline, accuracy vs the weaker ones. Remaining:
-compiler quality past 82%; stress the agentic tie with harder probes + higher k; a real-repo corpus.
+the moat precisely — efficiency/determinism vs the best baseline, accuracy vs the weaker ones. The
+compiler-quality gap is closed (live re-verify = 100%); remaining: stress the agentic tie with harder
+probes + higher k; a real-repo corpus.
 
 ## Candidate goals to choose from (pick one to set) — post-orchestration
 Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:

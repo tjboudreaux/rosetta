@@ -142,12 +142,31 @@ transcribes; the 18-pt gap is entirely the compiler, not the solver:
 resolve-then-assemble design assigns ids deterministically, so id-hallucination is structurally
 impossible; the gate guards ghost citations).
 
+### Live re-verification (2026-06-18): compiler drift closed the 18% gap
+
+A live A0 gate (fresh `claude-sonnet-4-6` compile via OAuth-routed `claude` CLI) scored **40/40 (100%)**
+— recovering all 7 misses with 0 regressions. The original 82% was a model-quality artifact of the
+saved `extracted.json` (1,237 rows → 929 ADRs); the live compile extracted 1,259 rows → 1,024 ADRs,
+finding the final/current decision for every miss chain. The 18% gap was genuine extraction errors
+(omitted final decisions), not a structural deficiency — the current model no longer makes them.
+
+The overlap/self-check ablations (A1–A3) designed to close the gap are **BLOCKED / NOT RUN**: with the
+gap at 0%, there's nothing to improve, and any recall change would be noise. The ablation infrastructure
+(variant isolation, chunk-provenance self-check, per-chunk checkpointing, gate-only scoring) is complete
+and reusable if a future model regression reintroduces extraction gaps. See
+`ADVERSARIAL-REVIEW-FINDINGS.md` for the full analysis and `ADVERSARIAL-REVIEW-PREREGISTRATION.md` for
+the frozen ablation matrix.
+
 **What pass 2 establishes (honestly):** a *real* LLM-compiled library answers **82%** end-to-end at this
 scale — below the 100% ground-truth ceiling but **above flat compression on most tiers** and far cheaper
 than raw. The dominant failure is **compiler extraction**, not resolution; the biggest single lever is
 **entity canonicalization** (+32 pts, 50→82) — the alias-resolution step Phase 1 named but never built,
 now shown to be load-bearing. Closing the remaining 18% is a compiler-quality problem (better extraction
-/ chunk overlap / a verification pass), not a thesis problem.
+/ chunk overlap / a verification pass), not a thesis problem. **Update (2026-06-18):** the live
+re-verification above closed this gap — the current `claude-sonnet-4-6` extracts all 40 chains correctly
+(100%). The `compiled-lib/extracted.json` should be refreshed with the live extraction; the
+overlap/self-check ablation infrastructure remains available if a future model regression reintroduces
+extraction gaps.
 
 ## Context-window scaling — what happens when corpus > the model's window (`killtest_scale.py`)
 The 106K matrix kept `raw` *inside* the window (merely expensive). This sweep grows the corpus past it.
