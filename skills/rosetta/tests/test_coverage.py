@@ -258,7 +258,7 @@ class ResolveRefactorParity(_Base):
         self.assertEqual(out, {
             "query": "alpha",
             "current": [{"id": "ADR 0001", "title": "alpha service", "status": "Accepted",
-                         "date": "2026-01-01",
+                         "date": "2026-01-01", "reviewed": None, "baseline_date": "2026-01-01",
                          "path": "architecture-decisions/0001-alpha-service.md",
                          "aliases": "", "superseded_from": []}],
             "matched_records": 1, "conflict": False, "via_alias": [],
@@ -271,7 +271,7 @@ class ResolveRefactorParity(_Base):
         self.assertEqual(out, {
             "query": "store v1",
             "current": [{"id": "ADR 0002", "title": "store v2", "status": "Accepted",
-                         "date": "2026-01-01",
+                         "date": "2026-01-01", "reviewed": None, "baseline_date": "2026-01-01",
                          "path": "architecture-decisions/0002-store-v2.md",
                          "aliases": "", "superseded_from": ["ADR 0001"],
                          "replaced": {"id": "ADR 0001", "title": "store v1"}}],

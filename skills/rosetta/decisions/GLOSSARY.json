@@ -28,10 +28,31 @@
         "status": "Accepted"
       }
     ],
+    "freshness acknowledgment": [
+      {
+        "id": "ADR 0027",
+        "title": "Reviewed freshness-acknowledgment field",
+        "status": "Accepted"
+      }
+    ],
     "library health": [
       {
         "id": "ADR 0026",
         "title": "Decision-coverage library-health metric",
+        "status": "Accepted"
+      }
+    ],
+    "reviewed field": [
+      {
+        "id": "ADR 0027",
+        "title": "Reviewed freshness-acknowledgment field",
+        "status": "Accepted"
+      }
+    ],
+    "staleness escape hatch": [
+      {
+        "id": "ADR 0027",
+        "title": "Reviewed freshness-acknowledgment field",
         "status": "Accepted"
       }
     ],

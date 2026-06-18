@@ -98,11 +98,15 @@ class StalenessWithGit(unittest.TestCase):
         subprocess.run(["git", "-C", str(self.root), "commit", "-q", "-m", f"touch {rel}"],
                        check=True, capture_output=True, text=True, env=env)
 
-    def _record(self, rel, title, status, date, sources):
+    def _record(self, rel, title, status, date, sources, reviewed=None):
         p = self.root / rel
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(f"# ADR {title}\n\n- Status: {status}\n- Date: {date}\n- Decider: Me\n"
-                     f"- Sources: {sources}\n\n## Decision\n\nbody\n")
+        lines = [f"# ADR {title}\n\n", f"- Status: {status}\n", f"- Date: {date}\n",
+                 f"- Decider: Me\n", f"- Sources: {sources}\n"]
+        if reviewed is not None:
+            lines.insert(3, f"- Reviewed: {reviewed}\n")
+        lines += ["\n## Decision\n\nbody\n"]
+        p.write_text("".join(lines))
         return p
 
     def _run_staleness(self, *extra):
@@ -197,6 +201,178 @@ class StalenessWithGit(unittest.TestCase):
                      "Accepted", "2026-06-01", "code `code/widget.py`")
         out = self._run_staleness()
         self.assertEqual([s["id"] for s in out["stale"]], ["ADR 0001"])
+
+
+@unittest.skipUnless(_have_git(), "git binary not available")
+class StalenessReviewedField(unittest.TestCase):
+    """`Reviewed:` is an optional freshness-acknowledgment field (ADR 0027). The staleness comparison
+    uses it as the baseline when present and valid: a record stale by Date becomes fresh when Reviewed
+    is added after the last code change, and a NEW commit after Reviewed re-flags it stale. Invalid or
+    future Reviewed values fall back to effective_date with a validate warning."""
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        _git(self.root, "init", "-q")
+        _git(self.root, "config", "user.email", "t@example.com")
+        _git(self.root, "config", "user.name", "Test")
+        (self.root / "architecture-decisions").mkdir(parents=True)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _main(self, *args):
+        old = sys.argv
+        sys.argv = ["decisions", *args]
+        try:
+            decisions.main()
+        finally:
+            sys.argv = old
+
+    def _commit(self, rel, content, date):
+        p = self.root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content)
+        _git(self.root, "add", rel)
+        env = dict(os.environ, GIT_AUTHOR_DATE=f"{date}T12:00:00",
+                   GIT_COMMITTER_DATE=f"{date}T12:00:00")
+        subprocess.run(["git", "-C", str(self.root), "commit", "-q", "-m", f"touch {rel}"],
+                       check=True, capture_output=True, text=True, env=env)
+
+    def _record(self, rel, title, status, date, sources, reviewed=None):
+        p = self.root / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        lines = [f"# ADR {title}\n\n", f"- Status: {status}\n", f"- Date: {date}\n",
+                 f"- Decider: Me\n", f"- Sources: {sources}\n"]
+        if reviewed is not None:
+            lines.insert(3, f"- Reviewed: {reviewed}\n")
+        lines += ["\n## Decision\n\nbody\n"]
+        p.write_text("".join(lines))
+        return p
+
+    def _run_staleness(self, *extra):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("staleness", "--root", str(self.root), *extra)
+        return json.loads(buf.getvalue())
+
+    def test_stale_by_date_becomes_fresh_with_reviewed(self):
+        # code committed 2026-06-10, record dated 2026-06-01 → stale by Date.
+        # Reviewed: 2026-06-15 (after the code change) → the review confirmed the
+        # change was non-contradicting → FRESH.
+        self._commit("src/store.py", "DB = 'dynamo'\n", "2026-06-10")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "code `src/store.py`", reviewed="2026-06-15")
+        out = self._run_staleness()
+        self.assertEqual(out["stale"], [])
+        self.assertEqual(out["fresh_count"], 1)
+        self.assertEqual(out["stale"], [])
+
+    def test_new_commit_after_reviewed_re_flags_stale(self):
+        # Reviewed: 2026-06-15, then a NEW commit on 2026-06-20 → stale again
+        # (Reviewed is NOT a permanent override).
+        self._commit("src/store.py", "DB = 'dynamo'\n", "2026-06-10")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "code `src/store.py`", reviewed="2026-06-15")
+        self._commit("src/store.py", "DB = 'redis'\n", "2026-06-20")
+        out = self._run_staleness()
+        self.assertEqual([s["id"] for s in out["stale"]], ["ADR 0001"])
+        self.assertEqual(out["stale"][0]["reviewed"], "2026-06-15")
+        self.assertEqual(out["stale"][0]["baseline_date"], "2026-06-15")
+
+    def test_reviewed_in_output_json(self):
+        self._commit("src/store.py", "x\n", "2026-05-01")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "code `src/store.py`", reviewed="2026-06-15")
+        out = self._run_staleness()
+        self.assertEqual(out["fresh_count"], 1)
+        # fresh records aren't in the stale/unknown lists; check via resolve instead
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("resolve", "--root", str(self.root), "--text", "store")
+        res = json.loads(buf.getvalue())
+        entry = res["current"][0]
+        self.assertEqual(entry["reviewed"], "2026-06-15")
+        self.assertEqual(entry["baseline_date"], "2026-06-15")
+        self.assertFalse(entry["stale"])
+
+    def test_invalid_reviewed_falls_back_to_effective_date(self):
+        # malformed Reviewed → staleness falls back to Date; validate warns.
+        self._commit("src/store.py", "x\n", "2026-06-10")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "code `src/store.py`",
+                     reviewed="not-a-date")
+        out = self._run_staleness()
+        # Date is 2026-06-01, code changed 2026-06-10 → stale (fallback to Date)
+        self.assertEqual([s["id"] for s in out["stale"]], ["ADR 0001"])
+        self.assertIsNone(out["stale"][0]["reviewed"])
+        self.assertEqual(out["stale"][0]["baseline_date"], "2026-06-01")
+        # validate warns on the malformed field (warnings go to stderr via log())
+        from contextlib import redirect_stderr
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            self._main("validate", "--root", str(self.root))
+        self.assertIn("Reviewed", buf.getvalue())
+        self.assertIn("not a YYYY-MM-DD", buf.getvalue())
+
+    def test_future_reviewed_falls_back_to_effective_date(self):
+        self._commit("src/store.py", "x\n", "2026-06-10")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "code `src/store.py`",
+                     reviewed="2099-12-31")
+        out = self._run_staleness()
+        self.assertEqual([s["id"] for s in out["stale"]], ["ADR 0001"])
+        # validate warns on the future date (warnings go to stderr via log())
+        from contextlib import redirect_stderr
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            self._main("validate", "--root", str(self.root))
+        self.assertIn("future", buf.getvalue())
+
+    def test_reviewed_before_effective_date_warns_and_falls_back(self):
+        # Reviewed: 2026-06-01 is before effective date 2026-06-10 → nonsensical, so staleness
+        # ignores Reviewed and falls back to the effective date. Code committed 2026-05-01 is
+        # before 2026-06-10 → FRESH (the baseline is the effective date, not the early Reviewed).
+        self._commit("src/store.py", "x\n", "2026-05-01")
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-10", "code `src/store.py`",
+                     reviewed="2026-06-01")
+        out = self._run_staleness()
+        self.assertEqual(out["stale"], [])
+        # validate also warns on the nonsensical date (warnings go to stderr via log())
+        from contextlib import redirect_stderr
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            self._main("validate", "--root", str(self.root))
+        self.assertIn("before the decision's effective date", buf.getvalue())
+
+    def test_resolve_stale_reason_on_unknown(self):
+        # no cited code paths → stale is None with a reason
+        self._record("architecture-decisions/0001-store.md", "0001 — store",
+                     "Accepted", "2026-06-01", "no code paths here", reviewed="2026-06-15")
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self._main("resolve", "--root", str(self.root), "--text", "store")
+        res = json.loads(buf.getvalue())
+        entry = res["current"][0]
+        self.assertIsNone(entry["stale"])
+        self.assertIn("stale_reason", entry)
+        self.assertEqual(entry["reviewed"], "2026-06-15")
+
+    def test_parse_reviewed_unit(self):
+        rec = {"fields": {"Reviewed": "2026-06-15"}}
+        self.assertEqual(decisions.parse_reviewed(rec), "2026-06-15")
+        rec = {"fields": {"Reviewed": "not-a-date"}}
+        self.assertIsNone(decisions.parse_reviewed(rec))
+        rec = {"fields": {"Reviewed": "2099-12-31"}}
+        self.assertIsNone(decisions.parse_reviewed(rec))
+        rec = {"fields": {}}
+        self.assertIsNone(decisions.parse_reviewed(rec))
+
+    def test_reviewed_problem_unit(self):
+        self.assertIsNone(decisions.reviewed_problem({"fields": {}}))
+        self.assertIsNone(decisions.reviewed_problem({"fields": {"Reviewed": "2026-06-15"}}))
+        self.assertIn("YYYY-MM-DD", decisions.reviewed_problem({"fields": {"Reviewed": "x"}}))
+        self.assertIn("future", decisions.reviewed_problem({"fields": {"Reviewed": "2099-12-31"}}))
 
 
 class StalenessNoGit(unittest.TestCase):

@@ -5,7 +5,7 @@
   "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
   "required_fields": ["Status", "Date", "Decider"],
   "recommended_fields": ["Sources"],
-  "optional_fields": ["Decided originally", "Related", "Supersedes", "Aliases"],
+  "optional_fields": ["Decided originally", "Reviewed", "Related", "Supersedes", "Aliases"],
   "record_types": {
     "adr": {
       "label": "ADR",

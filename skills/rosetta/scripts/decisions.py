@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
     "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
     "required_fields": ["Status", "Date", "Decider"],
     "recommended_fields": ["Sources"],
-    "optional_fields": ["Decided originally", "Related", "Supersedes", "Aliases"],
+    "optional_fields": ["Decided originally", "Reviewed", "Related", "Supersedes", "Aliases"],
     "record_types": {
         "adr": {"label": "ADR", "name": "Architecture Decision Record",
                 "dir": "architecture-decisions", "template": "templates/adr-template.md"},
@@ -250,6 +250,56 @@ def effective_date(rec):
     return rec["fields"].get("Decided originally", "") or rec["fields"].get("Date", "")
 
 
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def parse_reviewed(rec):
+    """Return a valid `Reviewed:` YYYY-MM-DD string if the field is present, well-formed, and not in
+    the future; else None. A malformed/empty/future value is ignored (not raised) — staleness falls
+    back to effective_date, and `reviewed_problem` lets `validate` warn on the bad value. `Reviewed:`
+    records the date a human/agent last confirmed the record is still current against its cited code;
+    see ADR 0027."""
+    val, problem = _reviewed_value_and_problem(rec)
+    return val if problem is None else None
+
+
+def reviewed_problem(rec):
+    """Return a human-readable problem string for a malformed/future `Reviewed:` field, or None when
+    the field is absent or valid. Used by `validate` to warn (without erroring) so a bad `Reviewed:`
+    doesn't silently mask drift."""
+    return _reviewed_value_and_problem(rec)[1]
+
+
+def _reviewed_value_and_problem(rec):
+    """Return (valid_date_or_None, problem_or_None) for the `Reviewed:` field. Absent → (None, None);
+    valid → (date, None); malformed/future → (None, reason). A future date would mask all drift, so it
+    is rejected the same as a malformed one."""
+    raw = (rec["fields"].get("Reviewed", "") or "").strip()
+    if not raw:
+        return None, None
+    if not _ISO_DATE_RE.match(raw):
+        return None, f"Reviewed: '{raw}' is not a YYYY-MM-DD date"
+    try:
+        d = dt.date.fromisoformat(raw)
+    except ValueError:
+        return None, f"Reviewed: '{raw}' is not a real calendar date"
+    if d > dt.date.today():
+        return None, f"Reviewed: '{raw}' is in the future (must be ≤ today)"
+    return raw, None
+
+
+def staleness_baseline(rec):
+    """The date the staleness check compares cited-code changes against: `Reviewed:` when present,
+    valid, and on/after the decision's effective date; otherwise the effective date. This makes
+    `Reviewed:` a re-flaggable freshness baseline, NOT a permanent override — any cited code that
+    changes after the review date re-flags the record stale. A `Reviewed:` before the decision's
+    effective date is nonsensical and is ignored (validate warns separately)."""
+    reviewed = parse_reviewed(rec)
+    eff = effective_date(rec)
+    if reviewed and eff and reviewed < eff:
+        return eff                          # nonsensical — fall back; validate warns
+    return reviewed or eff
+
 # --- commands ------------------------------------------------------------------------
 def scan_max_number(d):
     """Highest NNNN-prefixed record number in a directory (0 if none). O(n) glob — Phase 2 replaces
@@ -428,6 +478,19 @@ def cmd_validate(args, root, cfg):
             errors.append(f"{name}: Status '{status}' not in {statuses} (or 'Superseded by <ID>')")
         if "Sources" in cfg.get("recommended_fields", []) and not rec["fields"].get("Sources"):
             warnings.append(f"{name}: no Sources (recommended for provenance)")
+        # Reviewed: freshness-acknowledgment field (ADR 0027) — warn on malformed/future/nonsensical
+        # values so a bad Reviewed: doesn't silently mask drift. Present-but-invalid falls back to
+        # effective_date in the staleness check; this warning makes that fallback visible.
+        rp = reviewed_problem(rec)
+        if rp:
+            warnings.append(f"{name}: {rp}")
+        else:
+            reviewed = parse_reviewed(rec)
+            if reviewed:
+                eff = effective_date(rec)
+                if eff and reviewed < eff:
+                    warnings.append(f"{name}: Reviewed: {reviewed} is before the decision's "
+                                    f"effective date {eff} (review should be on or after the decision)")
         if not re.match(r"^\d+-[a-z0-9][a-z0-9-]*$", rec["path"].stem):
             warnings.append(f"{name}: filename should be 'NNNN-kebab-slug.md'")
         # supersede links resolve
@@ -486,8 +549,10 @@ def cmd_validate(args, root, cfg):
                 if a["stale"] is True:
                     stale_found.append(a)
                     paths = ", ".join(sp["path"] for sp in a["stale_paths"])
+                    base = a["baseline_date"]
+                    label = "Reviewed date" if a["reviewed"] else "Date"
                     warnings.append(f"{a['id']} ({a['title']}): STALE — cited code changed after "
-                                    f"{a['date']} ({paths})")
+                                    f"{label} {base} ({paths})")
 
     for w in warnings:
         log(f"warn: {w}")
@@ -901,14 +966,27 @@ def _last_change_after(repo_root, path, since_date):
 
 def staleness_for_record(rec, repo_root, decisions_root):
     """Assess one record's freshness against git. Returns a dict:
-        {stale: bool|None, date: str, checked: [paths], stale_paths: [{path,last_change}], reason}
+        {stale: bool|None, date, baseline_date, reviewed, checked: [paths],
+         stale_paths: [{path,last_change}], reason}
     stale is None when freshness can't be determined (no Date, no cited paths, or git can't resolve any
-    path) — callers must treat None as 'unknown', never as fresh."""
-    date = effective_date(rec)
+    path) — callers must treat None as 'unknown', never as fresh.
+
+    The comparison baseline is `Reviewed:` (the last freshness adjudication) when present and valid,
+    otherwise the decision's effective date. `date` always carries the effective date; `baseline_date`
+    carries whichever was actually used; `reviewed` carries the Reviewed value or None."""
+    eff_date = effective_date(rec)
+    baseline_date = staleness_baseline(rec)
+    # `reviewed` reflects the value actually honored as the baseline. staleness_baseline ignores
+    # Reviewed when it is absent, malformed, future, or before the effective date — in all those
+    # cases the baseline fell back to the effective date, so `reviewed` must be None to keep the
+    # output honest (a consumer reads `reviewed` as "this date drove the comparison").
+    honored = parse_reviewed(rec)
+    reviewed = honored if honored and honored == baseline_date else None
     sources = rec["fields"].get("Sources", "")
     paths = extract_source_paths(sources)
-    result = {"stale": None, "date": date, "checked": [], "stale_paths": [], "reason": ""}
-    if not date:
+    result = {"stale": None, "date": eff_date, "baseline_date": baseline_date,
+              "reviewed": reviewed, "checked": [], "stale_paths": [], "reason": ""}
+    if not baseline_date:
         result["reason"] = "no Date to compare against"
         return result
     if not paths:
@@ -924,7 +1002,7 @@ def staleness_for_record(rec, repo_root, decisions_root):
         candidates.append(p)
         changed = last = None
         for cand in candidates:
-            changed, last = _last_change_after(repo_root, cand, date)
+            changed, last = _last_change_after(repo_root, cand, baseline_date)
             if changed is not None:
                 break
         if changed is None:
@@ -937,8 +1015,12 @@ def staleness_for_record(rec, repo_root, decisions_root):
         result["reason"] = "none of the cited paths are tracked in git"
         return result
     result["stale"] = bool(result["stale_paths"])
-    result["reason"] = ("cited code changed after the record's Date"
-                        if result["stale"] else "cited code unchanged since the record's Date")
+    if reviewed:
+        result["reason"] = ("cited code changed after the Reviewed date"
+                            if result["stale"] else "cited code unchanged since the Reviewed date")
+    else:
+        result["reason"] = ("cited code changed after the record's Date"
+                            if result["stale"] else "cited code unchanged since the record's Date")
     return result
 
 
@@ -1100,13 +1182,17 @@ def cmd_staleness(args, root, cfg):
         "git": True,
         "checked_records": len(assessed),
         "stale": [{"id": a["id"], "title": a["title"], "date": a["date"],
+                   "baseline_date": a["baseline_date"], "reviewed": a["reviewed"],
                    "stale_paths": a["stale_paths"]} for a in stale],
-        "unknown": [{"id": a["id"], "title": a["title"], "reason": a["reason"]} for a in unknown],
+        "unknown": [{"id": a["id"], "title": a["title"], "date": a["date"],
+                     "baseline_date": a["baseline_date"], "reviewed": a["reviewed"],
+                     "reason": a["reason"]} for a in unknown],
         "fresh_count": len(fresh),
     }
     if stale:
-        out["note"] = (f"{len(stale)} Accepted record(s) cite code that changed after their Date — "
-                       f"review and re-validate (the library may be serving a stale decision)")
+        out["note"] = (f"{len(stale)} Accepted record(s) cite code that changed after their "
+                       f"freshness baseline (Reviewed date if present, else Date) — review and "
+                       f"re-validate (the library may be serving a stale decision)")
     print(json.dumps(out, indent=2))
     if getattr(args, "strict", False) and stale:
         sys.exit(1)
@@ -1220,8 +1306,18 @@ def cmd_resolve(args, root, cfg):
     conflict, invalid_note = res["conflict"], res["invalid_note"]
 
     # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
-    # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /
-    # False / null(unknown) so a consumer never reads "absent flag" as "fresh".
+    # is a stale oracle). `reviewed`/`baseline_date` come from the record directly (always available);
+    # `stale`/`stale_paths`/`stale_reason` require git and are set only when freshness was checked, so a
+    # consumer never reads an absent `stale` flag as "fresh" (see `freshness_checked` in the output).
+    for cid, entry in current.items():
+        rec = current_recs[cid]
+        baseline = staleness_baseline(rec)
+        honored = parse_reviewed(rec)
+        # only report `reviewed` when it was actually honored as the baseline (mirrors
+        # staleness_for_record): an ignored Reviewed (absent/malformed/future/before-effective-date)
+        # must not appear as honored in the output.
+        entry["reviewed"] = honored if honored and honored == baseline else None
+        entry["baseline_date"] = baseline
     git_stale = False
     if not getattr(args, "no_stale_check", False):
         repo_root = _git_repo_root(root)
@@ -1232,6 +1328,8 @@ def cmd_resolve(args, root, cfg):
                 entry["stale"] = info["stale"]
                 if info["stale"]:
                     entry["stale_paths"] = info["stale_paths"]
+                if info["stale"] is None:
+                    entry["stale_reason"] = info["reason"]
 
     live = list(current.values())
     out = {"query": args.text, "current": live, "matched_records": res["matched_records"],

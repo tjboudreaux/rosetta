@@ -41,7 +41,8 @@ Heading + a **bullet-list frontmatter** (not YAML), then fixed body sections:
   `` `agent · session-id · date` `` (Rosetta's transcript citation), a git commit, a code path, a
   meeting note, or a task id. Multiple sources are comma-separated.
 - **Optional:** `Decided originally` (when the call was actually made, if the record is backdated),
-  `Related`, `Supersedes`, `Aliases` (codenames/synonyms for the concept — see below).
+  `Reviewed` (freshness acknowledgment — see below), `Related`, `Supersedes`, `Aliases`
+  (codenames/synonyms for the concept — see below).
 
 ### Status lifecycle
 
@@ -56,6 +57,31 @@ Records inherit Rosetta's truth hierarchy: **current code / git > committed deci
 latest conversation > older conversation.** A decision a transcript merely *discussed* is recorded
 as `Status: Proposed` (or noted "discussed/intended"), not asserted as Accepted, until code or an
 explicit human call confirms it.
+
+### `Reviewed:` — freshness acknowledgment
+
+The optional **`Reviewed:`** field records the last date a human or agent confirmed an Accepted
+decision is still current against its cited code. It is the adjudication step the staleness guard
+(`decisions.py staleness`) was missing: without it, a record whose cited code changed in git is
+re-flagged stale on every run, even after someone reviewed and confirmed it.
+
+```markdown
+- Reviewed: 2026-06-18
+```
+
+- **Format** — a single `YYYY-MM-DD` date, ≤ today. Malformed or future values are ignored by the
+  staleness check (which falls back to the effective date) and surfaced as a warning by `validate`.
+  A `Reviewed:` date before the decision's effective date is also a warning (nonsensical).
+- **Semantics — a baseline, not a permanent override.** The staleness comparison uses `Reviewed:` as
+  the baseline when present: a cited code path whose last git commit is *after* the `Reviewed:` date
+  is stale again. So a review is only good until the code moves once more — it does not exempt a
+  record from future drift, it just records that the last change was reviewed and found
+  non-contradicting.
+- **What it does not change** — `Date`, `Decided originally`, `Status`, and supersession are
+  untouched. The decision timeline is preserved; `Reviewed:` is a freshness-layer annotation only.
+- **Surfaces** — `staleness`, `validate --staleness`, and `resolve`'s stale flag all honor
+  `Reviewed:` via the shared `staleness_for_record` baseline. The JSON output carries `reviewed` and
+  `baseline_date` on each assessed entry so a consumer can see which date drove the comparison.
 
 ### Aliases & the glossary (codename resolution)
 
