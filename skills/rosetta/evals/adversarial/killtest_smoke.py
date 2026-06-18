@@ -21,6 +21,7 @@ Pure stdlib + the `claude` CLI.
 """
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -42,11 +43,19 @@ def claude(model, instruction, stdin_text, timeout=None):
     """One non-interactive claude call: instruction via -p, bulk context via stdin. Retries on
     nonzero/empty/timeout so a single slow or flaky call never crashes a long matrix run."""
     timeout = CALL_TIMEOUT if timeout is None else timeout
+    # If a stale/invalid ANTHROPIC_API_KEY is in the environment, the claude CLI errors with
+    # "Invalid API key" instead of falling back to the OAuth token. Opt in to stripping it by
+    # setting ROSETTA_CLAUDE_USE_OAUTH=1 (only when CLAUDE_CODE_OAUTH_TOKEN is available). Users
+    # with a valid ANTHROPIC_API_KEY are unaffected by default.
+    env = os.environ.copy()
+    if os.environ.get("ROSETTA_CLAUDE_USE_OAUTH") == "1" and os.environ.get("CLAUDE_CODE_OAUTH_TOKEN"):
+        for k in ("ANTHROPIC_API_KEY", "CLAUDE_API_KEY"):
+            env.pop(k, None)
     out = ""
     for attempt in (1, 2, 3):
         try:
             r = subprocess.run(["claude", "-p", instruction, "--model", model],
-                               input=stdin_text, capture_output=True, text=True, timeout=timeout)
+                               input=stdin_text, capture_output=True, text=True, timeout=timeout, env=env)
         except subprocess.TimeoutExpired:
             sys.stderr.write(f"[claude {model}] attempt {attempt} TIMEOUT after {timeout}s\n")
             continue

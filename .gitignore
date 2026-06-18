@@ -36,6 +36,10 @@ skills/rosetta/evals/adversarial/killtest-outputs/corpus.md
 skills/rosetta/evals/adversarial/killtest-outputs/decisions/
 # the LLM-compiled library is regenerable from extracted.json via `killtest_compile.py --reassemble`
 skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib*/decisions/
+skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib-baseline-live/
+skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib*/extract-checkpoint.json
+skills/rosetta/evals/adversarial/killtest-outputs/compiled-lib*/selfcheck-checkpoint.json
+skills/rosetta/evals/adversarial/killtest-outputs/compile-*.log
 
 # Editor / OS
 *.swp

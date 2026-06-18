@@ -1,0 +1,31 @@
+{
+  "variant": "compiled-lib-baseline-live",
+  "gate_pass": false,
+  "recall": 40,
+  "total": 40,
+  "recall_pct": 100.0,
+  "conflicts": 0,
+  "integrity_clean": true,
+  "compile_tokens": 145924,
+  "extracted_rows": 1259,
+  "miss_taxonomy": {},
+  "misses": [],
+  "corpus_sha256": "845ad39e088dd12cf17e6d079259bb7ce17c88fd27650e616103c0e525680e50",
+  "probes_sha256": "d416de5456d31046e4ea384ee567d60c42ccffb6d4a61ffef5bce5a09f6d8780",
+  "gold_sha256": "e40c9e7d8e5c522ba6eeec2493f42c6852ec962b677f727f9a1905f69d67f83d",
+  "diff_vs_baseline": {
+    "flipped_to_wrong": [],
+    "flipped_to_right": [
+      "Q004",
+      "Q006",
+      "Q017",
+      "Q025",
+      "Q026",
+      "Q034",
+      "Q038"
+    ],
+    "regressions": 0,
+    "recoveries": 7
+  },
+  "baseline_recall": 33
+}
