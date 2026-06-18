@@ -40,7 +40,7 @@ DEFAULT_CONFIG = {
     "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
     "required_fields": ["Status", "Date", "Decider"],
     "recommended_fields": ["Sources"],
-    "optional_fields": ["Decided originally", "Related", "Supersedes"],
+    "optional_fields": ["Decided originally", "Reviewed", "Related", "Supersedes", "Aliases"],
     "record_types": {
         "adr": {"label": "ADR", "name": "Architecture Decision Record",
                 "dir": "architecture-decisions", "template": "templates/adr-template.md"},
@@ -50,6 +50,7 @@ DEFAULT_CONFIG = {
                 "dir": "business-decisions", "template": "templates/bdr-template.md"},
     },
     "index": {"path": "README.md", "columns": ["Date", "ID", "Type", "Decision", "Status"]},
+    "alias_stoplist": ["api", "app", "web", "auth", "prod", "test", "db", "data", "core", "service"],
 }
 
 FRONT_RE = re.compile(r"^-\s+([A-Za-z][A-Za-z ]*?):\s*(.*)$")      # "- Status: Accepted"
@@ -81,6 +82,8 @@ def atomic_write_text(path, text):
 MAX_SLUG = 80
 COUNTER_FILE = ".counter.json"
 INDEX_JSON = "INDEX.json"
+GLOSSARY_MD = "GLOSSARY.md"
+GLOSSARY_JSON = "GLOSSARY.json"
 
 
 def load_counter(path):
@@ -247,6 +250,56 @@ def effective_date(rec):
     return rec["fields"].get("Decided originally", "") or rec["fields"].get("Date", "")
 
 
+_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def parse_reviewed(rec):
+    """Return a valid `Reviewed:` YYYY-MM-DD string if the field is present, well-formed, and not in
+    the future; else None. A malformed/empty/future value is ignored (not raised) — staleness falls
+    back to effective_date, and `reviewed_problem` lets `validate` warn on the bad value. `Reviewed:`
+    records the date a human/agent last confirmed the record is still current against its cited code;
+    see ADR 0027."""
+    val, problem = _reviewed_value_and_problem(rec)
+    return val if problem is None else None
+
+
+def reviewed_problem(rec):
+    """Return a human-readable problem string for a malformed/future `Reviewed:` field, or None when
+    the field is absent or valid. Used by `validate` to warn (without erroring) so a bad `Reviewed:`
+    doesn't silently mask drift."""
+    return _reviewed_value_and_problem(rec)[1]
+
+
+def _reviewed_value_and_problem(rec):
+    """Return (valid_date_or_None, problem_or_None) for the `Reviewed:` field. Absent → (None, None);
+    valid → (date, None); malformed/future → (None, reason). A future date would mask all drift, so it
+    is rejected the same as a malformed one."""
+    raw = (rec["fields"].get("Reviewed", "") or "").strip()
+    if not raw:
+        return None, None
+    if not _ISO_DATE_RE.match(raw):
+        return None, f"Reviewed: '{raw}' is not a YYYY-MM-DD date"
+    try:
+        d = dt.date.fromisoformat(raw)
+    except ValueError:
+        return None, f"Reviewed: '{raw}' is not a real calendar date"
+    if d > dt.date.today():
+        return None, f"Reviewed: '{raw}' is in the future (must be ≤ today)"
+    return raw, None
+
+
+def staleness_baseline(rec):
+    """The date the staleness check compares cited-code changes against: `Reviewed:` when present,
+    valid, and on/after the decision's effective date; otherwise the effective date. This makes
+    `Reviewed:` a re-flaggable freshness baseline, NOT a permanent override — any cited code that
+    changes after the review date re-flags the record stale. A `Reviewed:` before the decision's
+    effective date is nonsensical and is ignored (validate warns separately)."""
+    reviewed = parse_reviewed(rec)
+    eff = effective_date(rec)
+    if reviewed and eff and reviewed < eff:
+        return eff                          # nonsensical — fall back; validate warns
+    return reviewed or eff
+
 # --- commands ------------------------------------------------------------------------
 def scan_max_number(d):
     """Highest NNNN-prefixed record number in a directory (0 if none). O(n) glob — Phase 2 replaces
@@ -349,6 +402,18 @@ def cmd_index(args, root, cfg):
                     "path": rec["path"].relative_to(root).as_posix()})
     save_counter(root / COUNTER_FILE, counter)
     atomic_write_text(root / INDEX_JSON, json.dumps(idx, indent=2) + "\n")
+
+    # Derived alias glossary (SPEC-04): GLOSSARY.md (human) + GLOSSARY.json (machine). index is a
+    # generator (exit 0) but surfaces ambiguous codenames / broken chains LOUDLY on stderr — `validate`
+    # is the hard gate. resolve/validate always rebuild the map from records; this is never a cache.
+    gmd, gjson, ares = build_glossary_artifacts(records, cfg)
+    atomic_write_text(root / GLOSSARY_MD, gmd)
+    atomic_write_text(root / GLOSSARY_JSON, json.dumps(gjson, indent=2) + "\n")
+    for alias, ids in ares["collisions"].items():
+        print(f"WARNING: alias '{alias}' is ambiguous -> {', '.join(ids)} "
+              f"(`validate` will fail until disambiguated)", file=sys.stderr)
+    for rid, why in sorted(ares["invalid_chains"].items()):
+        print(f"WARNING: {rid}: invalid supersession chain on an aliased record ({why})", file=sys.stderr)
     print(f"indexed {len(records)} records → {index_path}")
 
 
@@ -413,6 +478,19 @@ def cmd_validate(args, root, cfg):
             errors.append(f"{name}: Status '{status}' not in {statuses} (or 'Superseded by <ID>')")
         if "Sources" in cfg.get("recommended_fields", []) and not rec["fields"].get("Sources"):
             warnings.append(f"{name}: no Sources (recommended for provenance)")
+        # Reviewed: freshness-acknowledgment field (ADR 0027) — warn on malformed/future/nonsensical
+        # values so a bad Reviewed: doesn't silently mask drift. Present-but-invalid falls back to
+        # effective_date in the staleness check; this warning makes that fallback visible.
+        rp = reviewed_problem(rec)
+        if rp:
+            warnings.append(f"{name}: {rp}")
+        else:
+            reviewed = parse_reviewed(rec)
+            if reviewed:
+                eff = effective_date(rec)
+                if eff and reviewed < eff:
+                    warnings.append(f"{name}: Reviewed: {reviewed} is before the decision's "
+                                    f"effective date {eff} (review should be on or after the decision)")
         if not re.match(r"^\d+-[a-z0-9][a-z0-9-]*$", rec["path"].stem):
             warnings.append(f"{name}: filename should be 'NNNN-kebab-slug.md'")
         # supersede links resolve
@@ -435,6 +513,16 @@ def cmd_validate(args, root, cfg):
     if cycle:
         chain = " → ".join(f"{lbl} {num}" for lbl, num in cycle)
         errors.append(f"supersede cycle (oscillation): {chain}")
+
+    # alias glossary hard gate (SPEC-04): an ambiguous codename (one alias → >=2 distinct current
+    # decisions) or a broken alias-bearing supersession chain silently misresolves — so this is a HARD
+    # error (exits nonzero even WITHOUT --strict, joining integrity's "ambiguous provenance" class).
+    ares = build_alias_map(records, cfg)
+    for alias, aids in sorted(ares["collisions"].items()):
+        errors.append(f"alias '{alias}' is ambiguous — maps to {len(aids)} distinct current decisions "
+                      f"({', '.join(aids)}); disambiguate by scope or supersede")
+    for rid, why in sorted(ares["invalid_chains"].items()):
+        errors.append(f"{rid}: invalid supersession chain on an aliased record ({why})")
 
     # optional integrity pass: fabricated ADR-id references and ghost source citations anywhere in a
     # record (the compiler-hallucination gate). These are hard errors — fabricated provenance has no
@@ -461,8 +549,10 @@ def cmd_validate(args, root, cfg):
                 if a["stale"] is True:
                     stale_found.append(a)
                     paths = ", ".join(sp["path"] for sp in a["stale_paths"])
+                    base = a["baseline_date"]
+                    label = "Reviewed date" if a["reviewed"] else "Date"
                     warnings.append(f"{a['id']} ({a['title']}): STALE — cited code changed after "
-                                    f"{a['date']} ({paths})")
+                                    f"{label} {base} ({paths})")
 
     for w in warnings:
         log(f"warn: {w}")
@@ -576,6 +666,214 @@ def immediately_superseded(records, cur, cfg):
     return None
 
 
+# --- alias / glossary layer (the moat: deterministic codename resolution, SPEC-04) ---
+# A record's optional `Aliases:` field lists `;`-separated codenames/synonyms for the concept it
+# decides. Each alias maps to the record's CURRENT endpoint (following supersession) so a codename
+# query resolves to the live decision. Precision-safe by construction: alias-FIELD text is excluded
+# from the literal haystack (it matches ONLY via this map), one normalized phrase maps to one current
+# decision, and an alias mapping to >=2 distinct current decisions is a HARD error (an ambiguous
+# codename silently misresolves — the exact failure Rosetta exists to prevent). The signal is split:
+# `conflict` stays literal-only; `resolved_unique` is the union-aware "did this uniquely resolve?" flag.
+# Hardened across 4 adversarial-review rounds — see specs/SPEC-04-alias-glossary.md.
+
+_ALIAS_SEP_RE = re.compile(r"[\s\-_/\\]+")            # separators: whitespace, - _ / \ (others kept)
+_ALIAS_LINE_RE = re.compile(r"(?im)^[ \t]*-[ \t]*Aliases:.*$")        # the frontmatter Aliases line
+_IDREF_RE = re.compile(r"\b([A-Za-z]+)\s*0*(\d+)\b")
+DEFAULT_ALIAS_STOPLIST = DEFAULT_CONFIG["alias_stoplist"]
+
+
+def normalize_alias(s):
+    """Casefold; collapse runs of separator chars (whitespace, - _ / \\) to one space; strip. All other
+    characters are preserved verbatim, so `C++`/`C#`/`.NET`/`A.1` stay distinct while `Project-Meridian`,
+    `project_meridian`, `project meridian` all normalize equal. Returns '' if nothing survives."""
+    return _ALIAS_SEP_RE.sub(" ", (s or "").casefold()).strip()
+
+
+def parse_alias_field(value):
+    """A record's raw `Aliases:` value -> de-duplicated, order-preserving list of normalized alias
+    phrases. Splits on ';', drops blank segments (`foo;;bar`) and separator-only segments whose
+    normalized form is empty (`-`), so no empty alias can ever enter the map (SPEC-04 R4 guard)."""
+    out, seen = [], set()
+    for seg in (value or "").split(";"):
+        norm = normalize_alias(seg)
+        if not norm or norm in seen:
+            continue
+        seen.add(norm)
+        out.append(norm)
+    return out
+
+
+def literal_haystack(rec):
+    """The text `resolve` matches literally: title + every field value EXCEPT `Aliases` + the record
+    body (raw text with the `- Aliases:` frontmatter line removed). So alias-FIELD text never
+    participates in literal matching (it matches only via the alias map), while body-prose mentions of
+    a codename remain legitimate literal content."""
+    fields = " ".join(v for k, v in rec["fields"].items() if k.lower() != "aliases")
+    body = _ALIAS_LINE_RE.sub("", rec["path"].read_text(errors="replace"))
+    return (rec["title"] + " " + fields + " " + body).lower()
+
+
+def _norm_idref(lbl, num, cfg):
+    return f"{lbl.upper()} {str(int(num)).zfill(cfg['number_width'])}"
+
+
+def _superseded_by_edges(records, cfg):
+    """Map id -> set(ids that supersede it), from both `Status: Superseded by X` and `Supersedes: Y`.
+    Only edges between existing records are kept (used to detect forked chains)."""
+    valid = {record_id(r, cfg) for r in records}
+    edges = {}
+    for rec in records:
+        rid = record_id(rec, cfg)
+        sm = SUPERSEDED_BY_RE.search(rec["fields"].get("Status", ""))
+        if sm:
+            m = _IDREF_RE.search(sm.group(1))
+            if m:
+                tgt = _norm_idref(m.group(1), m.group(2), cfg)
+                if tgt in valid:
+                    edges.setdefault(rid, set()).add(tgt)
+        for m in _IDREF_RE.finditer(rec["fields"].get("Supersedes", "")):
+            y = _norm_idref(m.group(1), m.group(2), cfg)
+            if y in valid:
+                edges.setdefault(y, set()).add(rid)
+    return edges
+
+
+def _chain_invalid_reason(rec, records, cfg, sup_by, by_id):
+    """Why a declaring record's supersession chain cannot be collapsed deterministically (or None):
+    a fork (a record superseded by >=2 distinct records), a missing named superseder, or a
+    contradiction (X says 'Superseded by Y' but Y's Supersedes omits X). Cycle-safe."""
+    seen = set()
+    cur = rec
+    while True:
+        rid = record_id(cur, cfg)
+        if rid in seen:
+            return "supersede cycle"
+        seen.add(rid)
+        if len(sup_by.get(rid, set())) >= 2:
+            return f"forked — superseded by {', '.join(sorted(sup_by[rid]))}"
+        sm = SUPERSEDED_BY_RE.search(cur["fields"].get("Status", ""))
+        if not sm:
+            return None
+        m = _IDREF_RE.search(sm.group(1))
+        nxt_id = _norm_idref(m.group(1), m.group(2), cfg) if m else None
+        nxt = by_id.get(nxt_id)
+        if nxt is None:
+            return f"names missing superseder {nxt_id}"
+        sup_field = nxt["fields"].get("Supersedes", "")
+        if sup_field:
+            back = {_norm_idref(mm.group(1), mm.group(2), cfg) for mm in _IDREF_RE.finditer(sup_field)}
+            if rid not in back:
+                return f"{rid} says superseded by {nxt_id}, but {nxt_id} does not list it under Supersedes"
+        cur = nxt
+
+
+def build_alias_map(records, cfg):
+    """Return a dict:
+        map:             {normalized_alias: [current Accepted endpoint id, ...]} (sorted)
+        collisions:      {alias: [ids]} for an alias mapping to >=2 distinct current endpoints
+        invalid_chains:  {record_id: reason} for alias-declaring records with broken chains
+        invalid_aliases: {alias: [record_ids]} aliases dropped because their chain is invalid
+    Aliases along one supersession chain collapse to the single live endpoint (NOT a collision)."""
+    by_id = {record_id(r, cfg): r for r in records}
+    sup_by = _superseded_by_edges(records, cfg)
+    raw, invalid, invalid_aliases = {}, {}, {}
+    for rec in records:
+        aliases = parse_alias_field(rec["fields"].get("Aliases", ""))
+        if not aliases:
+            continue
+        rid = record_id(rec, cfg)
+        reason = _chain_invalid_reason(rec, records, cfg, sup_by, by_id)
+        if reason:
+            invalid[rid] = reason
+            for a in aliases:
+                invalid_aliases.setdefault(a, []).append(rid)
+            continue
+        cur, _chain = resolve_current(records, rec, cfg)
+        if not cur["fields"].get("Status", "").lower().startswith("accepted"):
+            continue                               # no live endpoint; contributes nothing live
+        cid = record_id(cur, cfg)
+        for a in aliases:
+            raw.setdefault(a, set()).add(cid)
+    alias_map = {a: sorted(ids) for a, ids in sorted(raw.items())}
+    collisions = {a: ids for a, ids in alias_map.items() if len(ids) > 1}
+    return {"map": alias_map, "collisions": collisions,
+            "invalid_chains": invalid, "invalid_aliases": invalid_aliases}
+
+
+def find_query_aliases(query, alias_map, stoplist):
+    """Alias phrases present in `query`, matched on whole-token phrase boundaries, longest-then-leftmost
+    greedy (a consumed span is not reused). Single-token aliases in `stoplist` are ignored. Returns an
+    order-preserving, de-duplicated list of normalized alias phrases."""
+    qtokens = normalize_alias(query).split()
+    if not qtokens:
+        return []
+    cands = []
+    for a in alias_map:
+        atoks = a.split()
+        if not atoks or (len(atoks) == 1 and atoks[0] in stoplist):
+            continue
+        cands.append(atoks)
+    cands.sort(key=lambda t: (-len(t), t))            # longest first, then lexical (determinism)
+    matched, used, i = [], [False] * len(qtokens), 0
+    while i < len(qtokens):
+        hit = None
+        for atoks in cands:
+            n = len(atoks)
+            if i + n <= len(qtokens) and not any(used[i:i + n]) and qtokens[i:i + n] == atoks:
+                hit = atoks
+                break
+        if hit:
+            n = len(hit)
+            for j in range(i, i + n):
+                used[j] = True
+            phrase = " ".join(hit)
+            if phrase not in matched:
+                matched.append(phrase)
+            i += n
+        else:
+            i += 1
+    return matched
+
+
+def _type_of_id(idstr, records, cfg):
+    for r in records:
+        if record_id(r, cfg) == idstr:
+            return r["type"]
+    return None
+
+
+def build_glossary_artifacts(records, cfg):
+    """Build (glossary_md, glossary_json_obj, alias_result) — the human + machine artifacts `index`
+    emits. Deterministically sorted. `_alias_conflicts`/`_invalid_chains` are surfaced in the artifact
+    so the ambiguous codenames are visible (validate is the hard gate)."""
+    res = build_alias_map(records, cfg)
+    by_id = {record_id(r, cfg): r for r in records}
+    rows, entries = [], {}
+    for alias, ids in res["map"].items():
+        targets = []
+        for cid in ids:
+            rec = by_id.get(cid)
+            title = rec["title"] if rec else ""
+            status = rec["fields"].get("Status", "") if rec else ""
+            targets.append({"id": cid, "title": title, "status": status})
+            rows.append((alias, title, cid, status))
+        entries[alias] = targets
+    obj = {"aliases": entries,
+           "_alias_conflicts": [{"alias": a, "candidates": ids} for a, ids in res["collisions"].items()],
+           "_invalid_chains": [{"record": rid, "reason": why}
+                               for rid, why in sorted(res["invalid_chains"].items())]}
+    header = "| Alias | Canonical concept | Record id | Status |\n|---|---|---|---|\n"
+    body = "".join(f"| {a} | {t} | {cid} | {st} |\n" for a, t, cid, st in sorted(rows))
+    md = ("# Glossary — codename -> current decision\n\n"
+          "Derived from each record's `Aliases:` field by `decisions.py index`. Do not edit by hand.\n\n"
+          + header + (body or "| _(no aliases declared)_ |  |  |  |\n"))
+    if res["collisions"]:
+        md += "\n## Ambiguous codenames (FIX — `validate` fails on these)\n\n"
+        for a, ids in res["collisions"].items():
+            md += f"- `{a}` -> {', '.join(ids)}\n"
+    return md, obj, res
+
+
 # --- freshness / staleness (Phase 1 drift guard) ------------------------------------
 # A record can be Accepted yet stale: the code it cites under `Sources:` has changed in git since the
 # record's Date. A library that silently serves such a record is a confidently-wrong oracle — worse
@@ -668,14 +966,27 @@ def _last_change_after(repo_root, path, since_date):
 
 def staleness_for_record(rec, repo_root, decisions_root):
     """Assess one record's freshness against git. Returns a dict:
-        {stale: bool|None, date: str, checked: [paths], stale_paths: [{path,last_change}], reason}
+        {stale: bool|None, date, baseline_date, reviewed, checked: [paths],
+         stale_paths: [{path,last_change}], reason}
     stale is None when freshness can't be determined (no Date, no cited paths, or git can't resolve any
-    path) — callers must treat None as 'unknown', never as fresh."""
-    date = effective_date(rec)
+    path) — callers must treat None as 'unknown', never as fresh.
+
+    The comparison baseline is `Reviewed:` (the last freshness adjudication) when present and valid,
+    otherwise the decision's effective date. `date` always carries the effective date; `baseline_date`
+    carries whichever was actually used; `reviewed` carries the Reviewed value or None."""
+    eff_date = effective_date(rec)
+    baseline_date = staleness_baseline(rec)
+    # `reviewed` reflects the value actually honored as the baseline. staleness_baseline ignores
+    # Reviewed when it is absent, malformed, future, or before the effective date — in all those
+    # cases the baseline fell back to the effective date, so `reviewed` must be None to keep the
+    # output honest (a consumer reads `reviewed` as "this date drove the comparison").
+    honored = parse_reviewed(rec)
+    reviewed = honored if honored and honored == baseline_date else None
     sources = rec["fields"].get("Sources", "")
     paths = extract_source_paths(sources)
-    result = {"stale": None, "date": date, "checked": [], "stale_paths": [], "reason": ""}
-    if not date:
+    result = {"stale": None, "date": eff_date, "baseline_date": baseline_date,
+              "reviewed": reviewed, "checked": [], "stale_paths": [], "reason": ""}
+    if not baseline_date:
         result["reason"] = "no Date to compare against"
         return result
     if not paths:
@@ -691,7 +1002,7 @@ def staleness_for_record(rec, repo_root, decisions_root):
         candidates.append(p)
         changed = last = None
         for cand in candidates:
-            changed, last = _last_change_after(repo_root, cand, date)
+            changed, last = _last_change_after(repo_root, cand, baseline_date)
             if changed is not None:
                 break
         if changed is None:
@@ -704,8 +1015,12 @@ def staleness_for_record(rec, repo_root, decisions_root):
         result["reason"] = "none of the cited paths are tracked in git"
         return result
     result["stale"] = bool(result["stale_paths"])
-    result["reason"] = ("cited code changed after the record's Date"
-                        if result["stale"] else "cited code unchanged since the record's Date")
+    if reviewed:
+        result["reason"] = ("cited code changed after the Reviewed date"
+                            if result["stale"] else "cited code unchanged since the Reviewed date")
+    else:
+        result["reason"] = ("cited code changed after the record's Date"
+                            if result["stale"] else "cited code unchanged since the record's Date")
     return result
 
 
@@ -867,13 +1182,17 @@ def cmd_staleness(args, root, cfg):
         "git": True,
         "checked_records": len(assessed),
         "stale": [{"id": a["id"], "title": a["title"], "date": a["date"],
+                   "baseline_date": a["baseline_date"], "reviewed": a["reviewed"],
                    "stale_paths": a["stale_paths"]} for a in stale],
-        "unknown": [{"id": a["id"], "title": a["title"], "reason": a["reason"]} for a in unknown],
+        "unknown": [{"id": a["id"], "title": a["title"], "date": a["date"],
+                     "baseline_date": a["baseline_date"], "reviewed": a["reviewed"],
+                     "reason": a["reason"]} for a in unknown],
         "fresh_count": len(fresh),
     }
     if stale:
-        out["note"] = (f"{len(stale)} Accepted record(s) cite code that changed after their Date — "
-                       f"review and re-validate (the library may be serving a stale decision)")
+        out["note"] = (f"{len(stale)} Accepted record(s) cite code that changed after their "
+                       f"freshness baseline (Reviewed date if present, else Date) — review and "
+                       f"re-validate (the library may be serving a stale decision)")
     print(json.dumps(out, indent=2))
     if getattr(args, "strict", False) and stale:
         sys.exit(1)
@@ -896,21 +1215,23 @@ def cmd_get(args, root, cfg):
         print(rec["path"].read_text())
 
 
-def cmd_resolve(args, root, cfg):
-    """Decision-resolution primitive (the product's core capability): given a query, find matching
-    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
-    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
-    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
-    records = collect_records(root, cfg)
-    q = (args.text or "").lower()
+def resolve_query(records, cfg, root, text, type_filter=None, no_alias=False):
+    """Pure decision resolution (no git/freshness, no printing) — the shared core of `resolve` and the
+    `coverage` retrieval diagnostic, so the two can NEVER diverge (SPEC-03). `root` is needed to build
+    each entry's relative `path`. Returns: `current` (insertion-ordered dict, NEVER reordered here so
+    `cmd_resolve` stays byte-identical), `current_recs` (live record objects, for the freshness pass),
+    `conflict` (literal-only), `via_alias`, `alias_conflict`, `resolved_unique`, `invalid_note`,
+    `matched_records`, and `endpoints` (current ∪ via_alias target ids)."""
+    q = (text or "").lower()
+
+    # literal matches — alias-FIELD text is excluded from the haystack (it matches ONLY via the map)
     matched = []
     for rec in records:
-        if args.type and rec["type"] != args.type.lower():
+        if type_filter and rec["type"] != type_filter:
             continue
-        hay = (rec["title"] + " " + " ".join(rec["fields"].values())).lower()
-        if not q or q in hay or q in rec["path"].read_text(errors="replace").lower():
+        if not q or q in literal_haystack(rec):
             matched.append(rec)
-    current = {}                                   # id -> {record, superseded_from}
+    current = {}                                   # id -> entry (literal current endpoints)
     current_recs = {}                              # id -> live record object (for the freshness pass)
     for rec in matched:
         cur, chain = resolve_current(records, rec, cfg)
@@ -929,9 +1250,74 @@ def cmd_resolve(args, root, cfg):
             if prior:
                 entry["replaced"] = {"id": record_id(prior, cfg), "title": prior["title"]}
 
+    conflict = len(current) > 1                    # LITERAL-only conflict signal (unchanged semantics)
+
+    # alias layer (Direct Record Mapping): union an unambiguous alias's target record by id; report an
+    # ambiguous alias separately. This NEVER rewrites the query and NEVER flips `conflict` (SPEC-04).
+    via_alias, alias_conflict, invalid_note = [], [], None
+    if not no_alias and text:
+        ares = build_alias_map(records, cfg)
+        amap, inv_aliases = ares["map"], ares["invalid_aliases"]
+        stoplist = {normalize_alias(s) for s in cfg.get("alias_stoplist", DEFAULT_ALIAS_STOPLIST)}
+        by_id = {record_id(r, cfg): r for r in records}
+        for a in find_query_aliases(text, amap, stoplist):
+            ids = amap.get(a, [])
+            if type_filter:                        # resolve ambiguity is --type-scoped
+                ids = [i for i in ids if _type_of_id(i, records, cfg) == type_filter]
+            if not ids:
+                continue
+            if len(ids) > 1:                       # ambiguous within scope → report, inject nothing
+                alias_conflict.append({"alias": a, "candidates": ids})
+                continue
+            cid = ids[0]
+            if cid in current:
+                continue                           # already a literal match (dedup; stays in `current`)
+            rec = by_id.get(cid)
+            if rec is None:
+                continue
+            via_alias.append({"id": cid, "title": rec["title"], "alias": a, "target_id": cid,
+                              "path": rec["path"].relative_to(root).as_posix()})
+        bad = find_query_aliases(text, inv_aliases, stoplist)
+        if bad:
+            invalid_note = ("query alias(es) " + ", ".join(f"'{a}'" for a in bad) +
+                            " map through an invalid supersession chain; cannot resolve deterministically")
+        via_alias.sort(key=lambda v: (v["id"], v["alias"]))
+        alias_conflict.sort(key=lambda c: (c["alias"], c["candidates"]))
+
+    endpoints = set(current.keys()) | {v["id"] for v in via_alias}
+    resolved_unique = (len(endpoints) == 1 and not alias_conflict and invalid_note is None)
+    return {"current": current, "current_recs": current_recs, "conflict": conflict,
+            "via_alias": via_alias, "alias_conflict": alias_conflict,
+            "resolved_unique": resolved_unique, "invalid_note": invalid_note,
+            "matched_records": len(matched), "endpoints": endpoints}
+
+
+def cmd_resolve(args, root, cfg):
+    """Decision-resolution primitive (the product's core capability): given a query, find matching
+    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
+    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
+    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
+    records = collect_records(root, cfg)
+    type_filter = args.type.lower() if args.type else None
+    no_alias = getattr(args, "no_alias_expand", False)
+    res = resolve_query(records, cfg, root, args.text, type_filter, no_alias)
+    current, current_recs = res["current"], res["current_recs"]
+    via_alias, alias_conflict = res["via_alias"], res["alias_conflict"]
+    conflict, invalid_note = res["conflict"], res["invalid_note"]
+
     # Freshness annotation (the moat: a resolved record that's Accepted but whose cited code has moved
-    # is a stale oracle). Best-effort against git; unless --no-stale-check is passed. `stale` is True /
-    # False / null(unknown) so a consumer never reads "absent flag" as "fresh".
+    # is a stale oracle). `reviewed`/`baseline_date` come from the record directly (always available);
+    # `stale`/`stale_paths`/`stale_reason` require git and are set only when freshness was checked, so a
+    # consumer never reads an absent `stale` flag as "fresh" (see `freshness_checked` in the output).
+    for cid, entry in current.items():
+        rec = current_recs[cid]
+        baseline = staleness_baseline(rec)
+        honored = parse_reviewed(rec)
+        # only report `reviewed` when it was actually honored as the baseline (mirrors
+        # staleness_for_record): an ignored Reviewed (absent/malformed/future/before-effective-date)
+        # must not appear as honored in the output.
+        entry["reviewed"] = honored if honored and honored == baseline else None
+        entry["baseline_date"] = baseline
     git_stale = False
     if not getattr(args, "no_stale_check", False):
         repo_root = _git_repo_root(root)
@@ -942,18 +1328,206 @@ def cmd_resolve(args, root, cfg):
                 entry["stale"] = info["stale"]
                 if info["stale"]:
                     entry["stale_paths"] = info["stale_paths"]
+                if info["stale"] is None:
+                    entry["stale_reason"] = info["reason"]
 
     live = list(current.values())
-    out = {"query": args.text, "current": live, "matched_records": len(matched),
-           "conflict": len(live) > 1, "freshness_checked": git_stale}
+    out = {"query": args.text, "current": live, "matched_records": res["matched_records"],
+           "conflict": conflict}
+    if not no_alias:
+        out["via_alias"] = via_alias
+        if alias_conflict:
+            out["alias_conflict"] = alias_conflict
+    out["resolved_unique"] = res["resolved_unique"]
+    out["freshness_checked"] = git_stale
     if git_stale and any(e.get("stale") for e in live):
         out["stale"] = True
-    if len(live) > 1:
-        out["note"] = ("MULTIPLE current records match — unresolved conflict; the library does not "
-                       "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
-    elif not live:
-        out["note"] = "no current (Accepted) record matches; all matches are superseded or none found"
+    notes = []
+    if conflict:
+        notes.append("MULTIPLE current records match — unresolved conflict; the library does not "
+                     "uniquely resolve this query. Disambiguate (scope/subsystem) or supersede.")
+    elif not live and not via_alias:
+        notes.append("no current (Accepted) record matches; all matches are superseded or none found")
+    if alias_conflict:
+        notes.append("ambiguous codename(s) — an alias maps to multiple current decisions; "
+                     "disambiguate by scope.")
+    if invalid_note:
+        notes.append(invalid_note)
+    if notes:
+        out["note"] = " ".join(notes)
     print(json.dumps(out, indent=2))
+
+
+def _is_within(parent, child):
+    """True if `child` is `parent` or nested under it (after resolving symlinks/.. ), else False."""
+    try:
+        child.resolve().relative_to(parent.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _anchor_roots(root):
+    """Repo-bounded source roots for coverage anchoring (SPEC-03): `root` and `root.parent`, restricted
+    to those inside the git repo boundary when git is available — so a citation can never anchor to an
+    unrelated SIBLING project outside the repo (the `../other-project/x.py` leak). Git-absent fallback
+    keeps both candidates. Returns (roots, repo_root)."""
+    repo_root = _git_repo_root(root)
+    roots, seen = [], set()
+    for c in (root, root.parent):
+        key = c.resolve()
+        if key in seen:
+            continue
+        seen.add(key)
+        if repo_root is not None and not _is_within(repo_root, c):
+            continue
+        roots.append(c)
+    return (roots or [root]), repo_root
+
+
+def _record_code_anchored(rec, anchor_roots, repo_root):
+    """True iff the record's `Sources:` cites >=1 path that resolves by EXACT relative path (file OR
+    directory) under an anchor root, with the resolved real path inside the repo boundary when git is
+    present. Reuses `extract_source_paths` (which already ignores transcript-style citations) and adds a
+    directory addendum for bare dir tokens like `Sources: scripts` that the path heuristic drops."""
+    sources = rec["fields"].get("Sources", "")
+    tokens = set(extract_source_paths(sources))
+    for raw in re.split(r"[,;`\s]+", sources):     # directory addendum: bare tokens, existence-filtered
+        raw = raw.strip()
+        if raw:
+            tokens.add(raw)
+    for t in tokens:
+        for r in anchor_roots:
+            cand = r / t
+            try:
+                if cand.exists() and (repo_root is None or _is_within(repo_root, cand)):
+                    return True
+            except OSError:
+                continue
+    return False
+
+
+def assess_coverage(records, cfg, root):
+    """Deterministic decision-library HEALTH report (SPEC-03): provenance/code-anchoring (PRIMARY),
+    supersession stats, an agent-retrieval ambiguous-topics DIAGNOSTIC, and structural fields. No
+    external gold set; reuses the existing resolver/staleness/integrity machinery. Never mutates.
+    Denominator for the gated rate is Accepted records."""
+    def _status(rec):
+        return rec["fields"].get("Status", "").strip().lower()
+
+    def _bucket(s):
+        if s.startswith("superseded"):
+            return "superseded"
+        for b in ("accepted", "proposed", "deprecated", "rejected"):
+            if s.startswith(b):
+                return b
+        return "other"
+
+    accepted = [r for r in records if _status(r).startswith("accepted")]
+    anchor_roots, repo_root = _anchor_roots(root)
+
+    # 3.1 provenance / code-anchoring (PRIMARY, gated on rate_raw)
+    anchored = {record_id(r, cfg): _record_code_anchored(r, anchor_roots, repo_root) for r in records}
+    acc_anchored_n = sum(1 for r in accepted if anchored[record_id(r, cfg)])
+    unanchored = sorted(record_id(r, cfg) for r in accepted if not anchored[record_id(r, cfg)])
+    a_rate_raw = (acc_anchored_n / len(accepted)) if accepted else None
+    anchoring = {"accepted_anchored": acc_anchored_n, "accepted_total": len(accepted),
+                 "rate": round(a_rate_raw, 3) if a_rate_raw is not None else None,
+                 "rate_raw": a_rate_raw, "unanchored": unanchored,
+                 "all_anchored": sum(1 for v in anchored.values() if v), "all_total": len(records)}
+
+    # 3.2 supersession (reported SIGNAL, not gated); depth = supersession chain length per origin record
+    dist = {"accepted": 0, "proposed": 0, "superseded": 0, "deprecated": 0, "rejected": 0, "other": 0}
+    for r in records:
+        dist[_bucket(_status(r))] += 1
+    retired = dist["superseded"] + dist["deprecated"] + dist["rejected"]
+    depths = [len(resolve_current(records, r, cfg)[1]) for r in records]
+    chain_depths = [d for d in depths if d >= 1]
+    supersession = {"active": dist["accepted"], "retired": retired,
+                    "rate": round(retired / len(records), 3) if records else None,
+                    "max_chain_depth": max(depths) if depths else 0,
+                    "mean_chain_depth": round(sum(chain_depths) / len(chain_depths), 3)
+                    if chain_depths else None}
+
+    # 3.3 agent-retrieval ambiguous-topics DIAGNOSTIC (Option A — not a rate, not gated)
+    ambiguous = []
+    for r in accepted:
+        self_id = record_id(r, cfg)
+        res = resolve_query(records, cfg, root, r["title"])
+        cand = set(res["endpoints"])
+        for ac in res["alias_conflict"]:
+            cand.update(ac["candidates"])         # alias-conflict candidates may be outside `endpoints`
+        if not res["resolved_unique"] or res["endpoints"] != {self_id}:
+            ambiguous.append({"id": self_id, "title": r["title"],
+                              "collides_with": sorted(cand - {self_id})})
+    ambiguous.sort(key=lambda x: x["id"])
+    retrieval = {"checked": len(accepted), "ambiguous_count": len(ambiguous),
+                 "ambiguous_topics": ambiguous}
+
+    # 3.5 structural / supporting signals
+    valid_labels = {rt["label"].upper() for rt in cfg["record_types"].values()}
+    label_re = re.compile(r"\b(" + "|".join(sorted(valid_labels)) + r")\s+(\d+)\b")
+    all_ids = {record_id(r, cfg) for r in records}
+    inbound = set()
+    outbound = {}
+    for r in records:
+        rid = record_id(r, cfg)
+        links = " ".join(r["fields"].get(k, "") for k in ("Status", "Supersedes", "Related"))
+        refs = {_norm_idref(lbl, num, cfg) for lbl, num in label_re.findall(links)} & all_ids
+        refs.discard(rid)
+        outbound[rid] = refs
+        inbound |= refs
+    orphans = sorted(rid for r in accepted
+                     for rid in [record_id(r, cfg)] if not outbound.get(rid) and rid not in inbound)
+
+    git_ok, assessed = assess_staleness(records, root, cfg, ("accepted",))
+    if not git_ok:
+        staleness = {"git": False, "skipped": True}
+    else:
+        stale_ids = sorted(a["id"] for a in assessed if a["stale"] is True)
+        staleness = {"git": True, "checked": len(assessed), "stale": len(stale_ids),
+                     "unknown": sum(1 for a in assessed if a["stale"] is None), "stale_ids": stale_ids}
+
+    with_aliases = sum(1 for r in accepted if parse_alias_field(r["fields"].get("Aliases", "")))
+    alias_coverage = {"with_aliases": with_aliases, "accepted_total": len(accepted),
+                      "rate": round(with_aliases / len(accepted), 3) if accepted else None}
+
+    return {"root": root.name, "records_total": len(records), "accepted_total": len(accepted),
+            "anchoring": anchoring, "supersession": supersession, "status_distribution": dist,
+            "retrieval": retrieval, "orphans": orphans, "staleness": staleness,
+            "alias_coverage": alias_coverage}
+
+
+def _unit_float(s):
+    """argparse type: a float in [0,1] (a coverage threshold)."""
+    f = float(s)
+    if not (0.0 <= f <= 1.0):
+        raise argparse.ArgumentTypeError("must be a float in [0,1]")
+    return f
+
+
+def cmd_coverage(args, root, cfg):
+    """Decision-library health report (SPEC-03): provenance-anchoring (gated), supersession stats, an
+    agent-retrieval ambiguous-topics diagnostic, and structural fields. JSON out; report-only by
+    default. `--min-coverage` gates the anchoring rate_raw (exit 1 on violation; a null rate is
+    skipped, never a TypeError)."""
+    records = collect_records(root, cfg)
+    report = assess_coverage(records, cfg, root)
+    min_cov = getattr(args, "min_coverage", None)
+    report["thresholds"] = {"min_coverage": min_cov}
+    failures = []
+    if min_cov is not None:
+        rate_raw = report["anchoring"]["rate_raw"]
+        if rate_raw is None:
+            report.setdefault("notes", []).append(
+                "no Accepted records — anchoring rate is null; --min-coverage skipped")
+        elif rate_raw < min_cov:
+            failures.append(f"anchoring rate {round(rate_raw, 3)} < --min-coverage {min_cov}")
+    report["failures"] = failures
+    report["ok"] = not failures
+    print(json.dumps(report, indent=2))
+    if failures:
+        sys.exit(1)
 
 
 def _set_frontmatter_line(text, field, value):
@@ -1061,6 +1635,14 @@ def main():
     p_res.add_argument("--type", default=None, help="restrict to a record type (adr|pdr|bdr|…)")
     p_res.add_argument("--no-stale-check", action="store_true",
                        help="skip the git freshness annotation on resolved records")
+    p_res.add_argument("--no-alias-expand", action="store_true",
+                       help="disable alias/codename resolution (literal matching only)")
+
+    p_cov = sub.add_parser("coverage", help="decision-library health report: provenance-anchoring "
+                                            "(gated), supersession stats, retrieval diagnostic")
+    add_root(p_cov)
+    p_cov.add_argument("--min-coverage", type=_unit_float, default=None,
+                       help="fail (exit 1) if the anchoring rate is below this floor in [0,1]")
 
     args = ap.parse_args()
 
@@ -1090,6 +1672,8 @@ def main():
         cmd_supersede(args, root, cfg)
     elif args.cmd == "resolve":
         cmd_resolve(args, root, cfg)
+    elif args.cmd == "coverage":
+        cmd_coverage(args, root, cfg)
 
 
 if __name__ == "__main__":

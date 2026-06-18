@@ -3,9 +3,11 @@
 - Status: Proposed
 - Date: YYYY-MM-DD
 - Decided originally: YYYY-MM-DD
+- Reviewed:
 - Decider: <name>
 - Sources: <provenance — `agent · session-id · date`, a git commit, a doc, or a task id>
 - Related: <sibling ADR/PDR/BDR ids, content paths, docs>
+- Aliases:
 
 ## Context
 
