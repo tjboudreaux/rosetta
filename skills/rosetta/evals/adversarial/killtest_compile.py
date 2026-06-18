@@ -116,19 +116,41 @@ def _parse_json_array(text):
         return None
 
 
-def extract(corpus, compiler, overlap=0):
+def extract(corpus, compiler, overlap=0, checkpoint_path=None):
     """Map-reduce extraction. Returns (decisions, rows_by_chunk, compile_tokens).
     Each decision row is tagged with _chunk (its source chunk index) so the self-check can verify
     a row against ONLY the chunk that produced it (leakage control: a chunk never adjudicates rows
-    from other chunks, which would cause false drops)."""
+    from other chunks, which would cause false drops).
+
+    Per-chunk checkpointing: if checkpoint_path is given, each chunk's parsed rows + token cost are
+    saved to a checkpoint file as they complete, and already-checkpointed chunks are skipped on resume.
+    This prevents a timeout from losing all successful chunk spend."""
     chunks = _chunks_overlap(corpus, 28_000, overlap)
     decisions, rows_by_chunk, compile_tokens = [], {}, 0
+    checkpoint = {"chunks": {}, "compiler": compiler, "overlap": overlap,
+                  "corpus_sha256": hashlib.sha256(corpus.encode()).hexdigest()}
+    if checkpoint_path and checkpoint_path.exists():
+        saved = json.loads(checkpoint_path.read_text())
+        # validate the checkpoint matches this run's params before resuming — a mismatched checkpoint
+        # (different compiler, overlap, or corpus) is discarded to avoid resuming wrong data
+        if (saved.get("compiler") == compiler and saved.get("overlap") == overlap
+                and saved.get("corpus_sha256") == checkpoint["corpus_sha256"]):
+            checkpoint = saved
+            print(f"  resuming from checkpoint: {len(checkpoint['chunks'])}/{len(chunks)} chunks done")
+        else:
+            print(f"  checkpoint params mismatch (compiler/overlap/corpus), starting fresh")
     for i, c in enumerate(chunks, 1):
+        if str(i) in checkpoint["chunks"]:
+            chunk_rows = checkpoint["chunks"][str(i)]["rows"]
+            compile_tokens += checkpoint["chunks"][str(i)]["tokens"]
+            decisions.extend(chunk_rows)
+            rows_by_chunk[i] = chunk_rows
+            continue
         out = ks.run_model(compiler, EXTRACT, c)
         compile_tokens += len(c) // 4 + 2500
         arr = _parse_json_array(out)
         if arr is None:
-            sys.stderr.write(f"chunk {i}: no JSON extracted\n")
+            sys.stderr.write(f"chunk {i}: no JSON extracted (NOT checkpointed — will retry on resume)\n")
             continue
         chunk_rows = []
         for d in arr:
@@ -138,51 +160,87 @@ def extract(corpus, compiler, overlap=0):
                 decisions.append(d)
                 chunk_rows.append(d)
         rows_by_chunk[i] = chunk_rows
+        checkpoint["chunks"][str(i)] = {"rows": chunk_rows, "tokens": len(c) // 4 + 2500}
+        if checkpoint_path:
+            checkpoint_path.write_text(json.dumps(checkpoint) + "\n")
+            print(f"  chunk {i}/{len(chunks)} done ({len(chunk_rows)} rows, {len(decisions)} total) — checkpointed")
     return decisions, rows_by_chunk, compile_tokens
 
 
-def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None):
+def _apply_selfcheck_fix(fix, chunk_id, corrections, added_rows, dims):
+    """Apply one self-check fix (correction, drop, or missing) to the corrections/added_rows dicts."""
+    if fix.get("missing"):
+        if {"city", "dimension", "value", "date"} <= set(fix):
+            dim = fix["dimension"].strip().lower()
+            if dim in dims:
+                added_rows.append({"city": fix["city"].strip(), "dimension": dim,
+                                   "value": fix["value"].strip(),
+                                   "date": str(fix["date"]).strip()[:10], "_chunk": chunk_id})
+        return
+    key = (chunk_id, fix.get("city", "").strip(), fix.get("dimension", "").strip().lower(),
+           fix.get("value", "").strip(), str(fix.get("date", "")).strip()[:10])
+    if not key[1]:
+        return
+    corrections[key] = fix
+
+
+def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None, checkpoint_path=None):
     """Verification pass: for each chunk, verify ONLY the rows extracted from THAT chunk against that
     same chunk. Returns (corrected_decisions, selfcheck_tokens). The self-check sees ONLY the raw chunk
     + its own rows — never probes, gold, or the assembled ADRs (leakage control). It returns a diff
     (rows to fix/drop), not a re-extraction. Rows from other chunks are never sent to this chunk, so a
-    chunk can't drop rows it doesn't contain evidence for."""
+    chunk can't drop rows it doesn't contain evidence for.
+
+    Per-chunk checkpointing with row-hash validation: each chunk's corrections are saved alongside a
+    hash of the rows it was shown. On resume, a chunk is only skipped if its row-hash matches — if
+    extraction produced different rows (e.g. a re-run after a model change), the self-check re-runs
+    for that chunk so stale corrections are never applied."""
     chunks = _chunks_overlap(corpus, 28_000, overlap)
     corrections = {}
     added_rows = []
-    dropped_count = 0
-    fixed_count = 0
     selfcheck_tokens = 0
+    corpus_hash = hashlib.sha256(corpus.encode()).hexdigest()
+    checkpoint = {"chunks": {}, "compiler": compiler, "overlap": overlap,
+                  "corpus_sha256": corpus_hash}
+    if checkpoint_path and checkpoint_path.exists():
+        saved = json.loads(checkpoint_path.read_text())
+        if (saved.get("compiler") == compiler and saved.get("overlap") == overlap
+                and saved.get("corpus_sha256") == corpus_hash):
+            checkpoint = saved
+            print(f"  self-check resuming from checkpoint: {len(checkpoint['chunks'])}/{len(chunks)} chunks done")
+        else:
+            print(f"  self-check checkpoint params mismatch, starting fresh")
     for i, c in enumerate(chunks, 1):
         chunk_rows = rows_by_chunk.get(i, [])
         if not chunk_rows:
             continue
-        # strip _chunk metadata before sending to the model (it's internal bookkeeping)
+        # hash the rows this chunk will be checked against — a stale checkpoint with different rows
+        # must be re-run, not reused (the corrections are relative to the rows shown)
         rows_clean = [{k: v for k, v in r.items() if k != "_chunk"} for r in chunk_rows]
+        rows_hash = hashlib.sha256(json.dumps(rows_clean, sort_keys=True).encode()).hexdigest()
+        cached = checkpoint["chunks"].get(str(i))
+        if cached and cached.get("rows_hash") == rows_hash:
+            selfcheck_tokens += cached["tokens"]
+            for fix in cached["fixes"]:
+                _apply_selfcheck_fix(fix, i, corrections, added_rows, DIMS)
+            continue
         rows_json = json.dumps(rows_clean)
         out = ks.run_model(compiler, SELFCHECK, f"{c}\n\n--- EXTRACTED ROWS ---\n{rows_json}")
         selfcheck_tokens += len(c) // 4 + len(rows_json) // 4 + 2500
         arr = _parse_json_array(out)
         if arr is None:
-            sys.stderr.write(f"self-check chunk {i}: no JSON extracted\n")
+            sys.stderr.write(f"self-check chunk {i}: no JSON extracted (NOT checkpointed — will retry on resume)\n")
             continue
+        chunk_fixes = []
         for fix in arr:
-            if fix.get("missing"):
-                # MISSING row: the chunk contains a (city, dim, value, date) not in the extracted rows.
-                # Validate the row shape (same keys as extract) before adding — the self-check can't
-                # invent arbitrary rows, only ones it found in THIS chunk.
-                if {"city", "dimension", "value", "date"} <= set(fix):
-                    dim = fix["dimension"].strip().lower()
-                    if dim in DIMS:
-                        added_rows.append({"city": fix["city"].strip(), "dimension": dim,
-                                           "value": fix["value"].strip(),
-                                           "date": str(fix["date"]).strip()[:10], "_chunk": i})
-                continue
-            key = (i, fix.get("city", "").strip(), fix.get("dimension", "").strip().lower(),
-                   fix.get("value", "").strip(), str(fix.get("date", "")).strip()[:10])
-            if not key[1]:
-                continue
-            corrections[key] = fix
+            chunk_fixes.append(fix)
+            _apply_selfcheck_fix(fix, i, corrections, added_rows, DIMS)
+        checkpoint["chunks"][str(i)] = {"fixes": chunk_fixes,
+                                        "tokens": len(c) // 4 + len(rows_json) // 4 + 2500,
+                                        "rows_hash": rows_hash}
+        if checkpoint_path:
+            checkpoint_path.write_text(json.dumps(checkpoint) + "\n")
+            print(f"  self-check chunk {i}/{len(chunks)} done — checkpointed")
     # apply corrections: key includes _chunk so a drop from one chunk doesn't kill the duplicate
     # extracted from an overlapping chunk (the duplicate from the other chunk survives independently).
     # A row is only dropped if ALL chunks that extracted it drop it — tracked via a drop count.
@@ -196,7 +254,6 @@ def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None)
             ck = (chunk_id, city, dim, val, dt)
             if ck in drop_counts:
                 drop_counts[ck] += 1
-    # count how many chunks extracted each (city,dim,value,date) regardless of chunk id
     from collections import Counter
     dup_counts = Counter()
     for d in decisions:
@@ -209,6 +266,7 @@ def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None)
             rk = (city, dim, val, dt)
             drop_by_rowkey[rk] += cnt
     corrected = []
+    fixed_count = 0
     for d in decisions:
         rk = (d["city"].strip(), d["dimension"].strip().lower(),
               d["value"].strip(), str(d["date"]).strip()[:10])
@@ -217,10 +275,8 @@ def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None)
               d["value"].strip(), str(d["date"]).strip()[:10])
         fix = corrections.get(ck)
         if fix and fix.get("drop"):
-            # only drop if ALL chunks that extracted this row also dropped it
             if drop_by_rowkey.get(rk, 0) >= dup_counts.get(rk, 1):
                 continue
-            # otherwise keep the row but skip applying the other-chunk's correction to it
         if fix and not fix.get("drop"):
             d = dict(d)
             if fix.get("corrected_value"):
@@ -231,7 +287,6 @@ def self_check(corpus, compiler, decisions, rows_by_chunk, overlap=0, meta=None)
         corrected.append(d_clean)
         if fix and not fix.get("drop"):
             fixed_count += 1
-    # append missing rows discovered by the self-check (dedupe by (city,dim,value,date))
     seen = {(r["city"].strip(), r["dimension"].strip().lower(),
              r["value"].strip(), str(r["date"]).strip()[:10]) for r in corrected}
     for ar in added_rows:
@@ -325,20 +380,28 @@ def main():
         print(f"re-assembling from {len(decisions)} saved rows (no API calls)")
     else:
         corpus = (OUT / "corpus.md").read_text()
+        ckpt = lib_dir / "extract-checkpoint.json"
+        sc_ckpt = lib_dir / "selfcheck-checkpoint.json"
         print(f"compiling with {args.compiler} (overlap={args.overlap}) …", flush=True)
-        decisions, rows_by_chunk, compile_tokens = extract(corpus, args.compiler, args.overlap)
+        decisions, rows_by_chunk, compile_tokens = extract(corpus, args.compiler, args.overlap, ckpt)
         if args.self_check:
             print(f"self-check pass (verifying {len(decisions)} rows against corpus) …", flush=True)
             decisions, sc_tokens = self_check(corpus, args.compiler, decisions, rows_by_chunk,
-                                              args.overlap, meta=selfcheck_meta)
+                                              args.overlap, meta=selfcheck_meta, checkpoint_path=sc_ckpt)
             compile_tokens += sc_tokens
             print(f"self-check: {sc_tokens} tokens, {len(decisions)} rows after corrections "
                   f"(added={selfcheck_meta.get('selfcheck_added',0)} "
                   f"fixed={selfcheck_meta.get('selfcheck_fixed',0)} "
                   f"dropped={selfcheck_meta.get('selfcheck_dropped',0)})")
-        # strip _chunk metadata before saving (it's internal to this run)
+        # write extracted.json FIRST (atomic temp+rename), THEN unlink checkpoints — so a crash
+        # in the write window can't lose all chunk spend (the checkpoint survives to resume from)
         rows_clean = [{k: v for k, v in d.items() if k != "_chunk"} for d in decisions]
-        rows_path.write_text(json.dumps({"rows": rows_clean, "compile_tokens": compile_tokens}) + "\n")
+        tmp = rows_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"rows": rows_clean, "compile_tokens": compile_tokens}) + "\n")
+        tmp.replace(rows_path)
+        # only now that extracted.json is safely written, clean up the checkpoints
+        ckpt.unlink(missing_ok=True)
+        sc_ckpt.unlink(missing_ok=True)
 
     n_adrs, n_chains = assemble(decisions, lib_dir)
     print(f"extracted {len(decisions)} decision rows → {n_adrs} ADRs across {n_chains} (city,dim) chains")

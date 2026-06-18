@@ -214,6 +214,9 @@ def main():
                     help="Phase 0: score existing variant dirs (deterministic, no API)")
     ap.add_argument("--variants", default="baseline,overlap,selfcheck,both",
                     help="comma-separated variant names to score/compile")
+    ap.add_argument("--score-dir", default=None,
+                    help="score an arbitrary variant dir (e.g. compiled-lib-baseline-live) without "
+                         "adding it to the preregistered ABLATIONS matrix; used for the live A0 gate")
     args = ap.parse_args()
 
     if not args.compile and not args.score_only:
@@ -228,16 +231,111 @@ def main():
     gold_hash = hashlib.sha256((OUT / "gold.json").read_bytes()).hexdigest()
     expected_hashes = {"corpus": corpus_hash, "probes": probes_hash, "gold": gold_hash}
 
-    variants_to_run = args.variants.split(",")
+    # Gate-only path: score an arbitrary variant dir (e.g. compiled-lib-baseline-live) and diff
+    # against the saved baseline, WITHOUT touching the preregistered ABLATIONS matrix.
+    if args.score_dir:
+        vdir = OUT / args.score_dir
+        if not (vdir / "decisions").exists():
+            print(f"ERROR: no compiled library at {vdir}")
+            return
+        result = score_variant(vdir, probes, gold)
+        if "error" in result:
+            print(f"ERROR: {result['error']}")
+            return
+        issues = audit_fixture(result, expected_hashes)
+        if issues:
+            print(f"FIXTURE AUDIT FAIL: {'; '.join(issues)}")
+            return
+        tax = miss_taxonomy(result)
+        result["miss_taxonomy"] = tax
+        print(f"\n[{args.score_dir}] recall {result['recall']}/{result['total']} = {result['recall_pct']}%  "
+              f"conflicts={result['conflicts']}  tokens={result['compile_tokens']}  "
+              f"integrity={'CLEAN' if result['integrity_clean'] else 'FAIL'}")
+        print(f"  miss taxonomy: {tax}")
+        for m in result["misses"]:
+            print(f"  MISS {m['id']} {m['city']}/{m['dimension']}: want '{m['want']}' got '{m['got']}' "
+                  f"[{m.get('taxonomy','?')}]")
+        # diff against saved baseline if it exists — the GATE: live A0 must match saved A0
+        gate_pass = result["integrity_clean"] and result["conflicts"] == 0
+        baseline_dir = OUT / "compiled-lib-baseline"
+        if (baseline_dir / "decisions").exists() and args.score_dir != "compiled-lib-baseline":
+            baseline = score_variant(baseline_dir, probes, gold)
+            diff = per_probe_diff(baseline, result)
+            gate_pass = gate_pass and (result["recall"] == baseline["recall"]
+                                       and diff["regressions"] == 0
+                                       and diff["recoveries"] == 0)
+            print(f"\n  DIFF vs saved baseline: recoveries={diff['recoveries']}  "
+                  f"regressions={diff['regressions']}  "
+                  f"recall {baseline['recall']}→{result['recall']}")
+            if diff["flipped_to_wrong"]:
+                print(f"  REGRESSED: {', '.join(diff['flipped_to_wrong'])}")
+            if diff["flipped_to_right"]:
+                print(f"  RECOVERED: {', '.join(diff['flipped_to_right'])}")
+        print(f"\n  GATE: {'PASS' if gate_pass else 'FAIL'} — "
+              f"{'live A0 matches saved baseline; safe to proceed to A1–A3' if gate_pass else 'live A0 drifted from saved baseline; DO NOT proceed to A1–A3'}")
+        gate_artifact = {"variant": args.score_dir, "gate_pass": gate_pass,
+                         "recall": result["recall"], "total": result["total"],
+                         "recall_pct": result["recall_pct"],
+                         "conflicts": result["conflicts"],
+                         "integrity_clean": result["integrity_clean"],
+                         "compile_tokens": result["compile_tokens"],
+                         "extracted_rows": result["extracted_rows"],
+                         "miss_taxonomy": result.get("miss_taxonomy", {}),
+                         "misses": [{"id": m["id"], "city": m["city"], "dimension": m["dimension"],
+                                     "want": m["want"], "got": m["got"],
+                                     "taxonomy": m.get("taxonomy", "?")} for m in result["misses"]],
+                         "corpus_sha256": result.get("corpus_sha256"),
+                         "probes_sha256": result.get("probes_sha256"),
+                         "gold_sha256": result.get("gold_sha256")}
+        if (baseline_dir / "decisions").exists() and args.score_dir != "compiled-lib-baseline":
+            gate_artifact["diff_vs_baseline"] = diff
+            gate_artifact["baseline_recall"] = baseline["recall"]
+        (OUT / f"gate-{args.score_dir}.json").write_text(json.dumps(gate_artifact, indent=2) + "\n")
+        if not gate_pass:
+            sys.exit(1)
+        return
 
-    # Phase 1: compile variants that need it
+    # Phase 1: compile variants that need it — but ONLY if the live A0 gate passed.
+    # The gate artifact (gate-compiled-lib-baseline-live.json) is written by --score-dir and must
+    # exist with gate_pass=true before any ablation compile. This prevents running A1–A3 against a
+    # baseline that was never verified live (or that drifted from the saved 82%).
     if args.compile:
+        gate_path = OUT / "gate-compiled-lib-baseline-live.json"
+        if not gate_path.exists():
+            print("ERROR: live A0 gate not found. Run `--score-dir compiled-lib-baseline-live` first "
+                  "(after compiling it with killtest_compile.py --out-dir compiled-lib-baseline-live).")
+            sys.exit(1)
+        gate = json.loads(gate_path.read_text())
+        if not gate.get("gate_pass"):
+            print(f"ERROR: live A0 gate FAILED (recall={gate.get('recall')}, "
+                  f"conflicts={gate.get('conflicts')}). Fix the baseline before running ablations.")
+            sys.exit(1)
+        print(f"live A0 gate: PASS (recall {gate['recall']}/{gate['total']}) — proceeding with ablations")
         for name in variants_to_run:
             config = ABLATIONS[name]
             vdir = OUT / config["out_dir"]
-            if (vdir / "extracted.json").exists() and not name == "baseline":
-                print(f"  {name}: extracted.json exists, skipping compile (use --reassemble to force)")
+            # skip ONLY if the variant is fully and correctly compiled with matching params:
+            # extracted.json + compile-meta.json + decisions/ all exist, rows>0, integrity clean,
+            # fixture hashes match, and overlap/self_check/compiler match the expected config.
+            # A partial/failed run (missing decisions, integrity fail, rows=0, drifted fixture,
+            # or param mismatch) is re-compiled, never silently reused.
+            meta_path = vdir / "compile-meta.json"
+            skip = False
+            if (vdir / "extracted.json").exists() and meta_path.exists() and (vdir / "decisions").exists():
+                meta = json.loads(meta_path.read_text())
+                fixture_ok = (meta.get("corpus_sha256") == expected_hashes["corpus"]
+                              and meta.get("probes_sha256") == expected_hashes["probes"]
+                              and meta.get("gold_sha256") == expected_hashes["gold"])
+                params_ok = (meta.get("overlap") == config["overlap"]
+                             and meta.get("self_check") == config["self_check"]
+                             and meta.get("compiler") == args.compiler)
+                if (meta.get("integrity_clean") and meta.get("extracted_rows", 0) > 0
+                        and fixture_ok and params_ok):
+                    skip = True
+            if skip:
+                print(f"  {name}: complete artifact with matching params, skipping compile")
                 continue
+            print(f"  {name}: compiling (no valid cached artifact)")
             compile_variant(name, config, args.compiler)
 
     # Phase 0/1: score all variants
