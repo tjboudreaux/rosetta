@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-07
 - Decided originally: 2026-06-07
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · 4b80b004 · 2026-06-07` (found + fixed + verified); `claude · 43c9e0f6 · 2026-06-07` (surfaced during a downstream-project run); code `scripts/collect.py` (`resolve_hermes`, `collect_session`)
 - Related: ADR 0002

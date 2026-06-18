@@ -3,6 +3,7 @@
 - Status: Accepted (retroactive)
 - Date: 2026-06-07 (recorded)
 - Decided originally: 2026-05-29
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · bc09f7f6 · 2026-05-29` (design + build); code `scripts/collect.py`
 - Related: ADR 0002, ADR 0004; SKILL.md

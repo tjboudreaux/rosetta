@@ -2,6 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-06-13
+- Reviewed: 2026-06-18
 - Decider: Travis Boudreaux
 - Sources: .github/workflows/ci.yml (coverage job), skills/rosetta/.coveragerc, tests/
 - Related: ADR 0013 (pure-stdlib, zero runtime deps), ADR 0017 (test-enforced resilience), ADR 0018 (adversarial eval dataset)

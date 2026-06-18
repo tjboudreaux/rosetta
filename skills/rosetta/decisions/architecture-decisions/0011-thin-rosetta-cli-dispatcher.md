@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-07
 - Decided originally: 2026-06-07
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · 4b80b004 · 2026-06-07` (this conversation, requirement #6); code `scripts/rosetta`
 - Related: ADR 0009, ADR 0010, ADR 0013
@@ -27,7 +28,8 @@ Positive:
 - Adding a subcommand is a few lines of passthrough.
 
 Negative:
-- Not yet on `PATH` by default — needs an alias until ADR 0013 lands.
+- Not on `PATH` by default — needs an alias. `pip install -e skills/rosetta` (ADR 0013) puts `rosetta`
+  on PATH; the portable wheel / PyPI publish remains deferred.
 
 ## Alternatives considered
 

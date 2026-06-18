@@ -69,13 +69,15 @@ asserted, until code or an explicit human call confirms it.
   dotdir — including its own home. Found and fixed via the ADR 0004 adversarial pass.
 - **ADRs 0001–0004** are retroactive audits of choices made on 2026-05-29 (`claude · bc09f7f6`); they
   carry `Date: 2026-06-07 (recorded)` with `Decided originally: 2026-05-29`.
-- **ADRs 0012–0013 and PDR 0004 are `Proposed`** — the roadmap (external MCP ingestion, installable CLI
-  packaging, human-source decisions), captured as designs, not yet built.
+- **ADR 0012** is `Accepted` (deterministic scaffolder + workflow shipped 2026-06-08; live-MCP
+  connectors unverified — agent-driven, auth-dependent). **ADR 0013** is `Accepted` (editable
+  install shipped 2026-06-08; portable wheel/PyPI publish deliberately deferred). **PDR 0004**
+  remains `Proposed` (human-source decision ingestion, not yet built).
 
 ## Where the rest lives
 
 - Reconciliation, coverage, contradictions, provenance: written to `../.agents/ground-truth.md` at
   runtime (gitignored). See the [example ground truth](../docs/examples/ground-truth.example.md).
 - Record format, schema & customization: [`../references/decision-schema.md`](../references/decision-schema.md)
-- External-source ingestion design (Proposed): [`../references/external-sources.md`](../references/external-sources.md)
+- External-source ingestion design: [`../references/external-sources.md`](../references/external-sources.md)
 - Agent transcript store registry: [`../references/agent-stores.md`](../references/agent-stores.md)

@@ -3,6 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-07
 - Decided originally: 2026-06-07
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · 4b80b004 · 2026-06-07` (this conversation, requirement #5); code `scripts/decisions.py`
 - Related: ADR 0001, ADR 0007, ADR 0008

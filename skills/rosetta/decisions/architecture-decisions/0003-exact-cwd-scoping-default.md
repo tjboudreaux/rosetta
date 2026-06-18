@@ -3,6 +3,7 @@
 - Status: Accepted (retroactive)
 - Date: 2026-06-07 (recorded)
 - Decided originally: 2026-05-29
+- Reviewed: 2026-06-18
 - Decider: Travis
 - Sources: `claude · bc09f7f6 · 2026-05-29` (tested live); code `scripts/collect.py` (`cwd_matches`, `matching_dirs`)
 - Related: ADR 0002
