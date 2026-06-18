@@ -230,10 +230,12 @@ def arm_resolve(probes, gold, solver):
     return _resolve_arm(probes, gold, solver, OUT / "decisions")
 
 
-def arm_compiled(probes, gold, solver):
+def arm_compiled(probes, gold, solver, lib_dir=None):
     """resolve against the LLM-COMPILED library (end-to-end Rosetta: extraction fallibility folded in;
-    compile cost is in compiled-lib/compile-meta.json). Build it first: python3 killtest_compile.py."""
-    return _resolve_arm(probes, gold, solver, OUT / "compiled-lib" / "decisions")
+    compile cost is in compile-meta.json). Build it first: python3 killtest_compile.py.
+    Pass lib_dir to resolve against a variant (compiled-lib-overlap, etc.)."""
+    root = (pathlib.Path(lib_dir) if lib_dir else OUT / "compiled-lib") / "decisions"
+    return _resolve_arm(probes, gold, solver, root)
 
 
 def score(answers, probes, gold):
