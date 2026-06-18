@@ -63,8 +63,9 @@ Positive:
   until the code moves again, so the gate can go green and re-flag only on genuine new drift.
 - Rosetta's own 12 stale records can now be triaged — reviewed and acknowledged — without
   corrupting the decision timeline (no re-dating or superseding).
-- Fully additive: records without `Reviewed:` resolve byte-for-byte as before (the baseline falls
-  back to the effective date). 223 tests pass (9 new).
+- Fully additive: records without `Reviewed:` keep the same staleness semantics (the baseline
+  falls back to the effective date); JSON output gains additive `reviewed`/`baseline_date` fields.
+  223 tests pass (9 new).
 
 Negative:
 - `Reviewed:` must be authored and maintained — an unpopulated field adds nothing until someone
