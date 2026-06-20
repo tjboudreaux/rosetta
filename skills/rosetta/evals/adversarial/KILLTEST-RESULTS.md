@@ -232,13 +232,14 @@ token-efficiency (~50×), and determinism, not accuracy.** End-to-end, a real LL
 canonicalization lever. Net: **resolve's moat is efficiency + determinism against the best baseline, and
 accuracy against the weaker ones — claim it precisely, not as a blanket accuracy moat.**
 
-Remaining next steps: push compiler extraction past 82% (overlap chunks / self-check pass); stress the
-agentic tie with harder retrieval-defeat probes + higher k (where the agent's *earned* 100% may crack
-while resolve's *structural* 100% holds); a real-repo corpus.
+Historical next steps (superseded 2026-06-18): push compiler extraction past 82% (overlap chunks /
+self-check pass); stress the agentic tie with harder retrieval-defeat probes + higher k (where the
+agent's *earned* 100% may crack while resolve's *structural* 100% holds); a real-repo corpus.
 
 **Update (2026-06-18):** the 82% figure is stale — a live A0 re-verify scored 100% (see "Live
-re-verification" above). The "push past 82%" next step is closed; the remaining frontier is the
-agentic tie + a real-repo corpus.
+re-verification" above). The "push past 82%" next step is closed. **Current remaining work:** stress
+the agentic tie with harder probes + higher k; a real-repo corpus; optionally refresh
+`compiled-lib/extracted.json` with the live 100% extraction.
 
 ## Artifacts
 `killtest_gen.py` · `killtest_validate.py` · `killtest_smoke.py` (arms + `run_model` dispatcher) ·
