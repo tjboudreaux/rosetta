@@ -40,7 +40,9 @@ DEFAULT_CONFIG = {
     "statuses": ["Proposed", "Accepted", "Superseded", "Deprecated", "Rejected"],
     "required_fields": ["Status", "Date", "Decider"],
     "recommended_fields": ["Sources"],
-    "optional_fields": ["Decided originally", "Reviewed", "Related", "Supersedes", "Aliases"],
+    "optional_fields": ["Decided originally", "Reviewed", "Related", "Supersedes", "Aliases",
+                        "Human gated paths", "Human approval for", "Evidence for",
+                        "Evidence artifacts"],
     "record_types": {
         "adr": {"label": "ADR", "name": "Architecture Decision Record",
                 "dir": "architecture-decisions", "template": "templates/adr-template.md"},
@@ -447,9 +449,8 @@ def _find_supersede_cycle(edges):
     return None
 
 
-def cmd_validate(args, root, cfg):
-    records = collect_records(root, cfg)
-    l2t = label_to_type(cfg)
+def assess_validation(records, cfg, root, *, integrity=False, staleness=False):
+    """Return {"errors": [...], "warnings": [...], "stale": [...], "git_ok": bool|None}."""
     valid_labels = {rt["label"].upper() for rt in cfg["record_types"].values()}
     statuses = cfg["statuses"]
     errors, warnings = [], []
@@ -527,7 +528,7 @@ def cmd_validate(args, root, cfg):
     # optional integrity pass: fabricated ADR-id references and ghost source citations anywhere in a
     # record (the compiler-hallucination gate). These are hard errors — fabricated provenance has no
     # benign reading — so `validate --integrity` doubles as the CI anti-hallucination gate.
-    if getattr(args, "integrity", False):
+    if integrity:
         intg = assess_integrity(records, cfg, root)
         for d in intg["dangling_refs"]:
             errors.append(f"{d['record']}: references {d['ref']} which does not exist "
@@ -540,11 +541,10 @@ def cmd_validate(args, root, cfg):
     # surfaced as a warning here (and a failure under --strict) so `validate --staleness` doubles as the
     # CI freshness gate without a separate invocation.
     stale_found = []
-    if getattr(args, "staleness", False):
+    git_ok = None
+    if staleness:
         git_ok, assessed = assess_staleness(records, root, cfg)
-        if not git_ok:
-            log("staleness: not a git work tree (or git unavailable); freshness check skipped")
-        else:
+        if git_ok:
             for a in assessed:
                 if a["stale"] is True:
                     stale_found.append(a)
@@ -554,6 +554,20 @@ def cmd_validate(args, root, cfg):
                     warnings.append(f"{a['id']} ({a['title']}): STALE — cited code changed after "
                                     f"{label} {base} ({paths})")
 
+    return {"errors": errors, "warnings": warnings, "stale": stale_found, "git_ok": git_ok}
+
+
+def cmd_validate(args, root, cfg):
+    records = collect_records(root, cfg)
+    report = assess_validation(records, cfg, root,
+                               integrity=getattr(args, "integrity", False),
+                               staleness=getattr(args, "staleness", False))
+    errors = report["errors"]
+    warnings = report["warnings"]
+    stale_found = report["stale"]
+
+    if getattr(args, "staleness", False) and report["git_ok"] is False:
+        log("staleness: not a git work tree (or git unavailable); freshness check skipped")
     for w in warnings:
         log(f"warn: {w}")
     for e in errors:
@@ -1292,15 +1306,10 @@ def resolve_query(records, cfg, root, text, type_filter=None, no_alias=False):
             "matched_records": len(matched), "endpoints": endpoints}
 
 
-def cmd_resolve(args, root, cfg):
-    """Decision-resolution primitive (the product's core capability): given a query, find matching
-    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
-    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
-    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
-    records = collect_records(root, cfg)
-    type_filter = args.type.lower() if args.type else None
-    no_alias = getattr(args, "no_alias_expand", False)
-    res = resolve_query(records, cfg, root, args.text, type_filter, no_alias)
+def build_resolve_report(records, cfg, root, text, *, type_filter=None, no_alias=False,
+                         no_stale_check=False):
+    """Return the same dict cmd_resolve currently prints, including freshness annotations."""
+    res = resolve_query(records, cfg, root, text, type_filter, no_alias)
     current, current_recs = res["current"], res["current_recs"]
     via_alias, alias_conflict = res["via_alias"], res["alias_conflict"]
     conflict, invalid_note = res["conflict"], res["invalid_note"]
@@ -1319,7 +1328,7 @@ def cmd_resolve(args, root, cfg):
         entry["reviewed"] = honored if honored and honored == baseline else None
         entry["baseline_date"] = baseline
     git_stale = False
-    if not getattr(args, "no_stale_check", False):
+    if not no_stale_check:
         repo_root = _git_repo_root(root)
         if repo_root is not None:
             git_stale = True
@@ -1332,7 +1341,7 @@ def cmd_resolve(args, root, cfg):
                     entry["stale_reason"] = info["reason"]
 
     live = list(current.values())
-    out = {"query": args.text, "current": live, "matched_records": res["matched_records"],
+    out = {"query": text, "current": live, "matched_records": res["matched_records"],
            "conflict": conflict}
     if not no_alias:
         out["via_alias"] = via_alias
@@ -1355,6 +1364,20 @@ def cmd_resolve(args, root, cfg):
         notes.append(invalid_note)
     if notes:
         out["note"] = " ".join(notes)
+    return out
+
+
+def cmd_resolve(args, root, cfg):
+    """Decision-resolution primitive (the product's core capability): given a query, find matching
+    records, follow each to its CURRENT (non-superseded) form, and return the live decision(s) with
+    provenance — explicitly FLAGGING when two or more distinct current records match (an unresolved
+    conflict, the failure that silently poisons naive search/compilation). Prints compact JSON."""
+    records = collect_records(root, cfg)
+    type_filter = args.type.lower() if args.type else None
+    no_alias = getattr(args, "no_alias_expand", False)
+    out = build_resolve_report(records, cfg, root, args.text, type_filter=type_filter,
+                               no_alias=no_alias,
+                               no_stale_check=getattr(args, "no_stale_check", False))
     print(json.dumps(out, indent=2))
 
 

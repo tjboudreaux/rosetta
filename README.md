@@ -22,11 +22,12 @@ Rosetta is an open-source [agent skill](https://agentskills.io) that reads every
 conversation history (across **18 tools**), reconciles it with your git history and docs, and turns it
 into one *cited* **ground truth** — plus durable **decision records** (ADRs, PDRs, BDRs). So you, your
 team, and the next agent never lose the thread. **The core collector and decision CLI are 100% local,
-read-only, pure-stdlib Python, zero dependencies.** (Optional external-source ingestion via MCP is
-agent-driven and opt-in — see ADR 0012.)
+read-only, pure-stdlib Python, zero dependencies.**
 
 > Like the Rosetta Stone recovered one meaning across three scripts, Rosetta recovers one project
 > truth across many incompatible agent transcript formats.
+
+Rosetta's deterministic CLI is local and does not call external APIs except `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent checks to RA1. Agent-run external-source collection for ADR 0012 is outside the deterministic CLI, opt-in, may use authenticated MCP/network tools, and may only feed `rosetta ingest` records as `Status: Proposed` drafts pending human confirmation. Rosetta is read-only against transcript stores and product source by default; default writes are limited to `.agents/**`, `decisions/**`, and `loop-runs/**`, plus the allowlisted harness docs only under explicit `harness export --apply`. Rosetta records, cites, and checks evidence; it never runs product builds/tests/deploys, asserts behavior, schedules loops, merges/pushes, or grades autonomy.
 
 ```bash
 npx skills add tjboudreaux/rosetta        # skills.sh — Claude Code, Codex, Gemini, Cursor, opencode…
@@ -176,7 +177,12 @@ rosetta collect   --project <path> --out <dir>   # gather + normalize a project'
                                                  #   (skips already-processed sessions; --reprocess rebuilds all)
 rosetta discover  [--out <dir>]                  # machine-wide index of projects with history
 rosetta decisions new|index|validate|integrity|staleness|search|get|supersede|resolve|coverage
-rosetta ingest    --root ./decisions --from x.json   # external decisions (meetings/Slack) -> Proposed records
+rosetta ingest    --root ./decisions --from x.json [--schema auto|decisions|signals]
+rosetta gates check --project-root . --decisions-root ./decisions --min-coverage 0.8
+rosetta harness export --project-root . [--patch | --apply]
+rosetta runs new|append|close|index|validate --project-root .
+rosetta drift report --project-root . --decisions-root ./decisions
+rosetta preflight --project-root . --decisions-root ./decisions --scope "<query>" --min-coverage 0.8
 ```
 
 `validate` exits nonzero on a malformed library, so it drops straight into CI. No install needed, but
@@ -191,11 +197,12 @@ and templates — or omit it for sensible defaults. Add a new record type (say, 
 with no code change. See [docs/decisions.md → customize](skills/rosetta/docs/decisions.md#use-your-own-templates-any-team).
 
 ## FAQ
-**Is my data sent anywhere?** No. The core collector and decision CLI are fully local and read-only
-against your own machine's transcript files — pure-stdlib Python, no network calls, no telemetry, no
-dependencies. (Optional MCP external-source ingestion is agent-driven, opt-in, and uses your
-authenticated agent session — see ADR 0012.) The normalized-transcript cache (`.agents/`) can contain
-secrets, so it's git-ignored by default.
+**Is my data sent anywhere?** No by default. The deterministic CLI is local, read-only against
+transcript stores and product source by default, pure-stdlib Python, and has no telemetry. The one
+deterministic exception is `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent
+checks to RA1. Optional external-source collection for ADR 0012 is agent-run, opt-in, and uses your
+authenticated MCP/network tools only to feed `Status: Proposed` drafts to `rosetta ingest`. The
+normalized-transcript cache (`.agents/`) can contain secrets, so it's git-ignored by default.
 
 **Is it only for Claude Code?** No. It installs into any [skills-compatible agent](https://agentskills.io)
 (Claude Code, Codex, Gemini CLI, Cursor, opencode, and more) and *reads* 18 different agents' histories.
@@ -221,6 +228,7 @@ the deterministic `decisions.py` handles numbering, the index, and validation.
 - [Agents & discovery](skills/rosetta/docs/agents.md)
 - [Decision records](skills/rosetta/docs/decisions.md)
 - [CLI reference](skills/rosetta/docs/cli.md)
+- [Loop integration boundary](skills/rosetta/references/loop-integration.md)
 - [End-to-end walkthrough](skills/rosetta/docs/examples/end-to-end.md) · [Example ground truth](skills/rosetta/docs/examples/ground-truth.example.md)
 - [Agent store registry](skills/rosetta/references/agent-stores.md) · [Decision schema](skills/rosetta/references/decision-schema.md)
 

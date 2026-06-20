@@ -9,8 +9,13 @@ or add an alias:
 Commands (every command forwards its remaining args to the underlying script unchanged):
     collect    [args...]      scripts/collect.py            gather + normalize transcripts for a project
     discover   [args...]      scripts/collect.py --all-projects   machine-wide project index
-    decisions  <sub> [args]   scripts/decisions.py          new | index | validate
-    ingest     [args]         scripts/ingest.py             external decisions (meetings/Slack) -> Proposed records
+    decisions  <sub> [args]   scripts/decisions.py          new | index | validate | resolve | coverage
+    ingest     [args]         scripts/ingest.py             external decisions/signals -> Proposed records
+    gates      check [args]   scripts/gates.py              local provenance/evidence gates
+    runs       <sub> [args]   scripts/runs.py               loop-run ledger under loop-runs/
+    harness    export [args] scripts/harness.py             allowlisted harness doc export
+    drift      report [args] scripts/drift.py               JSON decision drift report
+    preflight  [args]        scripts/preflight.py           RA1 + decision state + gates JSON
 
 Examples:
     rosetta collect --project ~/code/web-app --out ~/code/web-app/.agents/rosetta/full
@@ -19,6 +24,8 @@ Examples:
     rosetta decisions index --root ~/.claude/skills/rosetta/decisions
     rosetta decisions validate --root ~/.claude/skills/rosetta/decisions
     rosetta ingest --root ./decisions --from meeting-decisions.json
+    rosetta gates check --project-root . --decisions-root ./decisions --min-coverage 0.8
+    rosetta preflight --project-root . --decisions-root ./decisions --scope onboarding --min-coverage 0.8
 
 The heavy synthesis (reading transcripts, writing ground-truth.md, distilling decision prose) is
 agent-driven via the rosetta SKILL — this CLI is only the deterministic, token-free mechanics.
@@ -31,6 +38,11 @@ SCRIPTS = Path(__file__).resolve().parent
 COLLECT = SCRIPTS / "collect.py"
 DECISIONS = SCRIPTS / "decisions.py"
 INGEST = SCRIPTS / "ingest.py"
+GATES = SCRIPTS / "gates.py"
+RUNS = SCRIPTS / "runs.py"
+HARNESS = SCRIPTS / "harness.py"
+DRIFT = SCRIPTS / "drift.py"
+PREFLIGHT = SCRIPTS / "preflight.py"
 
 
 def run(argv):
@@ -50,6 +62,16 @@ def main():
         return run([DECISIONS, *rest])
     if cmd == "ingest":
         return run([INGEST, *rest])
+    if cmd == "gates":
+        return run([GATES, *rest])
+    if cmd == "runs":
+        return run([RUNS, *rest])
+    if cmd == "harness":
+        return run([HARNESS, *rest])
+    if cmd == "drift":
+        return run([DRIFT, *rest])
+    if cmd == "preflight":
+        return run([PREFLIGHT, *rest])
     print(f"unknown command: {cmd!r}\n", file=sys.stderr)
     print(__doc__, file=sys.stderr)
     return 2
