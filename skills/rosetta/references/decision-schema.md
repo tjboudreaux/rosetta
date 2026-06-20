@@ -17,14 +17,15 @@ record dirs, an `index` file (`README.md`), and an optional `config.json`. Recor
 Heading + a **bullet-list frontmatter** (not YAML), then fixed body sections:
 
 ```markdown
-# ADR 0005 — Path encoding: every non-alphanumeric → dash
+# ADR NNNN — <short title>
 
 - Status: Accepted
 - Date: 2026-06-07
-- Decided originally: 2026-05-29
+- Decided originally: 2026-05-29    (optional — when the call was actually made, if backdated)
+- Reviewed: 2026-06-18             (optional — last date a human/agent confirmed this against its cited code; see below)
 - Decider: Travis
-- Sources: `claude · 4b80b004 · 2026-06-07` (verified); supersedes `claude · bc09f7f6 · 2026-05-29`
-- Related: ADR 0002; scripts/collect.py enc_path
+- Sources: `claude · <session-id> · <date>` (verified); `git <sha> · <date>`
+- Related: ADR NNNN; scripts/path.py function_name
 
 ## Context
 ## Decision

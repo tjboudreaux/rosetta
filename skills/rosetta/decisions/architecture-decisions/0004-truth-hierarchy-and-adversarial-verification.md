@@ -3,7 +3,7 @@
 - Status: Accepted (retroactive)
 - Date: 2026-06-07 (recorded)
 - Decided originally: 2026-05-29
-- Reviewed: 2026-06-18
+- Reviewed: 2026-06-20
 - Decider: Travis
 - Sources: `claude · bc09f7f6 · 2026-05-29`; SKILL.md (steps 6–7)
 - Related: ADR 0001, PDR 0002

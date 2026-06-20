@@ -104,3 +104,5 @@ upstream**; (4) lead the pitch with **cost-down** (durable) over the correctness
 - **Frontier models keep improving** → correctness gap shrinks; cost-down is the durable value.
 - **Stale libraries** are worse than none → freshness is mandatory, not optional.
 - **n=1** everywhere today → k≥3 gates every quoted result.
+
+> **Update (2026-06-18):** Phase 0's thesis question is settled — proven at scale in KILLTEST-RESULTS.md. The roadmap below is the pre-proof plan; Phase 0b/1 framing is superseded by the kill-test + ADR 0024/0025/0027 work.

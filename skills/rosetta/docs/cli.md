@@ -46,12 +46,19 @@ Enumerates every project with agent history across all stores → `projects-inde
 (project cwd ↔ per-agent session counts ↔ last activity). Cheap: globs + file mtimes, no transcript
 parsing.
 
-## `rosetta decisions` — scaffold / index / validate the decision library
+## `rosetta decisions` — the decision library (10 subcommands)
 
 ```bash
 rosetta decisions new --type adr|pdr|bdr --title "…" [--status Proposed] [--decider <name>] [--root <dir>]
 rosetta decisions index    [--root <dir>]
-rosetta decisions validate [--root <dir>]
+rosetta decisions validate [--root <dir>] [--integrity] [--staleness]
+rosetta decisions integrity  [--root <dir>]
+rosetta decisions staleness  [--root <dir>] [--strict]
+rosetta decisions search     [--root <dir>] --text "<topic>" [--type adr|pdr|bdr] [--status Accepted] [--limit N]
+rosetta decisions get        [--root <dir>] "ADR 0042" [--resolve]
+rosetta decisions supersede  [--root <dir>] "ADR 0042" --by "ADR 0098"
+rosetta decisions resolve    [--root <dir>] --text "<topic-or-codename>" [--no-alias-expand] [--no-stale-check]
+rosetta decisions coverage   [--root <dir>] [--min-coverage 0.8]
 ```
 
 - **new** — allocates the next zero-padded number, renders the template, writes `NNNN-slug.md`.
@@ -59,6 +66,21 @@ rosetta decisions validate [--root <dir>]
   markers (preserves your prose). Idempotent.
 - **validate** — checks required frontmatter, allowed `Status` values, unique numbering, and that
   `Supersedes`/`Superseded by` links resolve. **Exit code is nonzero on failure → CI-friendly.**
+  Add `--integrity` to also fail on **fabricated provenance** (ADR 0024), `--staleness` to flag
+  records whose cited code moved in git (ADR 0027).
+- **integrity** — standalone JSON check for fabricated provenance (ghost citations, dangling refs).
+- **staleness** — standalone JSON check for code drift; `--strict` exits nonzero if any record is
+  stale (the CI-gate form). Honors the `Reviewed:` field as a re-flaggable baseline.
+- **search** — returns matching records as JSON (by text, type, status, limit).
+- **get** — reads one record in full; `--resolve` follows the supersession chain to the current record.
+- **supersede** — flips an old record's Status to `Superseded by <new>` and sets the new record's
+  `Supersedes` line. Don't hand-edit status; let the tool do it.
+- **resolve** — follows supersession to the current decision(s), flags unresolved conflicts, returns
+  whether the query resolved uniquely. `--no-alias-expand` for literal-only, `--no-stale-check` to
+  skip git freshness annotations.
+- **coverage** — library health report (JSON): `anchoring.rate` (share of Accepted records with real
+  code provenance), supersession stats, ambiguous topics, orphans, staleness, alias coverage.
+  `--min-coverage 0.8` turns the anchoring rate into a CI gate (ADR 0026).
 
 `--root` defaults to `./decisions` if present, else the current directory. Drop a `config.json` in the
 root to use your own record types, directories, numbering, statuses, fields, and templates (see

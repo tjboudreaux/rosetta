@@ -102,3 +102,5 @@ behind the efficacy gate. Wire Tier-A into CI (already done); schedule Tier-B pe
 **Invest in the normalizing, supersession-resolving, code-anchored compiler (P0) and prove it flips the
 retrieval-defeating breaks on cheap models — that's where Rosetta turns a model failure into a product
 win; then keep it fresh (P1) and continuously calibrated (P2).**
+
+> **Update (2026-06-18):** P0.2 was executed as the kill test — thesis holds at scale (KILLTEST-RESULTS.md). This plan is the pre-proof articulation; retain for sequencing rationale.

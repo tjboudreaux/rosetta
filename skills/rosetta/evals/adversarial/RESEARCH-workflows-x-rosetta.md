@@ -64,3 +64,5 @@ error compounding) — grounding helps but doesn't erase that.
   author-reported on specific models/benchmarks; **6 related claims were refuted** (incl. "long-context
   consistently beats RAG" and two cost-Pareto/cache-coherence frameworks) — don't lean on those.
 - Mechanisms/directions are the durable takeaway; absolute percentages are time- and model-sensitive.
+
+> **Update (2026-06-18):** The thesis is now MEASURED — resolve 100% vs flat 57-82% across 5 models/3 providers (KILLTEST-RESULTS.md). The remaining open question is the agentic tie at 100%, not whether provenance recovers recall.

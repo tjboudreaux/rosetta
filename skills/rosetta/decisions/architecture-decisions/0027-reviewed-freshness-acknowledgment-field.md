@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-06-18
 - Decided originally: 2026-06-18
-- Reviewed:
+- Reviewed: 2026-06-20
 - Decider: Travis Boudreaux
 - Sources: `scripts/decisions.py` (`parse_reviewed`, `staleness_baseline`, `staleness_for_record`), `tests/test_staleness.py`, `references/decision-schema.md`
 - Related: ADR 0026 (decision-coverage health metric), the GOAL4 freshness guard (`evals/adversarial/GOAL4-FRESHNESS.md`), ADR 0004 (truth hierarchy)
@@ -23,6 +23,10 @@ A live sanity run on Rosetta's own library confirmed the problem: 12 of 30 Accep
 flagged stale, all citing core files (`collect.py`, `decisions.py`, `SKILL.md`) that change
 routinely. Without an acknowledgment mechanism, those 12 records are either permanently noisy in CI
 or permanently ignored — neither is correct.
+
+*Addendum (2026-06-20): the library has since grown to 32 records (31 Accepted). The 12/30 figure
+above is the pre-field sanity baseline that motivated this ADR; all 12 were triaged with
+`Reviewed: 2026-06-18` and `staleness --strict` now exits 0.*
 
 ## Decision
 

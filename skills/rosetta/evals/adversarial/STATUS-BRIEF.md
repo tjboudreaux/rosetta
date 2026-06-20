@@ -34,9 +34,9 @@ k=3 × 40-probe** matrix with judge-independent grading (`evals/adversarial/KILL
 - Also shipped this turn: **compiler anti-hallucination integrity gate** (ADR 0024, CI-enforced) and
   `resolve` now returns **"what it replaced"** (second grading axis → 100%).
 
-Remaining to harden the claim: **cross-harness pass (Gemini + Codex)** and an **end-to-end compiled-
-library arm** that folds in compile cost + the integrity gate (the current resolve arm uses a
-deterministic ground-truth library, so it measures the resolution ceiling, not LLM compilation).
+Previously remaining to harden the claim (now completed): **cross-harness pass (Gemini + Codex)** and
+an **end-to-end compiled-library arm** — both done in the GOAL COMPLETE block below (cross-harness
+pass 1 + the live-reverified compiled-library arm).
 
 ## Where we are (one paragraph)
 The eval suite catches real LLM failure modes; only **retrieval-defeat** (semantic evasion / codename
@@ -46,22 +46,21 @@ cost. The product is reframed as a **decision-resolution layer (provenance graph
 the cache and retrieval as the interface. Two CLI primitives shipped (`get --resolve`, `resolve`). Two
 deep-research passes + multiple Codex/Gemini reviews are folded in. **The central thesis — that
 code-anchored, supersession-resolved provenance recovers the recall that flat compression loses — is
-unmeasured.**
+PROVEN** (resolve 100% vs flat 57–82% across 5 models / 3 providers; see `KILLTEST-RESULTS.md`).
 
 ## The single decisive open question (highest leverage)
-**Does a code-anchored, supersession-resolved decision graph recover the ~33–35-pt factual-recall loss
-that flat extraction/compression incurs — i.e., does Rosetta beat both raw long-context and generic
-RAG/memory on accuracy, not just cost?** No source or experiment has tested this; it is the whole
-product thesis. → `evals/adversarial/RESEARCH-workflows-x-rosetta.md` (open questions),
-`evals/adversarial/PHASE0.5-RESULTS.md`.
+**The agentic tie:** resolve and a competent tool-calling agent both hit 100% on the current 40-probe
+set. Does resolve's *structural* 100% hold — and the agent's *earned* 100% crack — under harder
+retrieval-defeat probes and higher k? That's where resolve's determinism + efficiency moat would
+separate from the best baseline. → `KILLTEST-RESULTS.md` (verdict), `GOAL5-AGENTIC.md`.
 
 ## Remaining work by phase
 | Phase | Work | Size | Status | Link |
 |---|---|---|---|---|
-| **0b** | Preregistered **2×2 over 20+ generated fixtures** (glossary present/absent/scattered, ambiguous-supersession, code-conflict) × {Haiku/Sonnet/Gemini-Flash} × k≥3; arms = raw / scaffold / **production LLM resolver** / **LLM-compiler graph**; report **$/correct incl. compile+retry**; grade **two axes** (decoded answer AND supported resolution). | Large (hundreds of runs) | **Not started — gates every external claim** | `evals/adversarial/PHASE0.5-RESULTS.md`, `EVAL-AND-PRODUCT-ROADMAP.md` |
-| **1** | Build the full **resolver / evidence graph** (beyond the 2 shipped primitives): alias/codename resolution at compile time, scope/conditional handling, **freshness/drift guard** (staleness check + auto-supersede when code/git moves past an ADR). | Medium | 2 primitives shipped (`get --resolve`, `resolve`); rest open | `scripts/decisions.py`, `EVAL-AND-PRODUCT-ROADMAP.md` |
-| **2** | Fold the retrieval-defeating archetypes (v5/v6) into `dataset.json` as first-class scenarios; add the review's **missing failure modes** (sycophancy, multi-document/conflicting-context, tokenization/counting, order bias, RAG retrieval-vs-generation); k≥3 + **CALIBRATED gate** + cost panel per tier; keep ceiling checks. | Medium | Designed; generators exist | `RESEARCH-llm-failure-modes.md`, `dataset.json`, `HARDER-V6.md` |
-| **3** | **Agentic** benchmark research (SWE-bench/τ-bench/WebArena/GAIA) + agentic evals for Rosetta's own CLI loop; real-repo scale; live cost/value dashboard; the **compile-once → fan-out cheap workers** workflow pattern. | Large | Designed only; agentic = literature gap both passes | `RESEARCH-workflows-x-rosetta.md`, `RESEARCH-llm-failure-modes.md` (agentic gap) |
+| **0b** | Preregistered **2×2 over 20+ generated fixtures** (glossary present/absent/scattered, ambiguous-supersession, code-conflict) × {Haiku/Sonnet/Gemini-Flash} × k≥3; arms = raw / scaffold / **production LLM resolver** / **LLM-compiler graph**; report **$/correct incl. compile+retry**; grade **two axes** (decoded answer AND supported resolution). | Large (hundreds of runs) | **Superseded by the kill test** (2026-06-15) — thesis proven at scale (resolve 100% vs flat 57–82%); Phase 0b tied at toy scale (GOAL2-PHASE0B.md) | `KILLTEST-RESULTS.md`, `PHASE0.5-RESULTS.md` |
+| **1** | Build the full **resolver / evidence graph**: alias/codename resolution at compile time, scope/conditional handling, **freshness/drift guard**. | Medium | **Done** — alias resolution shipped (ADR 0025), `resolve`/`search`/`get --resolve` shipped, staleness + `Reviewed:` field shipped (ADR 0027) | `scripts/decisions.py`, ADR 0025, ADR 0027 |
+| **2** | Fold the retrieval-defeating archetypes (v5/v6) into `dataset.json` as first-class scenarios; add the review's **missing failure modes** (sycophancy, multi-document/conflicting-context, tokenization/counting, order bias, RAG retrieval-vs-generation); k≥3 + **CALIBRATED gate** + cost panel per tier; keep ceiling checks. | Medium | Partial — v5/v6 archetypes folded into `dataset.json` (32 scenarios incl. semantic-evasion, multi-hop); remaining failure modes + CALIBRATED gate still open | `RESEARCH-llm-failure-modes.md`, `dataset.json`, `HARDER-V6.md` |
+| **3** | **Agentic** benchmark research (SWE-bench/τ-bench/WebArena/GAIA) + agentic evals for Rosetta's own CLI loop; real-repo scale; live cost/value dashboard; the **compile-once → fan-out cheap workers** workflow pattern. | Large | Designed only; agentic = literature gap both passes. **This is the current frontier** — the agentic tie at 100% is the open question. | `GOAL5-AGENTIC.md`, `RESEARCH-llm-failure-modes.md` |
 
 ## Hypothesis ledger
 ### Token reduction (target >75%) — `evals/adversarial/TOKEN-REDUCTION-HYPOTHESES.md`
@@ -120,8 +119,22 @@ probes + higher k; a real-repo corpus.
 ## Candidate goals to choose from (pick one to set) — post-orchestration
 Goals 1–5 have all been run once (see **Orchestration outcomes** at top). What remains:
 
-1. **Prove the thesis at scale (recommended):** re-run the goal-1/goal-2 design on a **LARGE, lossy corpus** (hundreds of ADRs / 100k+ tokens) so flat compression actually drops recall and compile cost amortizes. This is the *only* way to settle the two accuracy bets that tied at toy scale.
+1. **Prove the thesis at scale (recommended):** re-run the goal-1/goal-2 design on a **LARGE, lossy corpus** (hundreds of ADRs / 100k+ tokens) so flat compression actually drops recall and compile cost amortizes. The synthetic killtest corpus (106K tok, 1,025 ADRs) already ran this scale pass (`KILLTEST-RESULTS.md` §Context-window scaling); the remaining question is whether the thesis holds on a *real-repo* corpus with messier, less-structured decision histories.
 2. **Harden the token-reduction win (goal 3):** wire H1+H2 as the default grading path in CI end-to-end (not just measured), add H3 caching + H5 adaptive-k, keep the discrimination guardrail.
-3. **Extend the freshness layer (goal 4):** auto-supersede when code/git moves past an ADR; resolve the 12 stale records the live sanity run flagged.
-4. **Fix the compiler hallucination (goal 2 finding):** the LLM compiler invented ADR ids in 2/5 fixtures — constrain it to emit only verifiable ids before any "compiled beats raw" claim is attempted again.
+3. ~~**Extend the freshness layer (goal 4):** auto-supersede when code/git moves past an ADR; resolve the 12 stale records the live sanity run flagged.~~ **DONE (2026-06-18):** ADR 0027 shipped the `Reviewed:` freshness-acknowledgment field (a re-flaggable baseline, not a permanent override); all 12 stale ADRs were triaged with `Reviewed: 2026-06-18`; `staleness --strict` now exits 0 (CI-gateable).
+4. ~~**Fix the compiler hallucination (goal 2 finding):** the LLM compiler invented ADR ids in 2/5 fixtures — constrain it to emit only verifiable ids.~~ **DONE:** the resolve-then-assemble design assigns ids deterministically (ADR 0024 integrity gate), so id-hallucination is structurally impossible in the current pipeline.
 5. **Agentic frontier (goal 5):** turn the delivered research into real fixtures + the compile-once/fan-out workflow on a real repo.
+
+### Current remaining work (2026-06-18)
+
+The candidate goals above were set at orchestration time (2026-06-15). Goals 3 and 4 are now done
+(see strikethroughs). What remains:
+
+1. **Stress the agentic tie with harder probes + higher k.** Resolve and the tool-calling agent both
+   hit 100% on the current 40-probe set; harder probes (semantic evasion, multi-hop, code-conflict)
+   could break the tie and show where resolve's determinism wins or loses.
+2. **A real-repo corpus.** The synthetic corpus proves the thesis; a real repo would test
+   generalization to messier, less-structured decision histories.
+3. **Refresh `compiled-lib/extracted.json`.** The live A0 gate (2026-06-18) found the current
+   `claude-sonnet-4-6` extracts all 40 chains correctly (100%); the saved `extracted.json` (82%) is
+   stale and should be refreshed so the matrix's `compiled` arm reflects current model quality.

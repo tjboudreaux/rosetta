@@ -3,8 +3,9 @@
 > Rosetta is an open-source agent skill that reconciles every AI coding agent's local conversation
 > history (across 18 tools — Claude Code, Codex, Gemini CLI, Cursor, Aider, opencode, Cline, Goose,
 > and more) with git history and project docs into one cited "ground truth," and distills it into
-> durable decision records (ADRs, PDRs, BDRs). It is fully local, read-only, and pure-stdlib Python
-> with zero dependencies.
+> durable decision records (ADRs, PDRs, BDRs). The core collector and decision CLI are fully local,
+> read-only, and pure-stdlib Python with zero dependencies. (Optional external-source ingestion via
+> MCP — ADR 0012 — is agent-driven and opt-in; the core collector and CLI never touch the network.)
 
 ## What it does
 
@@ -12,7 +13,7 @@
 - Reconciles a project's transcripts + git + docs into `.agents/ground-truth.md` — a cited snapshot
   with a loud coverage map that shows what was found and what was missed.
 - Distills decisions into ADR (architecture), PDR (product), and BDR (business) records, each with
-  provenance citations and a Proposed → Accepted → Superseded status lifecycle.
+  provenance citations and a Proposed → Accepted → Superseded (or Deprecated / Rejected) status lifecycle.
 - Resolves conflicts with a truth hierarchy: current code / git > committed decisions > docs >
   latest conversation > older conversation. A thing the transcripts only discussed is recorded as
   "intended," never asserted as "done."
@@ -22,7 +23,7 @@
 - Supported agents: 18 transcript stores (Claude Code, Claude Agent-Mode, Codex, Factory/Droid,
   Cursor, Gemini CLI, opencode, Cline, Continue, Aider, Hermes, Qwen, Roo, Kilo, Goose, Crush,
   Windsurf, Augment).
-- Privacy: 100% local, read-only, no network calls, no telemetry.
+- Privacy: core collector/CLI are 100% local, read-only, no network calls, no telemetry. Optional MCP ingestion (ADR 0012) is opt-in and agent-driven.
 - Language: Python standard library only — no dependencies, no build step.
 - License: MIT.
 
