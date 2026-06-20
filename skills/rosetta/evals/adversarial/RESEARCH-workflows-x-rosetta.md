@@ -48,10 +48,10 @@ error compounding) — grounding helps but doesn't erase that.
 3. **`/rosetta-grill` and `/rosetta-conflicts` are the single-agent-grounded pattern** the evidence
    favors for most dev work (no fan-out tax).
 
-## Open questions = the next experiments (Rosetta-specific, unmeasured by any source)
+## Open questions = the next experiments (Rosetta-specific; the headline question is now measured)
 - Does a **code-anchored, supersession-resolved decision graph recover the 33–35-pt recall loss** that
-  flat extraction incurs? No source tested decision-graph grounding vs long-context — this is Rosetta's
-  whole thesis and it's **unmeasured**. (→ a Phase-0b arm.)
+  flat extraction incurs? **MEASURED (2026-06-15):** yes — resolve 100% vs flat 57–82% across 5
+  models/3 providers (`KILLTEST-RESULTS.md`). The remaining open question is the agentic tie at 100%.
 - What's the **compile break-even** for building a supersession-resolved library vs per-query savings on
   a *real* codebase? Memory papers measure conversation extraction, not ADR compilation.
 - For **coding tasks specifically**, does grounding workers in a resolved library make fan-out worthwhile

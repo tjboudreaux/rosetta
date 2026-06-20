@@ -73,7 +73,8 @@ separate from the best baseline. → `KILLTEST-RESULTS.md` (verdict), `GOAL5-AGE
 
 ### Product / mechanism — `PHASE0.5-RESULTS.md`, `PHASE0-RESULTS.md`, `PRODUCT-VALUE-PLAN.md`
 - **Compiler vs. inference-time resolver:** on a *messy* corpus the LLM compiler won (Haiku 2/3→3/3, −31%/query); on a *clean* corpus a retriever tied/beat a buggy compiler. **Ordering not settled → Phase 0b.**
-- **Provenance-recovers-recall** (the decisive question above) — **unmeasured.**
+- **Provenance-recovers-recall** (the decisive question above) — **MEASURED** (kill test 2026-06-15:
+  resolve 100% vs flat 57–82% across 5 models/3 providers; see `KILLTEST-RESULTS.md`).
 - **Compile break-even** on a real codebase (compile cost vs per-query savings) — **unmeasured.**
 
 ### Eval-integrity (lessons banked)
