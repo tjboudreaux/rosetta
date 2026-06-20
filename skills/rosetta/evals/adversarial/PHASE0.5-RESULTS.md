@@ -61,3 +61,5 @@ Both reviews agree the gate is **not fully met** by single fixtures. Required be
   models are *lifted* when the resolution evidence is materialized for them.
 **Falsifier:** if a production LLM resolver over raw matches the compiled graph across messy fixtures and
 real repos (and on amortized $), lead with retrieval instead. Until 0b, this is a strong signal, not a proof.
+
+> **Update (2026-06-18):** The single-fixture signal here was confirmed at scale by the kill test (KILLTEST-RESULTS.md). The Phase-0b gate (GOAL2-PHASE0B.md) tied at toy scale; the decisive measurement came from the large-corpus kill test.

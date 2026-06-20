@@ -180,3 +180,5 @@ thesis that is compilation's actual moat; (c) add the **compiler citation-integr
 - `goal2-grades/<fixture>.json` — per-attempt two-axis verdicts + judge reasons.
 - `goal2-results.json` — aggregated matrix, totals, token note, caveats.
 - `GOAL2-PHASE0B.md` — this report.
+
+> **Update (2026-06-18):** The correctness question this gate left open was settled at scale by the kill test (KILLTEST-RESULTS.md) — proven vs flat/RAG; the agentic tie is the new frontier. Goal-2's negative-at-toy-scale result stands and correctly motivated the compression-pressure design.

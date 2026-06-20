@@ -1,5 +1,10 @@
 # Adversarial Review — Preregistration
 
+> **SUPERSEDED (2026-06-18):** The live A0 gate scored 40/40 (100%), eliminating the 18% compiler gap
+> this review was designed to close. A1–A3 are BLOCKED / NOT RUN — with the gap at 0%, the ablations
+> are not interpretable. See `ADVERSARIAL-REVIEW-FINDINGS.md` for the full analysis. The frozen
+> ablation matrix, prompts, and infrastructure below remain valid for a future model regression.
+
 **Frozen before any live compiler run.** This document commits the ablation matrix, prompts,
 parameters, and scoring methodology *before* seeing Phase 1 results. No post-hoc tuning of the
 overlap size, self-check prompt, or scoring after results are observed.

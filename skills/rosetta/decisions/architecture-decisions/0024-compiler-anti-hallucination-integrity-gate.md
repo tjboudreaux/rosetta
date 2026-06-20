@@ -45,6 +45,8 @@ Positive:
 - The check ran clean on the live 28-record library after one genuine fix (ADR 0022 had mixed a CLI
   flag example, `--emit-bundle library.txt`, into its `Sources:` field — the gate caught it).
 
+*Addendum (2026-06-20): the library has since grown to 32 records; the integrity gate continues to run clean.*
+
 Negative:
 - Best-effort path resolution means a citation to a path that legitimately lives outside the checkout
   would false-positive; mitigated by basename grounding and by keeping the pass opt-in so unrelated CI

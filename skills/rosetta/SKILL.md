@@ -200,20 +200,15 @@ reconciled history into a decision library (see `references/decision-schema.md` 
   (both deterministic — no tokens; `validate` exits nonzero on a broken library). Add
   `--integrity` to also fail on **fabricated provenance** — a record that references a non-existent
   ADR id or cites a `Sources:` file that isn't on disk (the anti-hallucination gate; ADR 0024). Add
-  `--staleness` to flag Accepted records whose cited code moved in git since their Date (ADR; freshness
-  guard). `decisions.py integrity` and `decisions.py staleness` also run as standalone JSON checks.
-- Teams customize types/dirs/fields/templates via a `config.json` at the decisions root — adapt to
-  their conventions rather than imposing rosetta's.
-
-**Operating over a LARGE decision library — query, never slurp.** A mature project may carry
-thousands of records; reading the whole `decisions/` tree into context does not scale and is never
-necessary. The CLI is the index — use it deterministically (no tokens) instead:
-
-- **Before recording a new decision, check it isn't already captured:** `decisions.py search --text
-  "<topic>"` (also `--type` / `--status`) returns just the matching records as JSON. If an existing
-  ADR already records it, cite that one — do not create a duplicate.
+  `--staleness` to flag Accepted records whose cited code moved in git since their freshness baseline
+  (the `Reviewed:` date if present, else `Date` — see ADR 0027). `decisions.py integrity` and
+  `decisions.py staleness` also run as standalone JSON checks; `staleness --strict` exits nonzero if
+  any record is stale (the CI-gate form).
+  - **Before recording a new decision, check it isn't already captured:** `decisions.py search --text
+  "<topic>"` (also `--type` / `--status` / `--limit N`) returns just the matching records as JSON. If
+  an existing ADR already records it, cite that one — do not create a duplicate.
 - **Read a specific record in full** with `decisions.py get "ADR 0042"` — pull the one record you
-  need, not the library.
+  need, not the library. `--resolve` follows the supersession chain and prints the current record.
 - **Reverse a prior decision deterministically** with `decisions.py supersede "ADR 0042" --by "ADR
   0098"` — it flips the old record's `Status` to `Superseded by ADR 0098` and sets the new record's
   `Supersedes` line. Don't hand-edit status among thousands of files; let the tool do it, then
@@ -228,7 +223,13 @@ necessary. The CLI is the index — use it deterministically (no tokens) instead
   refer to work by **codename**, so records carry an optional `Aliases:` field (`;`-separated): a
   codename query resolves through that map (`via_alias`), `index` emits a derived
   `GLOSSARY.md`/`GLOSSARY.json`, and `validate` is a **hard error** if one alias maps to two live
-  decisions — an ambiguous codename is a bug, not a warning. `--no-alias-expand` for literal-only.
+  decisions — an ambiguous codename is a bug, not a warning. `--no-alias-expand` for literal-only,
+  `--no-stale-check` to skip git freshness annotations.
+- **Acknowledge code drift without re-dating a decision** with the optional `Reviewed: <YYYY-MM-DD>`
+  field (ADR 0027): when cited code has moved in git but the decision still holds, set `Reviewed:` to
+  the date you confirmed it. The staleness guard treats this as a re-flaggable baseline (any *future*
+  code change re-flags the record), not a permanent override — so it preserves the decision timeline
+  while making the freshness gate CI-green on active repos.
 - **Measure library health** with `decisions.py coverage` (JSON): the headline `anchoring.rate` is the
   share of Accepted decisions whose `Sources:` cite a real code path (provenance the resolver can
   trust); it also reports supersession stats, an agent-retrieval `ambiguous_topics` diagnostic (topics

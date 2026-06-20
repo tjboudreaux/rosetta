@@ -19,7 +19,10 @@ shouldn't block having a usable CLI today.
 Ship `scripts/rosetta`: a thin, zero-install dispatcher that forwards subcommands to the underlying
 scripts unchanged — `rosetta collect …`, `rosetta discover …` (`collect.py --all-projects`),
 `rosetta decisions new|index|validate …`. Run via `python3 …/scripts/rosetta` or an alias. Full
-PATH packaging (`pyproject.toml` + `console_scripts`) is deferred to ADR 0013.
+PATH packaging (`pyproject.toml` + `console_scripts`) is deferred to ADR 0013. **Update
+(2026-06-18):** ADR 0013 shipped `pip install -e skills/rosetta`, which puts `rosetta` on PATH —
+so the thin dispatcher is now PATH-installable. Only the portable wheel / PyPI publish remains
+deferred. See the Negative consequence below.
 
 ## Consequences
 
@@ -32,9 +35,10 @@ Negative:
   on PATH; the portable wheel / PyPI publish remains deferred.
 
 ## Alternatives considered
-
 - **Jump straight to a packaged console_scripts CLI** — more moving parts (packaging, versioning,
-  install) before the surface has settled; a thin dispatcher first, package later (ADR 0013).
+  install) before the surface has settled; a thin dispatcher first, then package later. ADR 0013
+  later shipped the editable install (`pip install -e`); only the portable wheel / PyPI publish
+  remains deferred.
 - **No CLI, call scripts directly** — workable but poor ergonomics for the unified engine.
 
 ## Related

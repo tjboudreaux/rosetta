@@ -55,7 +55,7 @@ whether it reasoned correctly.
   model. **$/correct** = cost per *passed* scenario, **withheld below an 80% efficacy gate** so "cheap
   but wrong" can't look good; $ comes from the versioned `pricing.json` (blended estimate from totals,
   exact when an input/output split is present). Measured result: Haiku + Rosetta matches the Opus
-  baseline's correctness on the hard suite at ~24× lower est cost (see `VALUE.md`). Metric design
+  baseline's correctness on the hard suite at ~7× lower est cost (see `VALUE.md`). Metric design
   hardened against Codex/Gemini red-team review. A full **14-model cross-harness sweep** (Claude,
   Codex, Gemini, Droid) is in `SWEEP.md` + `results-tierb-sweep.json`, with model IDs probed live and
   prices verified against the 2026-06 sheet.

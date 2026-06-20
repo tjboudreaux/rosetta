@@ -55,28 +55,4 @@ Arms: raw; prompt scaffold; production query-time resolver over raw corpus; prod
 **Roadmap changes:** add Phase 0b before Phase 1; make Phase 1 build the shared resolver/evidence graph, not just `decisions.py search`; pull messy alias and code-conflict tests forward from Phase 2; do not claim cost-down until `$ / correct` includes compile, retrieval, and retry costs.
 
 
-tokens used
-93,921
-**Verdict: NO-GO on the product redirect as written. GO on a Phase 0b.**
-
-1. **The Phase 0 gate was not actually met.** The roadmap required `{Haiku, Sonnet, Gemini-Flash}`, real inference-time tooling, and `$ / correct` measurement, but the result only covers Haiku/Sonnet, swaps arm 2 into prompt scaffolding, and reports mean tokens only. Compare [EVAL-AND-PRODUCT-ROADMAP.md](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/EVAL-AND-PRODUCT-ROADMAP.md:22) with [PHASE0-RESULTS.md](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/PHASE0-RESULTS.md:21) and [PHASE0-RESULTS.md](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/PHASE0-RESULTS.md:29). This is a smoke test, not the decision gate the roadmap defines.
-
-2. **The conclusion is still too motivated.** The corrected doc honestly retracts compiler-vs-retriever ordering, but then still says to “lead with the retrieval capability” and build alias retrieval first. That does not follow from a hand-tuned regex retriever versus a hand-normalized, buggy compiled folder. The retriever is not a general product capability; it parses two exact glossary phrasings and greps `history/*.md` only: [phase0_alias_retriever.py](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/phase0_alias_retriever.py:8), [phase0_alias_retriever.py](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/phase0_alias_retriever.py:10), [phase0_alias_retriever.py](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/phase0_alias_retriever.py:24). It proves “this glossary was easy to exploit,” not “retrieval is the moat.”
-
-3. **The artifact set is not clean enough to audit.** The setup says 4 arms x 2 models x k=3, which implies 24 files, but `p0-outputs/` has 30 files because both `arm1_raw__*` and `arm1iso__*` exist. If the intended baseline is `arm1iso`, 0/6 is correct. If someone reads `arm1_raw`, the baseline is not 0/6: [arm1_raw__haiku__k1.txt](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/p0-outputs/arm1_raw__haiku__k1.txt:1) and [arm1_raw__sonnet__k1.txt](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/p0-outputs/arm1_raw__sonnet__k1.txt:1) both answer Cloud Spanner. Mark the non-isolated files excluded or move them out of the scored corpus.
-
-4. **The grading is fair on “Cloud Spanner,” but lenient on evidence.** Counting undecoded “unified ledger tier” as a miss is fair because the trap is alias decoding: [PHASE0-RESULTS.md](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/PHASE0-RESULTS.md:21). But if the product claim is “supersession-resolving retrieval,” then merely naming Cloud Spanner is too low a bar. Some passing arm-3 answers do not explicitly reject the Postgres distractor or show the supersession chain, e.g. [arm3ret__haiku__k1.txt](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/p0-outputs/arm3ret__haiku__k1.txt:1). Grade two axes: decoded answer and supported resolution.
-
-5. **“Cheap models reach frontier correctness” is an overclaim.** The table shows Haiku beating Sonnet in the compiled arm because Sonnet followed a poisoned compiled record: [PHASE0-RESULTS.md](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/PHASE0-RESULTS.md:34), [arm4comp__sonnet__k1.txt](/Users/tjboudreaux/Sandbox/rosetta/skills/rosetta/evals/adversarial/p0-outputs/arm4comp__sonnet__k1.txt:1). That says more about artifact quality than model tier. Safer framing: “On this one alias/supersession fixture, cheap models can be lifted when the missing resolution evidence is exposed.”
-
-**Better framing:** Rosetta is not “an alias-aware retriever.” The stronger product is a **decision-resolution layer**: build and serve a provenance graph that maps aliases, supersession, scope, code evidence, and stale/conflicting records. Retrieval is the interface. Compilation is the cache/materialization strategy. The moat, if one exists, is verified resolution plus freshness, not search.
-
-**Highest-value next experiment:** Run Phase 0b as a preregistered 2x2 on 20+ generated fixtures across glossary-present, glossary-absent, scattered alias, ambiguous supersession, and code-vs-decision conflict cases.
-
-Arms: raw; prompt scaffold; production query-time resolver over raw corpus; production compiler-generated decision graph plus the same resolver. No hand-normalization, no fixture-specific regex, same token budget rules, include compile cost amortized over multiple queries, and report `$ / correct`.
-
-**Falsifies the redirect:** raw plus general query-time retrieval fails when the glossary is absent/scattered, or requires query-specific tuning, while compiled resolution wins on correctness or amortized cost. Conversely, if the real retriever matches compiled output across messy fixtures and real repos, then lead with retrieval.
-
-**Roadmap changes:** add Phase 0b before Phase 1; make Phase 1 build the shared resolver/evidence graph, not just `decisions.py search`; pull messy alias and code-conflict tests forward from Phase 2; do not claim cost-down until `$ / correct` includes compile, retrieval, and retry costs.
-
-
+*Codex review token cost: 93,921*

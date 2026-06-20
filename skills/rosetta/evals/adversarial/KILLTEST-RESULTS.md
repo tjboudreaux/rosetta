@@ -157,7 +157,7 @@ and reusable if a future model regression reintroduces extraction gaps. See
 `ADVERSARIAL-REVIEW-FINDINGS.md` for the full analysis and `ADVERSARIAL-REVIEW-PREREGISTRATION.md` for
 the frozen ablation matrix.
 
-**What pass 2 establishes (honestly):** a *real* LLM-compiled library answers **82%** end-to-end at this
+**Historical (2026-06-15 run): What pass 2 establishes (honestly):** a *real* LLM-compiled library answers **82%** end-to-end at this
 scale — below the 100% ground-truth ceiling but **above flat compression on most tiers** and far cheaper
 than raw. The dominant failure is **compiler extraction**, not resolution; the biggest single lever is
 **entity canonicalization** (+32 pts, 50→82) — the alias-resolution step Phase 1 named but never built,
@@ -235,6 +235,10 @@ accuracy against the weaker ones — claim it precisely, not as a blanket accura
 Remaining next steps: push compiler extraction past 82% (overlap chunks / self-check pass); stress the
 agentic tie with harder retrieval-defeat probes + higher k (where the agent's *earned* 100% may crack
 while resolve's *structural* 100% holds); a real-repo corpus.
+
+**Update (2026-06-18):** the 82% figure is stale — a live A0 re-verify scored 100% (see "Live
+re-verification" above). The "push past 82%" next step is closed; the remaining frontier is the
+agentic tie + a real-repo corpus.
 
 ## Artifacts
 `killtest_gen.py` · `killtest_validate.py` · `killtest_smoke.py` (arms + `run_model` dispatcher) ·

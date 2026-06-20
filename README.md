@@ -7,10 +7,10 @@
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-22c55e.svg"></a>
   <a href="https://skills.sh"><img alt="Agent Skill on skills.sh" src="https://img.shields.io/badge/Agent%20Skill-skills.sh-818cf8"></a>
-  <a href="docs/agents.md"><img alt="18 agents supported" src="https://img.shields.io/badge/agents-18-5eead4"></a>
+  <a href="skills/rosetta/docs/agents.md"><img alt="18 agents supported" src="https://img.shields.io/badge/agents-18-5eead4"></a>
   <img alt="Python 3.8+ stdlib only" src="https://img.shields.io/badge/python-3.8%2B%20·%20stdlib%20only-3776ab">
   <a href="https://github.com/tjboudreaux/rosetta/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/tjboudreaux/rosetta/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-c084fc"></a>
+  <a href="skills/rosetta/CONTRIBUTING.md"><img alt="PRs welcome" src="https://img.shields.io/badge/PRs-welcome-c084fc"></a>
 </p>
 
 # Rosetta — the decision context engine for AI coding agents
@@ -21,8 +21,9 @@ evaporates the moment each window closes.**
 Rosetta is an open-source [agent skill](https://agentskills.io) that reads every coding agent's local
 conversation history (across **18 tools**), reconciles it with your git history and docs, and turns it
 into one *cited* **ground truth** — plus durable **decision records** (ADRs, PDRs, BDRs). So you, your
-team, and the next agent never lose the thread. **100% local, read-only, pure-stdlib Python, zero
-dependencies.**
+team, and the next agent never lose the thread. **The core collector and decision CLI are 100% local,
+read-only, pure-stdlib Python, zero dependencies.** (Optional external-source ingestion via MCP is
+agent-driven and opt-in — see ADR 0012.)
 
 > Like the Rosetta Stone recovered one meaning across three scripts, Rosetta recovers one project
 > truth across many incompatible agent transcript formats.
@@ -164,8 +165,8 @@ Rosetta turns scattered decisions into durable, cited records:
 | **BDR** — Business Decision Record | business/commercial calls, often made in meetings |
 
 Each record carries `Sources:` provenance (`agent · session-id · date`, a commit, a code path), a
-`Proposed → Accepted → Superseded` lifecycle, and never silently oscillates. Rosetta's own
-[`decisions/`](decisions) library is the reference implementation. Details:
+`Proposed → Accepted → Superseded (or Deprecated / Rejected)` lifecycle, and never silently oscillates. Rosetta's own
+[`decisions/`](skills/rosetta/decisions) library is the reference implementation. Details:
 **[docs/decisions.md](skills/rosetta/docs/decisions.md)**.
 
 ## CLI
@@ -174,7 +175,7 @@ Each record carries `Sources:` provenance (`agent · session-id · date`, a comm
 rosetta collect   --project <path> --out <dir>   # gather + normalize a project's transcripts
                                                  #   (skips already-processed sessions; --reprocess rebuilds all)
 rosetta discover  [--out <dir>]                  # machine-wide index of projects with history
-rosetta decisions new|index|validate             # scaffold / index / validate the decision library
+rosetta decisions new|index|validate|integrity|staleness|search|get|supersede|resolve|coverage
 rosetta ingest    --root ./decisions --from x.json   # external decisions (meetings/Slack) -> Proposed records
 ```
 
@@ -190,10 +191,11 @@ and templates — or omit it for sensible defaults. Add a new record type (say, 
 with no code change. See [docs/decisions.md → customize](skills/rosetta/docs/decisions.md#use-your-own-templates-any-team).
 
 ## FAQ
-
-**Is my data sent anywhere?** No. Rosetta is fully local and read-only against your own machine's
-transcript files. It's pure-stdlib Python — no network calls, no telemetry, no dependencies. The
-normalized-transcript cache (`.agents/`) can contain secrets, so it's git-ignored by default.
+**Is my data sent anywhere?** No. The core collector and decision CLI are fully local and read-only
+against your own machine's transcript files — pure-stdlib Python, no network calls, no telemetry, no
+dependencies. (Optional MCP external-source ingestion is agent-driven, opt-in, and uses your
+authenticated agent session — see ADR 0012.) The normalized-transcript cache (`.agents/`) can contain
+secrets, so it's git-ignored by default.
 
 **Is it only for Claude Code?** No. It installs into any [skills-compatible agent](https://agentskills.io)
 (Claude Code, Codex, Gemini CLI, Cursor, opencode, and more) and *reads* 18 different agents' histories.
@@ -224,10 +226,12 @@ the deterministic `decisions.py` handles numbering, the index, and validation.
 
 ## Roadmap
 
-- **External-source ingestion via MCP** (Circleback meeting notes, Slack) so human/meeting decisions
-  become cited records too — designed in [references/external-sources.md](skills/rosetta/references/external-sources.md)
-  (Proposed, [ADR 0012](skills/rosetta/decisions/architecture-decisions/0012-mcp-external-source-ingestion.md)).
-- **Installable CLI packaging** (`pipx install`) — [ADR 0013](skills/rosetta/decisions/architecture-decisions/0013-installable-cli-packaging.md).
+- **External-source ingestion** (Circleback meeting notes, Slack) so human/meeting decisions become
+  cited records too — the deterministic scaffolder (`scripts/ingest.py`) shipped; live MCP connectors
+  are agent-driven and auth-dependent. Accepted, [ADR 0012](skills/rosetta/decisions/architecture-decisions/0012-mcp-external-source-ingestion.md).
+  Design: [references/external-sources.md](skills/rosetta/references/external-sources.md).
+- **Installable CLI packaging** — `pip install -e skills/rosetta` puts `rosetta` on PATH (shipped);
+  portable wheel / PyPI publish deferred. Accepted, [ADR 0013](skills/rosetta/decisions/architecture-decisions/0013-installable-cli-packaging.md).
 - Resolvers for more agents as they appear (the sweep flags unknown stores so you know when to add one).
 
 ## Contributing & license

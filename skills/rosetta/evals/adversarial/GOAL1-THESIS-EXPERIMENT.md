@@ -134,3 +134,5 @@ the corpus was too small and the summarizer too faithful to enter the lossy regi
 targets. The graph's demonstrated advantages were **cost (−37% tokens/query vs raw)** and a
 **single pre-resolved, conflict-free answer**, not accuracy. Do **not** claim "provenance recovers
 recall" on this evidence. The next experiment must force the compression pressure.
+
+> **Update (2026-06-18):** The decisive large-corpus test this doc called for was run as the kill test — thesis HOLDS at scale (KILLTEST-RESULTS.md). This goal-1 result stands as the honest small-scale negative that motivated the compression-pressure design.

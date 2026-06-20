@@ -34,8 +34,13 @@ For each Accepted decision, check whether the code it cites still supports it:
 
 ### 3. Staleness — cited code moved on
 Flag Accepted records whose cited code/commit has changed materially since the record's date (the drift
-failure mode from the research: silent updates leave a confidently-wrong oracle). Recommend re-running
-`rosetta` to refresh and `supersede` where a newer decision/commit has overtaken an old one.
+failure mode from the research: silent updates leave a confidently-wrong oracle). Two resolution paths:
+- **Code moved but the decision still holds** → add `Reviewed: <YYYY-MM-DD>` to the record (ADR 0027).
+  This acknowledges the code change without corrupting the decision timeline — the staleness guard
+  treats `Reviewed:` as a re-flaggable baseline, not a permanent override, so any *future* change
+  re-flags it. Run `decisions.py staleness --root decisions` to see which records need review.
+- **Code moved and the decision is now wrong** → `supersede` the ADR with a new one that reflects
+  the current code, or re-run `rosetta` to refresh the library.
 
 ### 4. Report
 Output a prioritized table: **Conflicts** (must-fix) → **Code-contradictions** → **Stale**. Close with
