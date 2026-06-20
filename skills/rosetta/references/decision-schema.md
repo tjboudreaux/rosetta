@@ -43,7 +43,37 @@ Heading + a **bullet-list frontmatter** (not YAML), then fixed body sections:
   meeting note, or a task id. Multiple sources are comma-separated.
 - **Optional:** `Decided originally` (when the call was actually made, if the record is backdated),
   `Reviewed` (freshness acknowledgment — see below), `Related`, `Supersedes`, `Aliases`
-  (codenames/synonyms for the concept — see below).
+  (codenames/synonyms for the concept — see below), plus loop-gate fields `Human gated paths`,
+  `Human approval for`, `Evidence for`, and `Evidence artifacts`.
+
+### Loop-gate fields
+
+`rosetta gates check` reads these parseable fields; it never infers approval or evidence from prose:
+
+- **`Human gated paths`** — on an Accepted ADR/PDR, semicolon-separated repo-relative `fnmatch`
+  patterns such as `src/payments/**; docs/MOBILE.md`. A changed matching path requires an explicit
+  `--change-id` and an Accepted approval record.
+- **`Human approval for`** — on an Accepted ADR/PDR/BDR, exact change id approved by the human
+  decider. A matching record must also have non-empty `Sources` and the normal required `Decider`.
+- **`Evidence for`** — on an Accepted ADR/PDR/BDR, exact change id covered by a local UI evidence
+  artifact.
+- **`Evidence artifacts`** — semicolon-separated local artifact refs of the form
+  `screenshot:<repo-path>` or `video:<repo-path>`. The gate checks only that the referenced local
+  file exists under the project; it does not inspect screenshots/videos or assert behavioral proof.
+
+### Signal ingest fields
+
+`rosetta ingest --schema auto|signals` maps validated product signals to `Status: Proposed` records.
+Signal ids appear in `Sources:` as ``signal:<id>``; public/internal raw refs are added as additional
+backticked sources. `pii` and `sensitive` signals are refused unless `--allow-sensitive` and
+`redacted: true` are both present; redacted records store `[redacted: <privacy_class> signal]` and no
+raw refs beyond the signal id.
+
+### Harness export contract
+
+`rosetta harness export` consumes only `rosetta-harness-export/v1` JSON and writes only between
+`<!-- ROSETTA:HARNESS:START -->` / `<!-- ROSETTA:HARNESS:END -->` markers in allowlisted docs:
+`ARCHITECTURE.md`, `docs/MOBILE.md`, and `domains/<single-kebab-slug>/README.md`.
 
 ### Status lifecycle
 

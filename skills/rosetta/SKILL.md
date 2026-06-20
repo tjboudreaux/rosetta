@@ -28,6 +28,15 @@ timestamps to UTC, and writes clean per-session markdown plus a coverage manifes
 read raw transcripts into your own context** — you orchestrate the script and subagents that read
 its normalized output. See `references/agent-stores.md` for the store registry it mirrors.
 
+## Deterministic loop-integration boundary
+
+Rosetta's deterministic CLI is local and does not call external APIs except `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent checks to RA1. Agent-run external-source collection for ADR 0012 is outside the deterministic CLI, opt-in, may use authenticated MCP/network tools, and may only feed `rosetta ingest` records as `Status: Proposed` drafts pending human confirmation. Rosetta is read-only against transcript stores and product source by default; default writes are limited to `.agents/**`, `decisions/**`, and `loop-runs/**`, plus the allowlisted harness docs only under explicit `harness export --apply`. Rosetta records, cites, and checks evidence; it never runs product builds/tests/deploys, asserts behavior, schedules loops, merges/pushes, or grades autonomy.
+
+Use `rosetta gates check` for local provenance/evidence gates, `rosetta preflight` for RA1 + decision
+state + gate JSON, `rosetta drift report` for freshness reports, `rosetta runs` for the isolated
+loop-run ledger, and `rosetta harness export` only for allowlisted marked docs.
+
+
 ## Workflow
 
 ### 1. Resolve the target project
@@ -242,6 +251,12 @@ be ingested too: query the source's MCP tools for the project/time window, emit 
 as a JSON array, and pipe it to `scripts/ingest.py` (`rosetta ingest`) — it writes one `Status: Proposed`
 record each for human confirmation. See `references/external-sources.md` and ADR 0012 (the deterministic
 scaffolder is shipped; the live-MCP connectors are unverified — treat ingested records as drafts).
+
+Loop/goal integration commands stay deterministic and bounded: `rosetta gates check` joins parseable
+decision fields (`Human gated paths`, `Human approval for`, `Evidence for`, `Evidence artifacts`);
+`rosetta preflight` embeds RA1's structural JSON when available and otherwise skips RA1; `rosetta runs`
+records local run lifecycle notes under `loop-runs/`; `rosetta harness export` updates only marked
+allowlisted docs under explicit `--apply`.
 
 ## Notes
 

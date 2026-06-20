@@ -10,6 +10,11 @@ alias rosetta="python3 ~/.claude/skills/rosetta/scripts/rosetta"
 The heavy synthesis (reading transcripts, writing `ground-truth.md`, drafting decision prose) is done
 by the **agent** via the skill; the CLI is only the deterministic, token-free mechanics.
 
+## Deterministic boundary
+
+Rosetta's deterministic CLI is local and does not call external APIs except `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent checks to RA1. Agent-run external-source collection for ADR 0012 is outside the deterministic CLI, opt-in, may use authenticated MCP/network tools, and may only feed `rosetta ingest` records as `Status: Proposed` drafts pending human confirmation. Rosetta is read-only against transcript stores and product source by default; default writes are limited to `.agents/**`, `decisions/**`, and `loop-runs/**`, plus the allowlisted harness docs only under explicit `harness export --apply`. Rosetta records, cites, and checks evidence; it never runs product builds/tests/deploys, asserts behavior, schedules loops, merges/pushes, or grades autonomy.
+
+
 ## `rosetta collect` — gather + normalize a project's transcripts
 
 ```bash
@@ -85,6 +90,71 @@ rosetta decisions coverage   [--root <dir>] [--min-coverage 0.8]
 `--root` defaults to `./decisions` if present, else the current directory. Drop a `config.json` in the
 root to use your own record types, directories, numbering, statuses, fields, and templates (see
 [decisions.md](decisions.md)).
+
+## `rosetta ingest` — external decisions and signals
+
+```bash
+rosetta ingest --root ./decisions --from input.json [--schema auto|decisions|signals] [--allow-sensitive]
+```
+
+Legacy decision JSON is unchanged. `--schema auto` treats objects with all signal discriminator keys as
+signals; signal records are written as `Status: Proposed`. `pii`/`sensitive` signals are refused unless
+`--allow-sensitive` and `redacted: true` are both present; redacted records store no raw refs beyond
+``signal:<id>``.
+
+## `rosetta gates check` — local decision/evidence gates
+
+```bash
+rosetta gates check --project-root <project> --decisions-root <decisions-root> --min-coverage 0.8 \
+  [--changed-path <path> ... | --diff-file <path-or-> | --base <rev> --head <rev>] \
+  [--change-id <id>] [--out -|report.json]
+```
+
+Emits `rosetta-gates/v1` JSON and exits 1 when any gate fails. Gates: strict validation,
+integrity, staleness, anchoring, `Human gated paths` approval, and UI `Evidence artifacts` presence.
+With no changed paths, the approval/evidence joins skip with `no_changed_paths`.
+
+## `rosetta harness export` — deterministic harness docs
+
+```bash
+rosetta harness export --project-root <project> [--from-json .agents/rosetta/harness-export.json] [--patch | --apply]
+```
+
+Consumes only `rosetta-harness-export/v1` JSON. Targets are allowlisted exactly:
+`ARCHITECTURE.md`, `docs/MOBILE.md`, and `domains/<single-kebab-slug>/README.md`. Dry-run prints JSON
+and writes nothing; `--patch` prints a diff and writes nothing; `--apply` updates only existing files
+with `<!-- ROSETTA:HARNESS:START -->` / `<!-- ROSETTA:HARNESS:END -->` markers.
+
+## `rosetta runs` — isolated loop-run ledger
+
+```bash
+rosetta runs new --project-root <project> --title <title> --runner <id> --trigger manual|ci|goal|loop|other --scope <text>
+rosetta runs append --project-root <project> "RUN 0001" --note <text>
+rosetta runs close --project-root <project> "RUN 0001" --stop-reason <text>
+rosetta runs index --project-root <project>
+rosetta runs validate --project-root <project>
+```
+
+Writes only under `loop-runs/`; decision-library commands do not scan those files.
+
+## `rosetta drift report` — freshness JSON
+
+```bash
+rosetta drift report --project-root <project> --decisions-root <decisions-root> [--status Accepted] [--out -|report.json]
+```
+
+Emits `rosetta-drift/v1` JSON and exits 0 when the report is generated, even if stale records exist.
+
+## `rosetta preflight` — RA1 + decision state + gates
+
+```bash
+rosetta preflight --project-root <project> --decisions-root <decisions-root> --scope <query> --min-coverage 0.8 \
+  [same change-source flags as gates check] [--change-id <id>] [--allow-ra1-github] [--ra1-timeout 30] [--out -|report.json]
+```
+
+Emits `rosetta-preflight/v1` JSON. Missing RA1 is a structured skip; RA1 timeout, nonzero exit,
+stderr-only failure, or invalid JSON is a structured `ra1_structural` failure. There is no
+`rosetta loop preflight` alias.
 
 ## Testing the installation
 

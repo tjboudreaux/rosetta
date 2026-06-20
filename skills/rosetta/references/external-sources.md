@@ -4,12 +4,10 @@ Parallel to `agent-stores.md` (which maps *agent transcript* stores), this maps 
 where decisions are made by humans — meetings, chat, trackers — reachable via MCP.
 
 **Status:** the deterministic half is **shipped** — `scripts/ingest.py` (`rosetta ingest`) turns a JSON
-array of extracted decisions into reviewable `Status: Proposed` records. The agent-driven half (the
-actual MCP queries that produce that JSON) is documented below and in SKILL.md but **unverified against
-live MCP servers** in this build. Unlike transcript collection (deterministic, local files), external
-ingestion is **agent-driven and on-demand**: it calls MCP tools, needs auth, and may be unavailable in
-headless/cron runs. Everything it surfaces is a **Proposed** draft pending human confirmation (truth
-hierarchy, ADR 0004).
+array of extracted decisions or validated product signals into reviewable `Status: Proposed` records.
+Agent-run external-source collection remains outside the deterministic CLI.
+
+Rosetta's deterministic CLI is local and does not call external APIs except `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent checks to RA1. Agent-run external-source collection for ADR 0012 is outside the deterministic CLI, opt-in, may use authenticated MCP/network tools, and may only feed `rosetta ingest` records as `Status: Proposed` drafts pending human confirmation. Rosetta is read-only against transcript stores and product source by default; default writes are limited to `.agents/**`, `decisions/**`, and `loop-runs/**`, plus the allowlisted harness docs only under explicit `harness export --apply`. Rosetta records, cites, and checks evidence; it never runs product builds/tests/deploys, asserts behavior, schedules loops, merges/pushes, or grades autonomy.
 
 ## Sources
 
@@ -36,6 +34,10 @@ CLI and Circleback usage.
 5. **Scaffold**: emit the extracted decisions as a JSON array and pipe it to `rosetta ingest`
    (`scripts/ingest.py`), which writes one `Status: Proposed` record each (numbering, provenance, body draft).
 6. **Confirm** with a human before any draft becomes `Accepted` (ADR 0004).
+
+Signal ingest uses the same draft discipline. `pii`/`sensitive` signals are refused unless the caller
+passes `--allow-sensitive` and the item says `redacted: true`; redacted records keep only
+``signal:<id>`` as a raw reference.
 
 ## Adding a source
 

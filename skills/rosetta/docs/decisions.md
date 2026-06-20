@@ -41,6 +41,8 @@ A `# <LABEL> NNNN — title` heading, a bullet-list frontmatter, then fixed body
   Every reversal supersedes the prior record — the library never silently oscillates.
 - A decision the transcripts only *discussed* stays `Proposed` until code or an explicit human call
   confirms it (the truth hierarchy, again).
+- Loop-gate fields are parseable frontmatter, not prose inference: `Human gated paths`,
+  `Human approval for`, `Evidence for`, and `Evidence artifacts`.
 
 Full spec: [`references/decision-schema.md`](../references/decision-schema.md).
 
@@ -57,6 +59,11 @@ rosetta decisions validate --root decisions    # CI-friendly: nonzero exit on a 
 `index` rewrites only the table between `<!-- ROSETTA:TIMELINE:START/END -->` markers, preserving any
 prose you add around it. `validate` enforces the frontmatter contract, unique numbering, allowed
 statuses, and resolvable supersede links.
+
+For integration gates, `rosetta gates check` treats validation warnings as failures, runs integrity and
+staleness checks, gates `coverage.anchoring.rate_raw` against `--min-coverage`, and joins the parseable
+human-approval/evidence fields. It emits JSON; it does not inspect screenshots/videos or assert product
+behavior.
 
 ## Use your own templates (any team)
 
@@ -79,9 +86,10 @@ Add a record type (e.g. a `gov` Governance record) with **no code change**. Temp
 relative to the root and fall back to the skill's `templates/`, so a team can adopt the format with
 zero files copied and override only what they want. The format bends to your team — not the reverse.
 
-## Beyond code and chat (roadmap)
+## Beyond code and chat
 
 Many decisions — pricing, partnerships, hiring — happen in meetings (Circleback) or Slack, never in
-code. Ingesting those via MCP into the same cited records is designed in
-[`references/external-sources.md`](../references/external-sources.md) and tracked as a Proposed ADR
-(0012). Until then, decisions are sourced from agent transcripts, code, and git.
+code. `rosetta ingest --schema auto|decisions|signals` also accepts normalized product signals;
+`pii`/`sensitive` signals require `--allow-sensitive` plus `redacted: true`.
+
+Rosetta's deterministic CLI is local and does not call external APIs except `rosetta preflight --allow-ra1-github`, which delegates GitHub-dependent checks to RA1. Agent-run external-source collection for ADR 0012 is outside the deterministic CLI, opt-in, may use authenticated MCP/network tools, and may only feed `rosetta ingest` records as `Status: Proposed` drafts pending human confirmation. Rosetta is read-only against transcript stores and product source by default; default writes are limited to `.agents/**`, `decisions/**`, and `loop-runs/**`, plus the allowlisted harness docs only under explicit `harness export --apply`. Rosetta records, cites, and checks evidence; it never runs product builds/tests/deploys, asserts behavior, schedules loops, merges/pushes, or grades autonomy.

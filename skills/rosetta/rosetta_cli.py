@@ -17,12 +17,22 @@ _DISPATCH = {
     "discover":  ["collect.py", "--all-projects"],
     "decisions": ["decisions.py"],
     "ingest":    ["ingest.py"],
+    "gates":     ["gates.py"],
+    "runs":      ["runs.py"],
+    "harness":   ["harness.py"],
+    "drift":     ["drift.py"],
+    "preflight": ["preflight.py"],
 }
 _USAGE = ("rosetta <command> [args...]\n"
-          "  collect    gather + normalize a project's transcripts\n"
-          "  discover   machine-wide index of projects with agent history\n"
-          "  decisions  new | index | validate the decision library\n"
-          "  ingest     external decisions (meetings/Slack) -> Proposed records")
+          "  collect    [args...]      scripts/collect.py            gather + normalize transcripts for a project\n"
+          "  discover   [args...]      scripts/collect.py --all-projects   machine-wide project index\n"
+          "  decisions  <sub> [args]   scripts/decisions.py          new | index | validate | resolve | coverage\n"
+          "  ingest     [args]         scripts/ingest.py             external decisions/signals -> Proposed records\n"
+          "  gates      check [args]   scripts/gates.py              local provenance/evidence gates\n"
+          "  runs       <sub> [args]   scripts/runs.py               loop-run ledger under loop-runs/\n"
+          "  harness    export [args] scripts/harness.py             allowlisted harness doc export\n"
+          "  drift      report [args] scripts/drift.py               JSON decision drift report\n"
+          "  preflight  [args]        scripts/preflight.py           RA1 + decision state + gates JSON")
 
 
 def main(argv=None):
