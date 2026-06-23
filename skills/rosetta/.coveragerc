@@ -21,6 +21,14 @@ omit =
     evals/adversarial/killtest_gen.py
     evals/adversarial/killtest_validate.py
     evals/adversarial/killtest_smoke.py
+    # Adversarial kill-test / cross-harness RUNNERS are the same class of one-shot experiment
+    # apparatus as the *_gen.py generators above: standalone entry points, never imported by a
+    # test (verified — each drives an external harness / subprocess). Omitted on the same grounds.
+    evals/adversarial/killtest_adversarial.py
+    evals/adversarial/killtest_agentic.py
+    evals/adversarial/killtest_compile.py
+    evals/adversarial/killtest_matrix.py
+    evals/adversarial/killtest_scale.py
 
 [report]
 fail_under = 90

@@ -17,8 +17,8 @@ No build step — pure stdlib. From the repo root (mirrors `.github/workflows/ci
 python -m py_compile skills/rosetta/scripts/collect.py skills/rosetta/scripts/decisions.py \
   skills/rosetta/scripts/ingest.py skills/rosetta/rosetta_cli.py
 
-# Unit tests — every agent resolver/parser, gates, preflight, ingest, decisions
-python -m unittest discover -s skills/rosetta/tests -v
+# Unit tests — agent resolvers/parsers, loop CLIs, ingest (run from skills/rosetta so `tests` imports)
+( cd skills/rosetta && python -m unittest discover -s tests -v )
 
 # Decision library must stay well-formed (anti-hallucination integrity gate)
 python skills/rosetta/scripts/decisions.py --root skills/rosetta/decisions validate --integrity
