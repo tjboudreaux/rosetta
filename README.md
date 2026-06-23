@@ -242,6 +242,51 @@ the deterministic `decisions.py` handles numbering, the index, and validation.
   portable wheel / PyPI publish deferred. Accepted, [ADR 0013](skills/rosetta/decisions/architecture-decisions/0013-installable-cli-packaging.md).
 - Resolvers for more agents as they appear (the sweep flags unknown stores so you know when to add one).
 
+## Agent readiness
+
+Rosetta dogfoods **Ready Agent 1 (RA1)**, its sibling agent-readiness engine: this repo's readiness
+is scored by the same deterministic engine. As of the latest run (engine `0.5.0`, schema `2`), the
+repo clears **Level 4 of 5 — "Optimized"**: **28 of 29** applicable gating criteria pass (pass rate
+**0.97**). The single deliberate gap is strict typing — see the note below.
+
+| Level | What it gates (representative) | Status |
+|---|---|---|
+| **1 — Functional** | Version control, README, pinned deps, comprehensive `.gitignore`, unit tests | ✅ 5/5 |
+| **2 — Documented** | `AGENTS.md`, CI, linter + formatter config, `SECURITY.md`, issue/PR templates | ✅ 8/8 |
+| **3 — Standardized** | Type-check config, pre-commit, CODEOWNERS, branch protection, secret scanning, Dependabot, devcontainer | ✅ 11/11 |
+| **4 — Optimized** | Automated security review (CodeQL), release automation, label taxonomy | ✅ 4/5 |
+| **5 — Autonomous** | Opt-in to autonomous loop execution | ⬜ not opted in |
+
+By pillar (gating criteria): Build System 5/5 · Dev Environment 1/1 · Documentation 5/5 ·
+Security & Governance 7/7 · Style & Validation 4/5 · Task Discovery 4/4 · Testing 2/2. Counts are
+gating-only; the engine also runs non-gating advisory checks (not all of which this repo passes).
+
+> **What "configured" means — and the one gap.** The Style/Build criteria score *configured*
+> tooling, not a clean run: ruff and mypy are configured (`pyproject.toml`) but not yet enforced in
+> CI. Strict mypy is intentionally **left off** — the scripts aren't fully annotated — so
+> `style.strict_typing` is the single deliberately-unmet L4 criterion. Enabling it honestly
+> (annotate + a mypy CI gate) is tracked as follow-up, not claimed here.
+
+> **Level 5 ("Autonomous") is intentionally not claimed.** It gates on opting the repo into
+> autonomous loop execution (`loop_ready`), which Rosetta deliberately leaves off — Rosetta owns
+> local memory, provenance, and decision state, not unattended execution (see
+> [`PLAN-loop-integration.md`](skills/rosetta/docs/PLAN-loop-integration.md)).
+
+Criteria that don't apply to a command-line tool — service env templates, HTTP API-schema docs,
+integration-test suites — are reported as **N/A** and excluded from the totals rather than counted as
+passes. The repo is classified as a **CLI** (the `rosetta` entry point,
+[ADR 0013](skills/rosetta/decisions/architecture-decisions/0013-installable-cli-packaging.md)) via a
+committed pin at `.agents/readiness/config.json`; without it the engine cannot classify the repo,
+since the installable package lives under `skills/rosetta/`.
+
+Reproduce the score with authenticated GitHub access to the origin (four criteria — branch
+protection, secret scanning, label taxonomy, CI-runs-tests — read live repo settings, not the
+checkout). Read-only; writes only under `.agents/readiness/`:
+
+```bash
+ra1 report --project . --require-origin   # via the Ready Agent 1 skill
+```
+
 ## Contributing & license
 
 Contributions welcome — adding an agent is usually a registry row + a resolver + a fixture. See
