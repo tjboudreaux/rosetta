@@ -2,9 +2,45 @@ import json
 import os
 import subprocess
 import tempfile
+import contextlib
+import importlib
+import io
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+SCRIPTS = ROOT / "scripts"
+
+
+def load_script(name):
+    """Import scripts/<name>.py in-process so coverage measures it."""
+    if str(SCRIPTS) not in sys.path:
+        sys.path.insert(0, str(SCRIPTS))
+    return importlib.import_module(name)
+
+
+def call_main(module, argv, *, stdin_text=None):
+    """Run a module's main() in-process; return (code, stdout, stderr).
+
+    Pass argv=None for mains that read sys.argv directly (set sys.argv first).
+    SystemExit (argparse or explicit) is normalized to an int code.
+    """
+    out, err = io.StringIO(), io.StringIO()
+    code = 0
+    saved_stdin = sys.stdin
+    if stdin_text is not None:
+        sys.stdin = io.StringIO(stdin_text)
+    try:
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            try:
+                rc = module.main() if argv is None else module.main(argv)
+                code = rc if isinstance(rc, int) else 0
+            except SystemExit as exc:
+                code = exc.code if isinstance(exc.code, int) else (0 if exc.code is None else 1)
+    finally:
+        sys.stdin = saved_stdin
+    return code, out.getvalue(), err.getvalue()
 
 
 def run_cli(args, cwd=ROOT, env=None, input_text=None):

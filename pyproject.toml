@@ -1,0 +1,29 @@
+# Repo-wide Python tooling config. Rosetta's runtime is pure-stdlib (ADR 0013); the package
+# itself lives under skills/rosetta/. This root file is intentionally TOOLING-ONLY — it has no
+# [project]/[build-system] table and declares NO third-party dependencies, so it configures
+# ruff + mypy for the whole repo without introducing an unpinned-dependency gap.
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = [".agents", "skills/rosetta/evals/adversarial/killtest-outputs"]
+
+[tool.ruff.lint]
+# E/F = pyflakes+pycodestyle, I = isort, N = pep8-naming (naming-convention rule),
+# B = bugbear, UP = pyupgrade, C90 = mccabe (complexity budget).
+select = ["E", "F", "I", "N", "B", "UP", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.mypy]
+# Type checker adopted for the scripts. Strict mode is the eventual target but is NOT enabled
+# yet: the modules are not fully annotated and mypy is not yet a CI gate, so turning on `strict`
+# here would be a hollow badge. Enabling strict + wiring mypy into CI is tracked as follow-up.
+python_version = "3.9"
+ignore_missing_imports = true
+files = ["skills/rosetta/scripts", "skills/rosetta/rosetta_cli.py"]
