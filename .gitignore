@@ -1,6 +1,17 @@
 # Rosetta scratch / generated artifacts — normalized transcripts can contain secrets.
 # Regenerable; never commit. (`rosetta collect` / ground-truth runs land here.)
+# Exception: .agents/readiness/config.json (the project-type pin) is authored config, not
+#   regenerable scratch — it is force-tracked (`git add -f`) so CI and fresh clones detect
+#   the repo's true type, and thus its true readiness level. All other .agents/ paths stay out.
 .agents/
+
+# Secrets / credentials — never commit. Guards accidental adds (these are not generated).
+.env
+.env.*
+*.pem
+*.key
+*.credentials
+secrets.*
 
 # Local agent + editor state
 .claude/
